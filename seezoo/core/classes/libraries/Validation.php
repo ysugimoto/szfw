@@ -253,7 +253,6 @@ class SZ_Validation extends SZ_Driver
 		}
 		
 		$dat = Yaml::loadFile($filePath);
-		var_dump($dat);
 		if ( isset($dat[0]) ) // numbering array
 		{
 			foreach ( $dat as $value )
