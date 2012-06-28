@@ -1,0 +1,15 @@
+# ignore application config
+seezoo/app/config/
+
+# ignore caches
+seezoo/etc/caches/session/*
+seezoo/etc/caches/smarty/*
+seezoo/etc/caches/twig/*
+seezoo/etc/logs/*
+
+# ignore IDE project files
+.project
+.settings
+.nbproject
+*.DS_Store
+*.Thumbs.db
