@@ -1,0 +1,4 @@
+RewriteEngine Off
+
+RewriteCond $1 !^(index\.php|blog|favicon.ico|awstatsreport|css|js|captcha|jscripts|uploads|phpMyAdmin|.+\.gif$|.+\.jpg$|.+\.png$|.+\.js$|.+\.json$|.+\.txt$|.+\.swf$|.+\.flv$)
+RewriteRule ^(.*)$ index.php/$1 [L]
