@@ -80,14 +80,14 @@ class SZ_Breeder extends Process
 	
 	
 	/**
-	 * auto import the libraries from "$uses" property
+	 * auto import the libraries from config settings or autoImport property
 	 * 
 	 * @access protected
 	 * @return void
 	 */
 	protected function _execAutoImport()
 	{
-		$autoloadDatabase = $this->env->getConfig('autload_database');
+		$autoloadDatabase = $this->env->getConfig('autoload_database');
 		$autoloadLibrary  = $this->env->getConfig('autoload_library');
 		$autoloadModel    = $this->env->getConfig('autoload_model');
 		$autoloadHelper   = $this->env->getConfig('autoload_helper');
