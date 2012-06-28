@@ -269,7 +269,6 @@ Class SZ_Database extends SZ_Driver
 				{
 					$error = $this->_stackQueryLog($sql);
 				}
-				echo $error;
 				throw new Exception('SQL Failed :' . implode(', ', $this->_connectID->errorInfo()) . ' SQL : ' . $error, SZ_ERROR_CODE_DATABASE);
 				return FALSE;
 			}
