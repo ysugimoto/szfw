@@ -525,7 +525,7 @@ class SZ_Validation extends SZ_Driver
 	
 	
 	/**
-	 * Get filed value
+	 * Get field value
 	 * 
 	 * @access public
 	 * @param  string $field
