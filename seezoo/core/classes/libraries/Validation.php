@@ -11,7 +11,7 @@
  * Validation
  * 
  * @required seezoo/core/classes/dirvers/validation/Validation_field.php or extended
- * @required seezoo/core/classes/Validation_ruels.php or extended
+ * @required seezoo/core/classes/libraries/Verify.php or extended
  * 
  * @package  Seezoo-Framework
  * @category Libraries
