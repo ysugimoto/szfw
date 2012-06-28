@@ -1,4 +1,3 @@
 szfw
 ====
-
-Seezoo-Framework
+吾輩はFWである。ドキュメントはまだない。
