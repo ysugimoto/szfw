@@ -286,7 +286,7 @@ class SZ_Validation extends SZ_Driver
 	{
 		if ( empty($suffix) )
 		{
-			preg_match('/<([a-zA-Z0-9]+)\s.+>', $prefix, $match);
+			preg_match('/<([a-zA-Z0-9]+)\s?(?:.+)?>/', $prefix, $match);
 			if ( isset($match[1]) )
 			{
 				$suffix = '</' . $match[1] . '>';
