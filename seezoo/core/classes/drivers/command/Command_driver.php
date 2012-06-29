@@ -106,42 +106,43 @@ class {$class}ActiveRecord extends SZ_ActiveRecord
 	protected \$_schemas = array(
 SCHEMAS_DIFINITION
 	); 
+	
+VALIDATE_METHODS
 }
 
 END;
 		$schemas = array();
+		$methods = array();
 		$primary = '';
 		$maxLen  = 0;
 		foreach ( $fields as $field )
 		{
-			if ( FALSE !== ($point = strpos($field->Type, '(')) )
-			{
-				$type = strtoupper(substr($field->Type, 0, $point));
-				$size = (int)rtrim(substr($field->Type, ++$point), ')');
-			}
-			else
-			{
-				$type = strtoupper($field->Type);
-				$size = NULL;
-			}
-			if ( $field->Key === 'PRI' && empty($primary) )
-			{
-				$primary = $field->Field;
-			}
-			$line = "\t\t'{$field->Field}' => array('type' => '{$type}'";
-			if ( $size )
-			{
-				$line .= ", 'size' => {$size}";
-			}
-			$line .= ')';
+			$line = "\t\t'{$field->field}' => array('type' => '{$field->type}')";
 			$schemas[] = $line;
+			$f = $this->_toCamelCase($field->field);
+			$methods[] = "\tpublic function isValid{$f}(\$value) {\n\t\treturn TRUE;\n\t}\n";
+			if ( $field->key === TRUE )
+			{
+				$primary = $field->field;
+			}
 		}
 		
 		return str_replace(
-			array('PRIMARY_FIELD', 'SCHEMAS_DIFINITION'),
-			array($primary, implode(",\n", $schemas)),
+			array('PRIMARY_FIELD', 'SCHEMAS_DIFINITION', 'VALIDATE_METHODS'),
+			array($primary, implode(",\n", $schemas), implode("\n\n", $methods)),
 			$template
 		);
+	}
+	
+	
+	protected function _toCamelCase($field)
+	{
+		$field = preg_replace_callback(
+								'/_([a-zA-Z])/',
+								create_function('$m', 'return strtoupper($m[1]);'),
+								$field
+							);
+		return ucfirst($field);
 	}
 	
 	// --------------------------------------------------

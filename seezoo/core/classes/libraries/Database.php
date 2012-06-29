@@ -97,8 +97,8 @@ Class SZ_Database extends SZ_Driver
 	 */
 	protected $_queryLog = array();
 	
-		
-	private $_resultClass;
+	
+	protected $_resultClass;
 	
 	
 	/**
@@ -106,18 +106,26 @@ Class SZ_Database extends SZ_Driver
 	 * @var array
 	 */
 	protected $_dsn = array(
-		'mysql'   => 'mysql:host=%s;dbname=%s;port=%s',
-		'sqlite2' => 'sqlite2:%s',
-		'sqlite3' => 'sqlite:%s',
-		'odbc'    => 'odbc:Driver=%s;HOSTNAME=%s;PORT=%d;DATABASE=%s;UID=%s;PWD=%s'
+		'mysql'    => 'mysql:host=%s;dbname=%s;port=%s',
+		'postgres' => 'pgsql:host=%s;port=%s;dbname=%s',
+		'sqlite2'  => 'sqlite2:%s',
+		'sqlite3'  => 'sqlite:%s',
+		'odbc'     => 'odbc:Driver=%s;HOSTNAME=%s;PORT=%d;DATABASE=%s;UID=%s;PWD=%s'
 	);
 
 	public function __construct($group)
 	{
 		$this->env = Seezoo::getENV();
 		$this->_group = $group;
-		$this->_loadDriver('database', 'Database_result', FALSE, FALSE);
 		$this->_initialize($group);
+		$this->_resultClass = $this->_loadDriver('database', 'Database_result', FALSE, FALSE);
+		
+		// Detect SQL Driver
+		$driver = ( substr($this->_info['driver'], 0, 6) === 'sqlite' )
+		           ? 'sqlite'
+		           : $this->_info['driver'];
+		$this->_loadDriver('database', ucfirst($driver) . '_query');
+		
 		$this->connect();
 	}
 	
@@ -137,7 +145,6 @@ Class SZ_Database extends SZ_Driver
 			return;
 		}
 		$settings = $this->_makeConnectSettings();
-		
 		try
 		{
 			if ( $settings['dsn_only'] === FALSE )
@@ -296,7 +303,7 @@ Class SZ_Database extends SZ_Driver
 	 */
 	protected function _createResult()
 	{
-		return new $this->driver($this->_statement);
+		return new $this->_resultClass($this->_statement);
 	}
 	
 	
@@ -493,7 +500,8 @@ Class SZ_Database extends SZ_Driver
 	{
 		if ( ! $this->_tablesCache )
 		{
-			$query = $this->_connectID->query('SHOW TABLES FROM ' . $this->_info['dbname']);
+			$sql   = $this->driver->tableListQuery($this->_info['dbname'], $this->prefix());
+			$query = $this->_connectID->query($sql);
 			$this->_tablesCache = array();
 			foreach ( $query->fetchAll(PDO::FETCH_COLUMN) as $tables )
 			{
@@ -538,11 +546,13 @@ Class SZ_Database extends SZ_Driver
 		
 		if ( ! isset($this->_fieldsCache[$table]) )
 		{
-			$query = $this->_connectID->query('SHOW COLUMNS FROM ' . $this->prefix() . $table);
+			$sql   = $this->driver->columnListQuery($this->prefix() . $table);
+			$query = $this->_connectID->query($sql);
 			$this->_fieldsCache[$table] = array();
-			foreach ( $query->fetchAll(PDO::FETCH_OBJ) as $tables )
+			foreach ( $query->fetchAll(PDO::FETCH_OBJ) as $column )
 			{
-				$this->_fieldsCache[$table][$tables->Field] = $tables;
+				$column = $this->driver->convertField($column);
+				$this->_fieldsCache[$table][$column->field] = $column;
 			}
 		}
 		
@@ -729,6 +739,9 @@ Class SZ_Database extends SZ_Driver
 			case 'mysql':
 				$dsn = sprintf($dsn, $this->_info['host'], $this->_info['dbname'], $this->_info['port']);
 				$options[PDO::MYSQL_ATTR_INIT_COMMAND] = "SET NAMES utf8";
+				break;
+			case 'postgres':
+				$dsn = sprintf($dsn, $this->_info['host'], $this->_info['port'], $this->_info['dbname']);
 				break;
 			case 'sqlite2':
 			case 'sqlite3':

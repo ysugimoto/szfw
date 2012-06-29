@@ -42,7 +42,7 @@ class SZ_ActiveRecord
 	 * Table schema info
 	 * @var array
 	 */
-	protected $_schemas;
+	protected $_schemas = array();
 	
 	/**
 	 * Select query statements
@@ -206,7 +206,7 @@ class SZ_ActiveRecord
 		{
 			throw new BadMethodCallException(get_class($this) . ' works Finder mode! Cannot be execute ' . get_class($this) . '::insert() method.');
 		}
-		$dataSet = $this->_validate();
+		$dataSet = $this->validate();
 		$db      = Seezoo::$Importer->database();
 		
 		if ( $db->insert($this->_table, $dataSet) )
@@ -230,13 +230,13 @@ class SZ_ActiveRecord
 		if ( $this->_isFinderMode === TRUE )
 		{
 			throw new BadMethodCallException(
-											get_class($this)
-											. ' works Finder mode! Cannot be execute '
-											. get_class($this)
-											. '::update() method.'
-											);
+			  get_class($this)
+			  . ' works Finder mode! Cannot be execute '
+			  . get_class($this)
+			  . '::update() method.'
+			);
 		}
-		$dataSet = $this->_validate();
+		$dataSet = $this->validate();
 		$db      = Seezoo::$Importer->database();
 		
 		if ( $db->update($this->_table, $dataSet, array($this->_primary => $dataSet[$this->_primary])) )
@@ -273,17 +273,17 @@ class SZ_ActiveRecord
 		if ( $this->_isFinderMode === TRUE )
 		{
 			throw new BadMethodCallException(
-											get_class($this)
-											. ' works Finder mode! Cannot be execute '
-											. get_class($this)
-											. '::delete() method.'
-										);
+			  get_class($this)
+			  . ' works Finder mode! Cannot be execute '
+			  . get_class($this)
+			  . '::delete() method.'
+			);
 		}
 		if ( ! isset($this->{$this->_primary}) )
 		{
 			throw new LogicException('Delete method requires primary key record');
 		}
-		$dataSet = $this->_validate();
+		$dataSet = $this->validate();
 		$db      = Seezoo::$Importer->database();
 		
 		if ( $db->update($this->_table, $this->_primary . ' = ' . $this->{$this->_primary}) )
@@ -298,57 +298,19 @@ class SZ_ActiveRecord
 	
 	
 	/**
-	 * Detect table schema information from DB
-	 * 
-	 * @access protected
-	 */
-	protected function _detectSchemaData()
-	{
-		if ( $this->_schemas )
-		{
-			return;
-		}
-		
-		$db      = Seezoo::$Importer->database();
-		$schemas = array();
-		
-		foreach ( $db->fields($this->_table) as $f )
-		{
-			if ( FALSE !== ($point = strpos($f->Type, '(')) )
-			{
-				$type = substr($f->Type, 0, $point);
-				$size = (int)rtrim(substr($f->Type, ++$point), ')');
-			}
-			else
-			{
-				$type = $f->Type;
-				$size = NULL;
-			}
-			$schemas[$f->Field] = array(
-				'type' => strtoupper($type),
-				'size' => $size
-			);
-			if ( $f->Key === 'PRI' )
-			{
-				$this->_primary = $f->Field;
-			}
-		}
-		$this->_schemas = $schemas;
-	}
-	
-	
-	// ---------------------------------------------------------------
-	
-	
-	/**
 	 * Validate record properties before insert/update
 	 * 
-	 * @access protected
-	 * @return array $dataSet
+	 * @access public
+	 * @return array
 	 */
-	protected function _validate()
+	public function validate()
 	{
-		$this->_detectSchemaData();
+		// Implement subclass method if you need
+		if ( ! $this->_schemas )
+		{
+			throw new LogicException('ActiveRecord schema is not defined.');
+		}
+		
 		$dataSet = array();
 		foreach ( $this->_schemas as $field => $schema )
 		{
@@ -356,42 +318,39 @@ class SZ_ActiveRecord
 			{
 				continue;
 			}
+			$Field = $this->_toCamelCase($field);
 			$value = (string)$this->{$field};
-			if ( preg_match('/.*INT$/', $schema['type']) )
+			if ( method_exists($this, 'isValid' . $Field) )
 			{
-				if ( ! ctype_digit($value) )
+				if ( FALSE === $this->{'isValid' . $Field}($value) )
 				{
-					throw new UnexpectedValueException($field . ' value must be integer.');
-				}
-				else if ( strlen($value) > $schema['size'] )
-				{
-					throw new RangeException($field . ' value is out of range ' . $schema['size'] . '.');
-				}
-			}
-			else if ( preg_match('/.*CHAR$/', $schema['type']) )
-			{
-				if ( strlen($value) > $schema['size'] )
-				{
-					throw new RangeException($field . ' value is out of range ' . $schema['size'] . '.');
-				}
-			}
-			else if ( $schema['type'] === 'DATE' )
-			{
-				if ( ! preg_match('/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/', $value) )
-				{
-					throw new UnexpectedValueException($field . ' value is illigal DATE format.');
-				}
-			}
-			else if ( $schema['type'] === 'DATETIME' )
-			{
-				if ( ! preg_match('/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}$/', $value) )
-				{
-					throw new UnexpectedValueException($field . ' value is illigal DATETIME format.');
+					throw new UnexpectedValueException($field . ' value is invalid!');
 				}
 			}
 			$dataSet[$field] = $this->{$field};
 		}
 		return $dataSet;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Under-scored string to camel-case
+	 * 
+	 * @access protected
+	 * @param  string $str
+	 * @return string
+	 */
+	protected function _toCamelCase($str)
+	{
+		$str = preg_replace_callback(
+								'/_([a-zA-Z])/',
+								create_function('$m', 'return strtoupper($m[1]);'),
+								$str
+							);
+		return ucfirst($str);
 	}
 	
 	
