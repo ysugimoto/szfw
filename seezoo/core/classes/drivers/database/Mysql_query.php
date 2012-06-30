@@ -76,4 +76,20 @@ class SZ_Mysql_query extends SZ_Database_driver
 		$obj->type = $type;
 		return $obj;
 	}
+	
+	
+	// --------------------------------------------------
+	
+	
+	/**
+	 * Returns Table string
+	 * 
+	 * @access public
+	 * @param  object $table
+	 * @return string
+	 */
+	public function convertTable($table)
+	{
+		return $table[0];
+	}
 }

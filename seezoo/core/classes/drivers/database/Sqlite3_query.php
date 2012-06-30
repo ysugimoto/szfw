@@ -18,7 +18,7 @@
  
 ### Will be implemented soon ###
 
-class SZ_Sqlite_query extends SZ_Database_driver
+class SZ_Sqlite3_query extends SZ_Database_driver
 {
 	
 	/**
@@ -31,7 +31,7 @@ class SZ_Sqlite_query extends SZ_Database_driver
 	 */
 	public function tableListQuery($dbname, $prefix)
 	{
-	
+		return "SELECT * FROM sqlite_master WHERE type <> 'index';";
 	}
 	
 	
@@ -47,7 +47,7 @@ class SZ_Sqlite_query extends SZ_Database_driver
 	 */
 	public function columnListQuery($table)
 	{
-	
+		return "PRAGMA table_info('" . $table . "');";
 	}
 	
 	
@@ -63,6 +63,26 @@ class SZ_Sqlite_query extends SZ_Database_driver
 	 */
 	public function convertField($field)
 	{
+		$obj = new stdClass;
+		$obj->field = $field->name;
+		$obj->key = ( $field->pk > 0 ) ? TRUE : FALSE;
+		$obj->type = strtoupper($field->type);
+		return $obj;
+	}
 	
+	
+	// --------------------------------------------------
+	
+	
+	/**
+	 * Returns Table string
+	 * 
+	 * @access public
+	 * @param  object $tables
+	 * @return string
+	 */
+	public function convertTable($table)
+	{
+		return $table[2];
 	}
 }

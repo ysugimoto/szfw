@@ -58,4 +58,18 @@ abstract class SZ_Database_driver
 	 * @return object
 	 */
 	abstract public function convertField($field);
+	
+	
+	// --------------------------------------------------
+	
+	
+	/**
+	 * Abstract
+	 * Returns Table string
+	 * 
+	 * @access public
+	 * @param  object $tables
+	 * @return string
+	 */
+	abstract public function convertTable($tables);
 }

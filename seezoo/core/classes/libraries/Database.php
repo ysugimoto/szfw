@@ -119,12 +119,7 @@ Class SZ_Database extends SZ_Driver
 		$this->_group = $group;
 		$this->_initialize($group);
 		$this->_resultClass = $this->_loadDriver('database', 'Database_result', FALSE, FALSE);
-		
-		// Detect SQL Driver
-		$driver = ( substr($this->_info['driver'], 0, 6) === 'sqlite' )
-		           ? 'sqlite'
-		           : $this->_info['driver'];
-		$this->_loadDriver('database', ucfirst($driver) . '_query');
+		$this->_loadDriver('database', ucfirst($this->_info['driver']) . '_query');
 		
 		$this->connect();
 	}
@@ -197,7 +192,9 @@ Class SZ_Database extends SZ_Driver
 	 */
 	public function prefix()
 	{
-		return $this->_info['table_prefix'];
+		return ( isset($this->_info['table_prefix']) )
+		         ? $this->_info['table_prefix']
+		         : '';
 	}
 	
 	
@@ -503,9 +500,9 @@ Class SZ_Database extends SZ_Driver
 			$sql   = $this->driver->tableListQuery($this->_info['dbname'], $this->prefix());
 			$query = $this->_connectID->query($sql);
 			$this->_tablesCache = array();
-			foreach ( $query->fetchAll(PDO::FETCH_COLUMN) as $tables )
+			foreach ( $query->fetchAll(PDO::FETCH_BOTH) as $tables )
 			{
-				$this->_tablesCache[] = $tables;
+				$this->_tablesCache[] = $this->driver->convertTable($tables);
 			}
 		}
 		
@@ -728,7 +725,7 @@ Class SZ_Database extends SZ_Driver
 		}
 		$dsn = $this->_dsn[$this->_info['driver']];
 		
-		if ( $this->_info['host'] === 'localhost' )
+		if ( isset($this->_info['host']) && $this->_info['host'] === 'localhost' )
 		{
 			$this->_info['host'] = '127.0.0.1';
 		}
