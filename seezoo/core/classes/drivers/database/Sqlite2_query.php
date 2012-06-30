@@ -8,16 +8,17 @@
  * A simple MVC/action Framework on PHP 5.1.0 or newer
  * 
  * 
- * SQLite3 database driver fixes SQL builder
+ * SQLite2 database driver fixes SQL builder
  * 
  * @package  Seezoo-Framework
  * @category drivers
- * @author   Yoshiaki Sugimoto <neo.yoshiaki.sugimoto@gmail.com>
- * @license  MIT Licence
  * 
  * ====================================================================
  */
-class SZ_Sqlite3_query extends SZ_Database_driver
+ 
+### Will be implemented soon ###
+
+class SZ_Sqlite2_query extends SZ_Database_driver
 {
 	
 	/**
@@ -30,7 +31,7 @@ class SZ_Sqlite3_query extends SZ_Database_driver
 	 */
 	public function tableListQuery($dbname, $prefix)
 	{
-		return "SELECT * FROM sqlite_master WHERE type <> 'index';";
+		
 	}
 	
 	
@@ -46,7 +47,7 @@ class SZ_Sqlite3_query extends SZ_Database_driver
 	 */
 	public function columnListQuery($table)
 	{
-		return "PRAGMA table_info('" . $table . "');";
+	
 	}
 	
 	
@@ -62,11 +63,7 @@ class SZ_Sqlite3_query extends SZ_Database_driver
 	 */
 	public function convertField($field)
 	{
-		$obj = new stdClass;
-		$obj->field = $field->name;
-		$obj->key = ( $field->pk > 0 ) ? TRUE : FALSE;
-		$obj->type = strtoupper($field->type);
-		return $obj;
+	
 	}
 	
 	
@@ -82,6 +79,6 @@ class SZ_Sqlite3_query extends SZ_Database_driver
 	 */
 	public function convertTable($table)
 	{
-		return $table[2];
+	
 	}
 }
