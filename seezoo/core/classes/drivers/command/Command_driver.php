@@ -95,7 +95,7 @@ END;
 	 */
 	public function getActiveRecordTemplate($table, $fields)
 	{
-		$class = ucfirst($table);
+		$class = $this->toCamelCase($table);
 		$template = <<<END
 <?php if ( ! defined('SZ_EXEC') ) exit('access_denied');
 
@@ -119,7 +119,7 @@ END;
 		{
 			$line = "\t\t'{$field->field}' => array('type' => '{$field->type}')";
 			$schemas[] = $line;
-			$f = $this->_toCamelCase($field->field);
+			$f = $this->toCamelCase($field->field);
 			$methods[] = "\tpublic function isValid{$f}(\$value) {\n\t\treturn TRUE;\n\t}\n";
 			if ( $field->key === TRUE )
 			{
@@ -135,7 +135,7 @@ END;
 	}
 	
 	
-	protected function _toCamelCase($field)
+	public function toCamelCase($field)
 	{
 		$field = preg_replace_callback(
 								'/_([a-zA-Z])/',

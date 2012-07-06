@@ -110,7 +110,8 @@ Class SZ_Database extends SZ_Driver
 		'postgres' => 'pgsql:host=%s;port=%s;dbname=%s',
 		'sqlite2'  => 'sqlite2:%s',
 		'sqlite3'  => 'sqlite:%s',
-		'odbc'     => 'odbc:Driver=%s;HOSTNAME=%s;PORT=%d;DATABASE=%s;UID=%s;PWD=%s'
+		'odbc'     => 'odbc:Driver=%s;HOSTNAME=%s;PORT=%d;DATABASE=%s;UID=%s;PWD=%s',
+		'firebird' => 'firebird:dbname=%s:%s'
 	);
 
 	public function __construct($group)
@@ -754,6 +755,9 @@ Class SZ_Database extends SZ_Driver
 				               $this->_info['username'],
 				               $this->_info['password']);
 				$dsn_only = TRUE;
+			case 'firebird':
+				$dsn = sprintf($dsn, $this->_info['host'], $this->_info['path']);
+				break;
 			default:
 				throw new PDOException('Undefiend or non-support database driver selected.', SZ_ERROR_CODE_DATABASE);
 				return FALSE;

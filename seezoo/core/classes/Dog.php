@@ -299,7 +299,7 @@ class SZ_Dog extends SZ_Driver
 		{
 			$fields    = $db->fields($table);
 			$schemas[] = array(
-				APPPATH . 'classes/activerecords/' . ucfirst($table) . '.php',
+				APPPATH . 'classes/activerecords/' . $this->driver->toCamelCase($table) . '.php',
 				$this->driver->getActiveRecordTemplate($table, $fields),
 				ucfirst($table) . 'ActiveRecord'
 			);

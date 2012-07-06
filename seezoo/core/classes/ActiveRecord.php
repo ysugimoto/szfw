@@ -61,7 +61,7 @@ class SZ_ActiveRecord
 	 */
 	public static function finder($arName)
 	{
-		$arName = ucfirst($arName);
+		$arName = $this->_toCamelCase($arName);
 		if ( ! isset(self::$_instances[$arName]) )
 		{
 			self::$_instances[$arName] = Seezoo::$Importer->activeRecord($arName);
@@ -79,7 +79,7 @@ class SZ_ActiveRecord
 	 */
 	public static function create($arName)
 	{
-		$arName = ucfirst($arName);
+		$arName = $this->_toCamelCase($arName);
 		if ( ! isset(self::$_instances[$arName]) )
 		{
 			self::$_instances[$arName] = Seezoo::$Importer->activeRecord($arName);
