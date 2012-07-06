@@ -134,7 +134,9 @@ class SZ_Router
 				$this->detectDir = 'scripts/processes/';
 				break;
 			default:
-				$this->detectDir = 'classes/controllers/';
+				$this->detectDir = ( is_ajax_request() )
+				                    ? 'classes/ajax/'
+				                    : 'classes/controllers/';
 				break;
 		}
 	}
@@ -295,12 +297,6 @@ class SZ_Router
 			{
 				// request method suffix
 				$methodSuffix = ( $this->requestMethod === 'POST' ) ? '_post' : '';
-				
-				// Check ajax-request prefixed method exists and truely ajax-request
-				if ( preg_match('/\Aajax_.+/', $this->_method) && ! is_ajax_request() )
-				{
-					return FALSE;
-				}
 				
 				$callMethod = '';
 				// First, call method-suffix ( *_post method ) if exists
