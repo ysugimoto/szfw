@@ -7,6 +7,9 @@ seezoo/etc/caches/smarty/*
 seezoo/etc/caches/twig/*
 seezoo/etc/logs/*
 
+#ignore packages
+seezoo/packages/*
+
 # ignore IDE project files
 .project
 .settings

@@ -105,5 +105,6 @@ class SZ_Driver
 		{
 			return call_user_func_array(array($this->driver, $name), $arguments);
 		}
+		throw new BadMethodCallException('Undefined method called ' . get_class($this) . '::' . $name . '.');
 	}
 }

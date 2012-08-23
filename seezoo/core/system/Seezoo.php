@@ -549,7 +549,20 @@ class Seezoo
 		// Only once!
 		self::$startUpExecuted = TRUE;
 		
+		foreach ( self::getPackage() as $pkg )
+		{
+			self::initPackage($pkg);
+		}
+		
 		Event::fire('startup');
+	}
+
+	public static function initPackage($pkg)
+	{
+		if ( file_exists(PKGPATH . $pkg . '/init.php') )
+		{
+			require(PKGPATH . $pkg . '/init.php');
+		}
 	}
 }
 

@@ -34,6 +34,9 @@ class SZ_Pict extends SZ_Driver
 	protected static $_textClass;
 	
 	
+	/**
+	 * Constructor
+	 */
 	public function __construct()
 	{
 		$env = Seezoo::getENV();
@@ -165,7 +168,9 @@ class SZ_Pict extends SZ_Driver
 	{
 		if ( ! self::$_textClass )
 		{
+			$tmp = $this->driver;
 			self::$_textClass = $this->_loadDriver('pict', 'Text_pict', FALSE, FALSE);
+			$this->driver = $tmp;
 			$this->driver->textClass = self::$_textClass;
 		}
 

@@ -27,7 +27,7 @@ define('SZPATH',     dirname(__FILE__) . '/');
 
 // Autoloader register
 require_once(SZPATH . 'core/system/Autoloader.php');
-Autoloader::register();
+Autoloader::init();
 
 // System startup!
 Seezoo::startup();

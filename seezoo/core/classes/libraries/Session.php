@@ -43,6 +43,63 @@ class SZ_Session extends SZ_Driver
 	
 	
 	/**
+	 * Generate session token
+	 * 
+	 * @access public
+	 * @param  string $tokenName
+	 * @param  bool   $setFlash
+	 * @return string
+	 */
+	public function generateToken($tokenName = '', $setFlash = FALSE)
+	{
+		if ( empty($tokenName) )
+		{
+			throw new InvalidArgumentException('Token name must not be empty!');
+		}
+		
+		$token = sha1(uniqid(mt_rand(), TRUE));
+		if ( $setFlash )
+		{
+			$this->setFlash($tokenName, $token);
+		}
+		else
+		{
+			$this->set($tokenName, $token);
+		}
+		return $token;
+	}
+	
+	
+	// --------------------------------------------------
+	
+	
+	/**
+	 * Check token data
+	 * 
+	 * @access public
+	 * @param  string $tokenName
+	 * @param  string $token
+	 * @param  bool   $fromFlash
+	 * @return bool
+	 */
+	public function checkToken($tokenName = '', $token = '', $fromFlash = FALSE)
+	{
+		$sess = ( $fromFlash )
+		          ? $this->driver->getFlash($tokenName)
+		          : $this->driver->get($tokenName);
+		
+		if ( ! $token || $token !== $sess )
+		{
+			return FALSE;
+		}
+		return TRUE;
+	}
+	
+	
+	// --------------------------------------------------
+	
+	
+	/**
 	 * set session data
 	 * 
 	 * @access public

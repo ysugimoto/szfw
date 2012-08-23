@@ -260,9 +260,9 @@ class SZ_Gd_pict extends SZ_Pict_driver
 		
 		$this->preprocess();
 		$matrix = array(
-						array( 0, -1, 0),
-						array(-1, 5, -1),
-						array( 0, -1, 0)
+						array( 0, -1,  0),
+						array(-1,  5, -1),
+						array( 0, -1,  0)
 					);
 		if ( ! imageconvolution($this->source_handle, $matrix, 1, 1) )
 		{
@@ -317,8 +317,8 @@ class SZ_Gd_pict extends SZ_Pict_driver
 									$params['y'],
 									0,
 									0,
-									$imgData->width,
-									$imgData->height,
+									$this->dat->width,
+									$this->dat->height,
 									$imgData->width,
 									$imgData->height
 								) )
