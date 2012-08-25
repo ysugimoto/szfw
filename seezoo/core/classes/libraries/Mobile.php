@@ -69,7 +69,7 @@ class SZ_Mobile
 	/**
 	 * Constructor
 	 */
-	private function __construct()
+	public function __construct()
 	{
 		if ( ! file_exists(APPPATH . 'config/mobile.php') )
 		{
@@ -396,7 +396,7 @@ class SZ_Mobile
 	 */
 	private function _detect_mobile()
 	{
-		if ( ! MobileConfig::is_judge_from_ip() )
+		if ( ! $this->_config['ip_detection'] )
 		{
 			$this->_detect_from_useragent();
 			return;

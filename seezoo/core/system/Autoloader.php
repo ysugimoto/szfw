@@ -49,6 +49,7 @@ class Autoloader
 		require_once($path . '/common.php');
 		
 		spl_autoload_register(array('Autoloader', '_initLoad'));
+		spl_autoload_register(array('Autoloader', 'load'));
 		spl_autoload_register(array('Event', 'loadEventDispatcher'));
 	}
 		

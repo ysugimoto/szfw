@@ -617,7 +617,7 @@ class SZ_Importer
 				}
 				else
 				{
-					throw new Exception('Undefined ' . substr($destDir, -1, 1) . ':' . $class);
+					throw new Exception('Undefined ' . substr($destDir, 0, -1) . ':' . $class);
 					return FALSE;
 				}
 			}

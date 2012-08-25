@@ -61,7 +61,14 @@ class SZ_ActiveRecord
 	 */
 	public static function finder($arName)
 	{
-		$arName = $this->_toCamelCase($arName);
+		// inline to camel case
+		$arName = preg_replace_callback(
+		           '/_([a-zA-Z])/',
+		           create_function('$m', 'return strtoupper($m[1]);'),
+		           $arName
+		          );
+		$arName = ucfirst($arName);
+		
 		if ( ! isset(self::$_instances[$arName]) )
 		{
 			self::$_instances[$arName] = Seezoo::$Importer->activeRecord($arName);
