@@ -93,7 +93,7 @@ class SZ_CookieHelper
 			$cookie = array(
 				'name'   => $name,
 				'value'  => $value,
-				'expire' => $lifetime,
+				'expire' => $expire,
 				'domain' => $domain,
 				'path'   => $path
 			);
