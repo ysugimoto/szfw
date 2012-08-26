@@ -243,6 +243,21 @@ class SZ_Router
 	}
 	
 	
+	// ---------------------------------------------------------------o
+
+
+	/**
+	 * Boot Lead layer class
+	 *
+	 * @access public
+	 * @return object SZ_Lead
+	 */
+	public function bootLead()
+	{
+		return Seezoo::$Importer->lead($this->_directory . $this->_class);
+	}
+
+
 	// ---------------------------------------------------------------
 	
 	
@@ -443,7 +458,7 @@ class SZ_Router
 					if ( count($segments) === 0 )
 					{
 						$this->_package   = $apppath;
-						$this->_direcotry = '';
+						$this->_directory = '';
 						$this->_class     = $this->defaultController;
 						$this->_method    = 'index';
 						$this->_arguments = array();

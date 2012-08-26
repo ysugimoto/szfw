@@ -337,8 +337,8 @@ class SZ_Importer
 		if ( strpos($lead, '/') !== FALSE )
 		{
 			$exp   = explode('/', $lead);
-			$Class = $lead . 'Lead';
 			$lead  = lcfirst(array_pop($exp));
+			$Class = $lead . 'Lead';
 			$dir   = 'classes/leads/' . trim(implode('/', $exp), '/') . '/';
 		}
 		else

@@ -72,7 +72,7 @@ class SZ_Breeder extends Process
 	{
 		parent::__construct();
 		$this->_execAutoImport();
-		$this->_attachLead();
+		$this->lead = $this->router->bootLead();
 	}
 	
 	
@@ -142,22 +142,6 @@ class SZ_Breeder extends Process
 		{
 			$this->import->helper($autoloadHelper);
 		}
-	}
-	
-	
-	// ---------------------------------------------------------------
-	
-	
-	/**
-	 * Load and attach dogs-lead
-	 * 
-	 * @access protected
-	 * @return void
-	 */
-	protected function _attachLead()
-	{
-		$leadName = str_replace($this->env->getConfig('controller_suffix'), '', get_class($this));
-		$this->lead = Seezoo::$Importer->lead($leadName);
 	}
 }
 	
