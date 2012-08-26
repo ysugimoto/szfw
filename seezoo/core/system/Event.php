@@ -34,6 +34,13 @@ class Event
 	protected static $isProcess = FALSE;
 	
 	
+	/**
+	 * Instanciated class stack
+	 * @var array
+	 */
+	protected static $_instances = array();
+	
+	
 	// ---------------------------------------------------------------
 	
 	
@@ -234,7 +241,15 @@ class Event
 			list($class, $method) = $callback;
 			if ( ! is_object($class) )
 			{
-				$obj = new $class();
+				if ( isset(self::$_instances[$class]) )
+				{
+					$obj = self::$_instances[$class];
+				}
+				else
+				{
+					$obj = new $class();
+					self::$_instances[$class] = $obj;
+				}
 			}
 			else
 			{

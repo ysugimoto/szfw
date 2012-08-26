@@ -86,7 +86,14 @@ class SZ_ActiveRecord
 	 */
 	public static function create($arName)
 	{
-		$arName = $this->_toCamelCase($arName);
+		// inline to camel case
+		$arName = preg_replace_callback(
+		           '/_([a-zA-Z])/',
+		           create_function('$m', 'return strtoupper($m[1]);'),
+		           $arName
+		          );
+		$arName = ucfirst($arName);
+		
 		if ( ! isset(self::$_instances[$arName]) )
 		{
 			self::$_instances[$arName] = Seezoo::$Importer->activeRecord($arName);
@@ -450,13 +457,11 @@ class SZ_ActiveRecord
 		$columns      = array_map(array($db, 'prepColumn'), $columns);
 		$selectColumn = ( count($columns) > 0 ) ? implode(', ', $columns) : '*';
 		$bindData     = array();
-		
-		$sql =
-				'SELECT '
-				. $selectColumn . ' '
-				.'FROM '
-				. $db->prefix() . $this->_table . ' ';
-				
+		$prefix       = $db->prefix();
+		$table        = ( $prefix !== '' )
+		                  ? $prefix . preg_replace('/^' . preg_quote($prefix) . '/', '', $this->table)
+		                  : $this->table;
+		$sql          = 'SELECT ' . $selectColumn . ' FROM '. $table . ' ';
 		if ( count($conditions) > 0 )
 		{
 			$where = array();
