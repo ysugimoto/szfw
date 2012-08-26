@@ -346,7 +346,7 @@ abstract class SZ_Session_driver
 		$this->_sessionID = $authData['sessionID'];
 		
 		// Session expiration check.
-		if ( $authData['lastActivity'] + $this->env->getConfig('session_lifetime') < $this->_time )
+		if ( $authData['lastActivity'] + $this->_sessionLifetime < $this->_time )
 		{
 			$this->_sessionDestroy();
 			return FALSE;
@@ -362,7 +362,7 @@ abstract class SZ_Session_driver
 		
 		// Session matching User-Agent check.
 		if ( $this->env->getConfig('session_match_useragent') === TRUE
-		    && $this->req->server('HTTP_USER_AGENT') !== $authData['userAgent'] )
+		    && strpos($this->req->server('HTTP_USER_AGENT'), $authData['userAgent']) !== 0 )
 		{
 			$this->_sessionDestroy();
 			return FALSE;
