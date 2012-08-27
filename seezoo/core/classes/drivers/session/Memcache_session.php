@@ -150,7 +150,7 @@ class SZ_Memcache_session extends SZ_Session_driver
 		// create auth info data
 		$authData = array(
 			'session_id'    => $sessid,
-			'ip_address'    => $this->req->server('REMOTE_ADDR'),
+			'ip_address'    => $this->req->ipAddress(),
 			'user_agent'    => $this->req->server('HTTP_USER_AGENT'),
 			'last_activity' => time(),
 			'user_data'     => ''

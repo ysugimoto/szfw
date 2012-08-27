@@ -70,7 +70,7 @@ class SZ_Cookie_session extends SZ_Session_driver
 		// create auth info data
 		$this->_authData = array(
 			'sessionID'    => $sessid,
-			'ipAddress'    => $this->req->server('REMOTE_ADDR'),
+			'ipAddress'    => $this->req->ipAddress(),
 			'userAgent'    => $this->req->server('HTTP_USER_AGENT'),
 			'lastActivity' => time()
 		);

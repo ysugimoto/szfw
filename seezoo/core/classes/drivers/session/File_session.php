@@ -87,7 +87,7 @@ class SZ_File_session extends SZ_Session_driver
 		// create auth info data
 		$authData = array(
 			'sessionID'    => $sessid,
-			'ipAddress'    => $this->req->server('REMOTE_ADDR'),
+			'ipAddress'    => $this->req->ipAddress(),
 			'userAgent'    => $this->req->server('HTTP_USER_AGENT'),
 			'lastActivity' => $this->_time
 		);
