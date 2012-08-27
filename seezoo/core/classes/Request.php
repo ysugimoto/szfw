@@ -90,12 +90,18 @@ class SZ_Request
 	protected $_accessPathInfo;
 	
 	
-	
 	/**
 	 * Your server encoding
 	 * @var string
 	 */
 	protected $_serverEncoding;
+	
+	
+	/**
+	 * Stack accessed IP address
+	 * @var string
+	 */
+	protected $_ip;
 	
 	
 	public function __construct()
@@ -327,6 +333,67 @@ class SZ_Request
 	public function getAccessPathInfo()
 	{
 		return $this->_accessPathInfo;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Get client IP address
+	 * 
+	 * @access public
+	 * @return string
+	 */
+	public function ipAddress()
+	{
+		if ( ! $this->_ip )
+		{
+			$remote        = $this->server('REMOTE_ADDR');
+			$trusted       = (array)$this->env->getConfig('trusted_proxys');
+			$ip = $default = '0.0.0.0';
+			
+			if ( FALSE !== ( $XFF = $this->server('X_FORWARDED_FOR'))
+			     && $remote
+			     && in_array($remote, $trusted) )
+			{
+				$exp = explode(',', $XFF);
+				$ip = reset($exp);
+			}
+			else if ( FALSE !== ( $HCI = $this->segment('HTTP_CLIENT_IP'))
+			     && $remote
+				 && in_array($remote, $trusted) )
+			{
+				$exp = explode(',', $HCI);
+				$ip = reset($exp);
+			}
+			else if ( $remote )
+			{
+				$ip = $remote;
+			}
+			
+			// validate
+			if ( function_exists('filter_var') )
+			{
+				if ( ! filter_var(
+				             $ip,
+				             FILTER_VALIDATE_IP,
+				             FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
+				)
+				{
+					$ip = $default;
+				}
+			}
+			else if ( function_exists('inet_pton') )
+			{
+				if ( FALSE === inet_pton($ip) )
+				{
+					$ip = $default;
+				}
+			}
+			$this->_ip = $ip;
+		}
+		return $this->_ip;
 	}
 	
 	
