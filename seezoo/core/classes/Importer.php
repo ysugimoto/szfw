@@ -57,8 +57,17 @@ class SZ_Importer
 	 * @param  string $group
 	 * @return Database $db
 	 */
-	public function database($group = 'default')
+	public function database($group = '')
 	{
+		if ( $group === '' )
+		{
+			$env   = Seezoo::getENV();
+			$group = $env->getConfig('default_database_connection_handle');
+			if ( ! $group )
+			{
+				$group = 'default';
+			} 
+		}
 		$db = $this->loadDatabase($group);
 		$this->_attachModule('db', $db);
 		

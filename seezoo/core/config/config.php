@@ -114,6 +114,17 @@ $config['method_prefix']     = 'act_';
 
 /*
  * --------------------------------------------------
+ * Default database connection handle
+ * 
+ * Handle set by default to use to connect to Database
+ * --------------------------------------------------
+ */
+ 
+ $config['default_database_connection_handle'] = 'default';
+
+ 
+/*
+ * --------------------------------------------------
  * Autoload
  * 
  * system loaded automatically
