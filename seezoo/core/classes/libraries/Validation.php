@@ -226,7 +226,7 @@ class SZ_Validation extends SZ_Driver
 		{
 			if ( ! isset($field->name) || ! isset($field->label) || ! isset($field->rules) )
 			{
-				throw LogicException('Imported rules XML structure is invalid!');
+				throw new LogicException('Imported rules XML structure is invalid!');
 			}
 			$this->field((string)$field->name, (string)$field->label)
 			     ->setRules((string)$field->rules);
@@ -461,8 +461,11 @@ class SZ_Validation extends SZ_Driver
 				// Does rule method really exisits?
 				if ( ! method_exists($class, $rule) )
 				{
-					throw new Exception('Undefined ' . $rule . ' rules method in ' . get_class($class) . '!');
-					return FALSE;
+					if ( ! isset($class->lead) || ! method_exists($class->lead, $rule) )
+					{
+						throw new Exception('Undefined ' . $rule . ' rules method in ' . get_class($class) . '!');
+					}
+					$class = $class->lead;
 				}
 				
 				// loop of field value

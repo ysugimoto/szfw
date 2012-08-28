@@ -37,7 +37,11 @@ class SZ_Kennel
 	
 	public function __get($name)
 	{
-		if ( preg_match($this->modelSuffixRegex, $name) )
+		if ( $name === 'db' )
+		{
+			return Seezoo::$Importer->database();
+		}
+		else if ( preg_match($this->modelSuffixRegex, $name) )
 		{
 			return Seezoo::$Importer->model($name);
 		}
