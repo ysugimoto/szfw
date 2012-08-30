@@ -43,42 +43,14 @@ class SZ_Phptal_view extends SZ_View_driver
 	 * abstruct implements
 	 * @see seezoo/core/drivers/view/SZ_View_driver::render()
 	 */
-	public function render($path, $vars, $return)
+	public function render($viewFile, $vars, $return)
 	{
 		$this->_stackVars =& $vars;
 		
-		$viewLoaded = FALSE;
 		$this->bufferStart();
 		
-		foreach ($this->_packages as $pkg )
-		{
-			if ( file_exists(PKGPATH . $pkg . 'views/' . $path . $this->_templateExtension) )
-			{
-				$TAL = new PHPTAL(PKGPATH . $pkg . 'views/' . $path . $this->_templateExtension);
-				$viewLoaded = TRUE;
-				break;
-			}
-		}
-		
-		if ( ! $viewLoaded )
-		{
-			if ( file_exists(EXTPATH . 'views/' . $path . '.php') )
-			{
-				$TAL = new PHPTAL(EXTPATH . 'views/' . $path . '.php');
-			}
-			else if ( file_exists(APPPATH . 'views/' . $path . $this->_templateExtension) )
-			{
-				$TAL = new PHPTAL(APPPATH . 'views/' . $path . $this->_templateExtension);
-			}
-			else
-			{
-				@ob_end_clean();
-				throw new Exception('Unable to load requested file:' . $path . $this->_templateExtension, 500);
-				return;
-			}
-		}
-		
 		// PHPTAL
+		$TAL = new PHPTAL($viewFile);
 		// assign value
 		foreach ( $vars as $key => $val )
 		{
@@ -96,6 +68,9 @@ class SZ_Phptal_view extends SZ_View_driver
 		
 		$this->_stackVars = array();
 		
+		// destroy GC
+		unset($TAL);
+		
 		if ( $return === TRUE )
 		{
 			return $this->getBufferEnd();
@@ -109,9 +84,6 @@ class SZ_Phptal_view extends SZ_View_driver
 		{
 			$this->getBufferEnd(TRUE);
 		}
-		
-		// destroy GC
-		unset($TAL);
 	}
 	
 	

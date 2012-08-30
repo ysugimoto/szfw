@@ -42,11 +42,23 @@ class SZ_View extends SZ_Driver
 	protected $_templateEngine;
 	
 	
+	// engine extensions:
+	// ========================================================
+	// | engine name | description                     |
+	//   ----------------------------------------------------- 
+	// | default     | .php                            |
+	// | smarty      | you can choose, default is .tpl |
+	// | phptal      | you can choose, default is .php |
+	// | twig        | you can choose, default is .html|
+	//=========================================================
+	protected $_templateExtension = '.php';
+	
+	
 	/**
 	 * layout view name
 	 * @var string
 	 */
-	protected $_layout      = FALSE;
+	protected $_layout = FALSE;
 	
 	
 	/**
@@ -228,8 +240,37 @@ class SZ_View extends SZ_Driver
 			$vars = array_map('prep_str', $vars);
 		}
 		
+		$viewFile = FALSE;
+		
+		// Detect include file
+		foreach ( Seezoo::getPackage() as $pkg )
+		{
+			if ( file_exists(PKGPATH . $pkg . '/views/' . $path . $this->_templateExtension) )
+			{
+				$viewFile = PKGPATH . $pkg . '/views/' . $path . $this->_templateExtension;
+				break;
+			}
+		}
+		
+		if ( ! $viewFile )
+		{
+			if ( file_exists(EXTPATH . 'views/' . $path . $this->_templateExtension) )
+			{
+				$viewFile = EXTPATH . 'views/' . $path . $this->_templateExtension;
+			}
+			else if ( file_exists(APPPATH . 'views/' . $path . '.php') )
+			{
+				$viewFile = APPPATH . 'views/' . $path . $this->_templateExtension;
+			}
+			else
+			{
+				throw new Exception('Unable to load requested file:' . $path . '.php');
+				return;
+			}
+		}
+		
 		// do render with driver
-		return $this->driver->render($path, $vars, $return);
+		return $this->driver->render($viewFile, $vars, $return);
 	}
 	
 	
@@ -319,7 +360,22 @@ class SZ_View extends SZ_Driver
 				break;
 		}
 		$this->_loadDriver('view', ucfirst($this->_templateEngine) . '_view');
-		$this->driver->setExtension($extension);
+		$this->setExtension($extension);
+	}
+	
+	
+	// --------------------------------------------------
+	
+	
+	/**
+	 * set viewfile extension
+	 * 
+	 * @access public
+	 * @param  string $ext
+	 */
+	public function setExtension($ext)
+	{
+		$this->_templateExtension = $ext;
 	}
 	
 	

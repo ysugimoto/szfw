@@ -52,7 +52,7 @@ class SZ_Smarty_view extends SZ_View_driver
 	 * abstruct implements
 	 * @see seezoo/core/drivers/view/SZ_View_driver::render()
 	 */
-	public function render($path, $vars, $return)
+	public function render($viewFile, $vars, $return)
 	{
 		$this->_stackVars =& $vars;
 		
@@ -67,42 +67,14 @@ class SZ_Smarty_view extends SZ_View_driver
 			$Smarty->assign($key, $val);
 		}
 		
-		$viewLoaded = FALSE;
 		$this->bufferStart();
-		
-		// Does packaged viewfile exists?
-		foreach ($this->_packages as $pkg )
-		{
-			if ( file_exists(PKGPATH . $pkg . 'views/' . $path . $this->_templateExtension) )
-			{
-				$Smarty->template_dir = PKGPATH . $pkg . 'views/';
-				$Smarty->display($path . $this->_templateExtension);
-				$viewLoaded = TRUE;
-				break;
-			}
-		}
-		
-		if ( ! $viewLoaded )
-		{
-			if ( file_exists(EXTPATH . 'views/' . $path . $this->_templateExtension) )
-			{
-				$Smarty->template_dir = APPPATH . 'views/';
-				$Smarty->display($path . $this->_templateExtension);
-			}
-			else if ( file_exists(APPPATH . 'views/' . $path . $this->_templateExtension) )
-			{
-				$Smarty->template_dir = APPPATH . 'views/';
-				$Smarty->display($path . $this->_templateExtension);
-			}
-			else
-			{
-				@ob_end_clean();
-				throw new Exception('Unable to load requested file:' . $path . $this->_templateExtension);
-				return;
-			}
-		}
+		$Smarty->template_dir = dirname($viewFile) . '/';
+		$Smarty->display(basename($vieewFile));
 		
 		$this->_stackVars = array();
+			
+		// destroy GC
+		unset($Smarty);
 		
 		if ( $return === TRUE )
 		{
@@ -117,9 +89,6 @@ class SZ_Smarty_view extends SZ_View_driver
 		{
 			$this->getBufferEnd(TRUE);
 		}
-		
-		// destroy GC
-		unset($Smarty);
 	}
 	
 	

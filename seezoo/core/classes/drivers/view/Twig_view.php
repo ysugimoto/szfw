@@ -45,45 +45,17 @@ class SZ_Twig_view extends SZ_View_driver
 	 * abstruct implements
 	 * @see seezoo/core/drivers/view/SZ_View_driver::render()
 	 */
-	public function render($path, $vars, $return)
+	public function render($viewFile, $vars, $return)
 	{
 		$this->_stackVars =& $vars;
 		
-		$viewLoaded = FALSE;
 		$this->bufferStart();
 		
-		foreach ($this->_packages as $pkg )
-		{
-			if ( file_exists(PKGPATH . $pkg . 'views/' . $path . $this->_templateExtension) )
-			{
-				$loader = new Twig_Loader_Filesystem(PKGPATH . $pkg . 'views/');
-				$viewLoaded = $path . $this->_templateExtension;
-				break;
-			}
-		}
-		
-		if ( ! $viewLoaded )
-		{
-			if ( file_exists(EXTPATH . 'views/' . $path . $this->_templateExtension) )
-			{
-				$loader = new Twig_Loader_Filesystem(EXTPATH . 'views/');
-				
-			}
-			if ( file_exists(APPPATH . 'views/' . $path . $this->_templateExtension) )
-			{
-				$loader = new Twig_Loader_Filesystem(APPPATH . 'views/');
-			}
-			else
-			{
-				@ob_end_clean();
-				throw new Exception('Unable to load requested file:' . $path . $this->_templateExtension, 500);
-				return;
-			}
-		}
-		
+		// Twig
+		$loader  = new Twig_Loader_Filesystem(dirname($viewFile) . '/');
 		$twigEnv = new Twig_Environment($loader, $this->options);
-		$twig    = $twigEnv->loadTemplate($path . $this->_templateExtension);
-		
+		$twig    = $twigEnv->loadTemplate(basename($viewFile));
+
 		// TODO : implement Twig extension enables.
 		
 		// Twig execute!
@@ -98,6 +70,11 @@ class SZ_Twig_view extends SZ_View_driver
 		
 		$this->_stackVars = array();
 		
+		// destroy GC
+		unset($loader);
+		unset($twigEnv);
+		unset($twig);
+		
 		if ( $return === TRUE )
 		{
 			return $this->getBufferEnd();
@@ -111,11 +88,6 @@ class SZ_Twig_view extends SZ_View_driver
 		{
 			$this->getBufferEnd(TRUE);
 		}
-		
-		// destroy GC
-		unset($loader);
-		unset($twigEnv);
-		unset($twig);
 	}
 	
 	

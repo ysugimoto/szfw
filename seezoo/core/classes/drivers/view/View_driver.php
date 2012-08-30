@@ -40,17 +40,6 @@ abstract class SZ_View_driver
 	 */
 	protected $_buffer;
 	
-	// engine extensions:
-	// ========================================================
-	// | engine name | description                     |
-	//   ----------------------------------------------------- 
-	// | default     | .php                            |
-	// | smarty      | you can choose, default is .tpl |
-	// | phptal      | you can choose, default is .php |
-	// | twig        | you can choose, default is .html|
-	//=========================================================
-	protected $_templateExtension = '.php';
-	
 	
 	/**
 	 * Temporary stacked view parameters
@@ -75,7 +64,6 @@ abstract class SZ_View_driver
 	{
 		$this->env = Seezoo::getENV();
 		
-		$this->_packages     = Seezoo::$config['package'];
 		$this->_initBufLevel = ob_get_level();
 		$this->filter        = Seezoo::$Importer->classes('Filter');
 	}
@@ -186,21 +174,6 @@ abstract class SZ_View_driver
 	public function replaceBuffer($buf)
 	{
 		$this->_buffer = $buf;
-	}
-	
-	
-	// --------------------------------------------------
-	
-	
-	/**
-	 * set viewfile extension
-	 * 
-	 * @access public
-	 * @param  string $ext
-	 */
-	public function setExtension($ext)
-	{
-		$this->_templateExtension = $ext;
 	}
 }
 

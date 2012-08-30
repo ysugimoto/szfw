@@ -33,7 +33,7 @@ class SZ_Default_view extends SZ_View_driver
 	 * abstruct implements
 	 * @see seezoo/core/drivers/view/SZ_View_driver::render()
 	 */
-	public function render($path, $vars, $return)
+	public function render($viewFile, $vars, $return)
 	{
 		$this->_stackVars =& $vars;
 		
@@ -42,38 +42,11 @@ class SZ_Default_view extends SZ_View_driver
 			$$key = $val;
 		}
 		
-		$viewLoaded = FALSE;
 		$this->bufferStart();
-		
-		foreach ($this->_packages as $pkg )
-		{
-			if ( file_exists(PKGPATH . $pkg . '/views/' . $path . '.php') )
-			{
-				require(PKGPATH . $pkg . '/views/' . $path . '.php');
-				$viewLoaded = TRUE;
-				break;
-			}
-		}
-		
-		if ( ! $viewLoaded )
-		{
-			if ( file_exists(EXTPATH . 'views/' . $path . '.php') )
-			{
-				require(EXTPATH . 'views/' . $path . '.php');
-			}
-			else if ( file_exists(APPPATH . 'views/' . $path . '.php') )
-			{
-				require(APPPATH . 'views/' . $path . '.php');
-			}
-			else
-			{
-				@ob_end_clean();
-				throw new Exception('Unable to load requested file:' . $path . '.php');
-				return;
-			}
-		}
+		require($viewFile);
 		
 		$this->_stackVars = array();
+		
 		if ( $return === TRUE )
 		{
 			return $this->getBufferEnd();
