@@ -68,8 +68,6 @@ class SZ_Twig_view extends SZ_View_driver
 			throw $e;
 		}
 		
-		$this->_stackVars = array();
-		
 		// destroy GC
 		unset($loader);
 		unset($twigEnv);

@@ -70,8 +70,6 @@ class SZ_Smarty_view extends SZ_View_driver
 		$this->bufferStart();
 		$Smarty->template_dir = dirname($viewFile) . '/';
 		$Smarty->display(basename($vieewFile));
-		
-		$this->_stackVars = array();
 			
 		// destroy GC
 		unset($Smarty);

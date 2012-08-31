@@ -241,6 +241,7 @@ class SZ_View extends SZ_Driver
 		}
 		
 		$viewFile = FALSE;
+		$viewDir  = FALSE;
 		
 		// Detect include file
 		foreach ( Seezoo::getPackage() as $pkg )
@@ -248,6 +249,7 @@ class SZ_View extends SZ_Driver
 			if ( file_exists(PKGPATH . $pkg . '/views/' . $path . $this->_templateExtension) )
 			{
 				$viewFile = PKGPATH . $pkg . '/views/' . $path . $this->_templateExtension;
+				$viewDir  = PKGPATH . $pkg . '/views/';
 				break;
 			}
 		}
@@ -257,10 +259,12 @@ class SZ_View extends SZ_Driver
 			if ( file_exists(EXTPATH . 'views/' . $path . $this->_templateExtension) )
 			{
 				$viewFile = EXTPATH . 'views/' . $path . $this->_templateExtension;
+				$viewDir  = EXTPATH . 'views/';
 			}
 			else if ( file_exists(APPPATH . 'views/' . $path . '.php') )
 			{
 				$viewFile = APPPATH . 'views/' . $path . $this->_templateExtension;
+				$viewDir  = APPPATH . 'views/';
 			}
 			else
 			{
@@ -269,8 +273,18 @@ class SZ_View extends SZ_Driver
 			}
 		}
 		
+		// set current directory
+		if ( ! $this->driver->getDirectoryBase() )
+		{
+			$this->driver->setDirectoryBase($viewDir);
+		}
+		
 		// do render with driver
-		return $this->driver->render($viewFile, $vars, $return);
+		$buffer = $this->driver->render($viewFile, $vars, $return);
+		
+		$this->driver->cleanUp();
+		
+		return $buffer;
 	}
 	
 	
@@ -376,6 +390,21 @@ class SZ_View extends SZ_Driver
 	public function setExtension($ext)
 	{
 		$this->_templateExtension = $ext;
+	}
+	
+	
+	// --------------------------------------------------
+	
+	
+	/**
+	 * get viewfile extension
+	 * 
+	 * @access public
+	 * @return string
+	 */
+	public function getExtension()
+	{
+		return $this->_templateExtension;
 	}
 	
 	

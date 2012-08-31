@@ -47,6 +47,13 @@ abstract class SZ_View_driver
 	 */
 	protected $_stackVars = array();
 	
+	
+	/**
+	 * Current loading file directory
+	 */
+	protected $_directoryBase;
+	
+	
 	/**
 	 * ===========================================-
 	 * abstruct method rendering
@@ -79,9 +86,50 @@ abstract class SZ_View_driver
 	 */
 	public function loadView($path)
 	{
-		$SZ = Seezoo::getInstance();
-		return $SZ->view->render($path, $this->_stackVars);
+		$SZ  = Seezoo::getInstance();
+		$ext = pathinfo($path, PATHINFO_EXTENSION);
+		
+		$includeFile = ( empty($ext) )
+		                 ? $this->_directoryBase . $path . $SZ->view->getExtension()
+		                 : $this->_directoryBase . $path; 
+		
+		if ( ! file_exists($includeFile) )
+		{
+			throw new Exception('Unable to load requested file: ' . $path);
+		}
+		
+		if ( pathinfo($includeFile, PATHINFO_EXTENSION) === 'php' )
+		{
+			foreach ( $this->_stackVars as $key => $val )
+			{
+				$$key = $val;
+			}
+			require($includeFile);
+		}
+		else
+		{
+			file_get_contents($includeFile);
+		}
 	}
+	
+	
+	// --------------------------------------------------
+	
+	
+	/**
+	 * Clean up the stacks 
+	 * 
+	 * @access public
+	 */
+	public function cleanUp()
+	{
+		if ( $this->_initBufLevel == ob_get_level() )
+		{
+			$this->_stackVars = array();
+			$this->_directoryBase = NULL;
+		}
+	}
+	
 	
 	// --------------------------------------------------
 	
@@ -174,6 +222,35 @@ abstract class SZ_View_driver
 	public function replaceBuffer($buf)
 	{
 		$this->_buffer = $buf;
+	}
+	
+	
+	// --------------------------------------------------
+	
+	
+	/**
+	 * Set current loading directory
+	 * 
+	 * @access public
+	 * @param  string $dir
+	 */
+	public function setDirectoryBase($dir)
+	{
+		$this->_directoryBase = $dir;
+	}
+	
+	
+	// --------------------------------------------------
+	
+	
+	/**
+	 * Get current loading directory
+	 * 
+	 * @access public
+	 */
+	public function getDirectoryBase()
+	{
+		return $this->_directoryBase;
 	}
 }
 

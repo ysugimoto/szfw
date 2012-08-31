@@ -45,8 +45,6 @@ class SZ_Default_view extends SZ_View_driver
 		$this->bufferStart();
 		require($viewFile);
 		
-		$this->_stackVars = array();
-		
 		if ( $return === TRUE )
 		{
 			return $this->getBufferEnd();
