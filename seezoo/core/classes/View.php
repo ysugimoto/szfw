@@ -73,12 +73,12 @@ class SZ_View extends SZ_Driver
 		$ENV = Seezoo::getENV();
 		
 		// set initial redering engine
-		$this->_templateEngine = $ENV->getConfig('rendering_engine');
-		if ( ! $this->_templateEngine )
+		$templateEngine = $ENV->getConfig('rendering_engine');
+		if ( ! $templateEngine )
 		{
-			$this->_templateEngine = 'default';
+			$templateEngine = 'default';
 		}
-		$this->engine($this->_templateEngine);
+		$this->engine($templateEngine);
 	}
 	
 	
@@ -229,7 +229,7 @@ class SZ_View extends SZ_Driver
 		if ( isset($SZ->lead) )
 		{
 			$assigns['Lead'] = $SZ->lead;
-			$assigns = array_merge($assigns, $SZ->lead->getAssignData());
+			$assigns = array_merge($assigns, $SZ->lead->getAssignData(TRUE));
 		}
 		$assigns = array_merge($assigns, $this->_assignedVars);
 		$vars    = array_merge($assigns, $this->_objectToArray($vars));
@@ -353,6 +353,11 @@ class SZ_View extends SZ_Driver
 	 */
 	public function engine($engine = 'default', $extension = FALSE)
 	{
+		if ( $engine === $this->_templateEngine )
+		{
+			return;
+		}
+		
 		$this->_templateEngine = strtolower($engine);
 		switch ( $this->_templateEngine )
 		{
@@ -375,6 +380,21 @@ class SZ_View extends SZ_Driver
 		}
 		$this->_loadDriver('view', ucfirst($this->_templateEngine) . '_view');
 		$this->setExtension($extension);
+	}
+	
+	
+	// --------------------------------------------------
+	
+	
+	/**
+	 * Get current engine
+	 * 
+	 * @access public
+	 * @return string
+	 */
+	public function getEngine()
+	{
+		return $this->_templateEngine;
 	}
 	
 	

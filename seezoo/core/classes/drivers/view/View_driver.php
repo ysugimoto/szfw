@@ -86,25 +86,20 @@ abstract class SZ_View_driver
 	 */
 	public function loadView($path)
 	{
-		$SZ  = Seezoo::getInstance();
-		$ext = pathinfo($path, PATHINFO_EXTENSION);
-		
-		$includeFile = ( empty($ext) )
-		                 ? $this->_directoryBase . $path . $SZ->view->getExtension()
-		                 : $this->_directoryBase . $path; 
+		$SZ          = Seezoo::getInstance();
+		$ext         = pathinfo($path, PATHINFO_EXTENSION);
+		$viewExt     = $SZ->view->getExtension();
+		$path        = $this->_directoryBase . $path;
+		$includeFile = ( empty($ext) ) ? $path . $viewExt : $path;
 		
 		if ( ! file_exists($includeFile) )
 		{
 			throw new Exception('Unable to load requested file: ' . $path);
 		}
 		
-		if ( pathinfo($includeFile, PATHINFO_EXTENSION) === 'php' )
+		if ( pathinfo($includeFile, PATHINFO_EXTENSION) === ltrim($viewExt, '.') )
 		{
-			foreach ( $this->_stackVars as $key => $val )
-			{
-				$$key = $val;
-			}
-			require($includeFile);
+			$this->render($includeFile, $this->_stackVars, FALSE);
 		}
 		else
 		{
