@@ -50,6 +50,7 @@ if ( PHP_SAPI === 'cli' )
 	// Else, single CLI request
 	else
 	{
+		define('SZ_COMMANDLINE_WORKER', 1);
 		chdir(SZPATH);
 		Seezoo::init(SZ_MODE_CLI, ( isset($_SERVER['argv'][1]) ) ? $_SERVER['argv'][1] : '');
 	}
