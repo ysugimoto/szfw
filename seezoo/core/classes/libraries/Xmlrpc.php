@@ -8,7 +8,7 @@
  * A simple MVC/action Framework on PHP 5.1.0 or newer
  * 
  * 
- * XML-PRC Client library
+ * XML-RPC Client library
  * 
  * @package  Seezoo-Framework
  * @category Libraries
