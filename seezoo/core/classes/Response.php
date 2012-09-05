@@ -91,6 +91,22 @@ class SZ_Response
 	
 	
 	/**
+	 * Add no cahce header
+	 * 
+	 * @access public
+	 */
+	public function noCache()
+	{
+		$this->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0', TRUE);
+		$this->setHeader('Pragma', 'no-cache', TRUE);
+		$this->setHeader('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT', TRUE);
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
 	 * send browser buffer
 	 * 
 	 * @access public
