@@ -266,7 +266,7 @@ class SZ_Router
 	 * 
 	 * @access public
 	 */
-	public function bootController()
+	public function bootController($extraArgs = FALSE)
 	{
 		Seezoo::$Importer->classes('Breeder', FALSE);
 		$dir    = $this->detectDir;
@@ -342,12 +342,16 @@ class SZ_Router
 					return FALSE;
 				}
 				$Controller->lead->setExecuteMethod($callMethod);
-				call_user_func_array(array($Controller, $callMethod), $this->_arguments);
+				if ( $extraArgs !== FALSE )
+				{
+					array_push($this->_arguments, $extraArgs);
+				}
+				$rv = call_user_func_array(array($Controller, $callMethod), $this->_arguments);
 			}
 		}
 		$Controller->lead->teardown();
 		
-		return $Controller;
+		return array($Controller, $rv);
 	}
 	
 	

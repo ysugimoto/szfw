@@ -43,11 +43,42 @@ class SZ_Xmlrpc extends SZ_Driver
 	protected $CRLF        = "\r\n";
 	
 	
+	/**
+	 * Classname stack server,encoder, decoder
+	 * @var string
+	 */
+	protected $_server;
+	protected $_encoder;
+	protected $_decoder;
 	
-	public function __construct($params = array())
+	
+	public function __construct($options = array())
 	{
-		$this->_options = $params;
-		$this->_loadDriver('xmlrpc', 'Xmlrpc_value', FALSE, FALSE);
+		$this->_options = $options;
+		$this->_decoder = $this->_loadDriver('xmlrpc', 'Xmlrpc_decoder', FALSE, FALSE);
+		$this->_encoder = $this->_loadDriver('xmlrpc', 'Xmlrpc_encoder', FALSE, FALSE);
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Create XML-RPC server instance
+	 * 
+	 * @access public
+	 * @param  array maps
+	 * @return SZ_Xmlrpc_server
+	 */
+	public function createServer($maps = array())
+	{
+		if ( ! $this->_server )
+		{
+			$this->_server  = $this->_loadDriver('xmlrpc', 'Xmlrpc_server', FALSE, FALSE);
+		}
+		$server = new $this->_server($maps, $this->_encoder, $this->_decoder);
+		
+		return $server;
 	}
 	
 	
@@ -90,7 +121,7 @@ class SZ_Xmlrpc extends SZ_Driver
 	 */
 	public function setParam($param, $expType = FALSE)
 	{
-		if ( call_user_func(array($this->driver, 'isOrderedArray'), $param) )
+		if ( call_user_func(array($this->_encoder, 'isOrderedArray'), $param) )
 		{
 			foreach ( $param as $val )
 			{
@@ -100,7 +131,7 @@ class SZ_Xmlrpc extends SZ_Driver
 		else
 		{
 			$this->param[] = ( $expType )
-			                   ? new $this->driver($param, $expType)
+			                   ? new $this->_encoder($param, $expType)
 			                   : $param;
 		}
 	}
@@ -195,7 +226,6 @@ class SZ_Xmlrpc extends SZ_Driver
 			throw new RuntimeException('Stream can\'t write to host!');
 		}
 		
-		
 		// Get response
 		$response = '';
 		while ( ! feof($stream) )
@@ -203,6 +233,8 @@ class SZ_Xmlrpc extends SZ_Driver
 			$response .= fgets($stream, 4096);
 		}
 		fclose($stream);
+		
+		return $request;
 		
 		// Parse and check parameter
 		return $this->_parseResponse($response);
@@ -285,10 +317,10 @@ class SZ_Xmlrpc extends SZ_Driver
 	{
 		$body  = '<?xml version="1.0" encoding="UTF-8"?>'; // UTF-8 only
 		$body .= '<methodCall>';
-		$body .= '<methodName>' . $method . '</methodName>';
-		$body .= '<params>';
-		$body .= $this->_encodeParameters();
-		$body .= '</params>';
+		$body .=   '<methodName>' . $method . '</methodName>';
+		$body .=   '<params>';
+		$body .=      $this->_encodeParameters();
+		$body .=   '</params>';
 		$body .= '</methodCall>';
 		
 		return $body;
@@ -309,17 +341,21 @@ class SZ_Xmlrpc extends SZ_Driver
 		$encoded = array();
 		foreach ( $this->_params as $param )
 		{
-			if ( $param instanceof $this->driver )
+			if ( $param instanceof $this->_encoder )
 			{
-				$encoded[] = $param->getValue();
+				$encodedValue = $param->getValue();
 				continue;
 			}
+			else
+			{
+				$type         = call_user_func(array($this->_encoder, 'detectType'), $param);
+				$value        = new $this->_encoder($param, $type);
+				$encodedValue = $value->getValue();
+			}
+			$encoded[] = '<param>' . $encodedValue . '</param>';
 			
-			$type      = call_user_func(array($this->driver, 'detectType'), $param);
-			$value     = new $this->driver($param, $type);
-			$encoded[] = $value->getValue();
 		}
-		return implode("\n", $encoded);
+		return implode('', $encoded);
 	}
 	
 	

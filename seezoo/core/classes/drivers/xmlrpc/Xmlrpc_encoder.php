@@ -17,7 +17,7 @@
  * 
  * ====================================================================
  */
-class SZ_Xmlrpc_value
+class SZ_Xmlrpc_encoder
 {
 	/**
 	 * return value stack

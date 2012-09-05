@@ -83,6 +83,9 @@ class Seezoo
 	 */
 	private static $_propertyAliases = array();
 	
+	
+	public static $outpuBufferMode = TRUE;
+	
 	// ---------------------------------------------------------------
 	
 	
@@ -338,7 +341,7 @@ class Seezoo
 	 * @param string $mode
 	 * @param string $overridePathInfo
 	 */
-	public static function init($mode = FALSE, $overridePathInfo = '', $options = array())
+	public static function init($mode = FALSE, $overridePathInfo = '', $extraArgs = FALSE)
 	{
 		// Benchmark start
 		$Mark = self::$Importer->classes('Benchmark');
@@ -370,7 +373,7 @@ class Seezoo
 			}
 			$Mark->end('process:' . $process->level . ':MVC:Routed', 'baseProcess:'. $process->level);
 			// Load Controller and execute method
-			$SZ = $process->router->bootController();
+			list($SZ, $rv) = $process->router->bootController($extraArgs);
 			if ( $SZ === FALSE )
 			{
 				show_404();
@@ -438,18 +441,38 @@ class Seezoo
 		// Is this process in a sub process?
 		if ( $level > 1 )
 		{
-			// returns output buffer
-			return $SZ->view->getDisplayBuffer();
+			// returns process result if buffermode is FALSE
+			if ( self::$outpuBufferMode === FALSE )
+			{
+				$returnValue = ( isset($rv) ) ? $rv : $SZ->view->getDisplayBuffer();
+			}
+			else
+			{
+				// returns output buffer
+				$returnValue = $SZ->view->getDisplayBuffer();
+			}
+			self::$outpuBufferMode = TRUE;
+			return $returnValue;
 		}
 		else
 		{
 			$Mark->end('final', 'baseProcess:'. $process->level);
-			$output = $SZ->view->getDisplayBuffer();
 			Event::fire('session_update');
 			Event::fire('final_output');
 			
-			// final output!
-			self::$Response->display($output);
+			// returns process result if buffermode is FALSE
+			if ( self::$outpuBufferMode === FALSE )
+			{
+				$output = ( isset($rv) ) ? $rv : NULL;
+				return $output;
+			}
+			else
+			{
+				// final output!
+				$output = $SZ->view->getDisplayBuffer();
+				self::$Response->display($output);
+			}
+			self::$outpuBufferMode = TRUE;
 			
 			//SeezooFactory::killAll();
 		}
