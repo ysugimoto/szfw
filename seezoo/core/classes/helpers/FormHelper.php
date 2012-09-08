@@ -292,7 +292,7 @@ class SZ_FormHelper
 			}
 			else
 			{
-				$selected_str = ( $val2 == $selected ) ? ' selected="selected"' : '';
+				$selected_str = ( $val == $selected ) ? ' selected="selected"' : '';
 				$options[] = '<option value="' . prep_str($key) . '"' . $selected_str . '>' . prep_str($val) . '</options>';
 			}
 		}
@@ -335,7 +335,7 @@ class SZ_FormHelper
 			unset($attrs['value']);
 		}
 		
-		return '<textarea' . $this->_extractAttribute($attrs) . "\n"
+		return '<textarea' . $this->_extractAttribute($attrs) . ">\n"
 		         . prep_str($value) . "\n"
 		         . '</textarea>' . "\n";
 	}
