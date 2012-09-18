@@ -44,6 +44,9 @@ class SZ_ActiveRecord
 	 */
 	protected $_schemas = array();
 	
+	protected $_joins   = array();
+	protected $_extraKeys = array();
+	
 	/**
 	 * Select query statements
 	 */
@@ -144,6 +147,55 @@ class SZ_ActiveRecord
 	
 	// =============== /overload methods =========================
 	
+	public function leftJoin($table, $key)
+	{
+		$this->_join('LEFT', $table, $key);
+		return $this;
+	}
+
+	public function leftOuterJoin($table, $key)
+	{
+		$this->_join('LEFT OUTER', $table, $key);
+		return $this;
+	}
+
+	public function rightJoin($table, $key)
+	{
+		$this->_join('RIGHT', $table, $key);
+		return $this;
+	}
+
+	public function rightOuterJoin($table, $key)
+	{
+		$this->_join('RIGHT OUTER', $table, $key);
+		return $this;
+	}
+
+	public function innerJoin($table)
+	{
+		$this->_join('INNER', $table);
+		return $this;
+	}
+	
+	protected function _join($type, $table, $key = FALSE)
+	{
+		$this->_joins[] = array($type, $table, $key);
+		if ( $key )
+		{
+			foreach ( (array)$key as $k )
+			{
+				if ( ! in_array($k, $this->_extraKeys) )
+				{
+					$this->_extraKeys[] = $k;
+				}
+			}
+		}
+	}
+	
+	public function getTable()
+	{
+		return $this->_table;
+	}
 	
 	/**
 	 * Set limit statement
@@ -216,10 +268,12 @@ class SZ_ActiveRecord
 	 */
 	public function reset()
 	{
-		$this->_limit    = 0;
-		$this->_offset   = 0;
-		$this->_orderBy  = array();
-		$this->_distinct = '';
+		$this->_limit     = 0;
+		$this->_offset    = 0;
+		$this->_orderBy   = array();
+		$this->_distinct  = '';
+		$this->_joins     = array();
+		$this->_extraKeys = array();
 	}
 	
 	
@@ -466,14 +520,24 @@ class SZ_ActiveRecord
 	 */
 	protected function _execFindQuery($columns, $conditions, $limit  = 1)
 	{
-		$db = Seezoo::$Importer->database();
-		if ( ! is_array($columns) )
-		{
-			$columns = ( ! $columns ) ? array('*') : explode(',', $columns);
-		}
-		$columns      = array_map(array($db, 'prepColumn'), $columns);
+		$db           = Seezoo::$Importer->database();
+		$primaryTable = $db->prefix() . $this->_table;
 		$selectColumn = ( count($columns) > 0 ) ? implode(', ', $columns) : '*';
 		$bindData     = array();
+		$columns      = ( count($columns) === 0 ) ? array('*') : explode(',', $columns);
+		
+		foreach ( $columns as $key => $col )
+		{
+			$col = $db->prepColumn($col);
+			$columns[$key] = ( in_array($col, $this->_schemas) )
+			                   ? $primaryTable . '.' . $col
+			                   : $col;
+		}
+		
+		foreach ( $this->_extraKeys as $exKey )
+		{
+			$selectColumn .= ', ' . $primaryTable . '.' . $exKey;
+		}
 		
 		$sql =
 				'SELECT ' . $this->_distinct
@@ -481,11 +545,32 @@ class SZ_ActiveRecord
 				.'FROM '
 				. $db->prefix() . $this->_table . ' ';
 		
+		foreach ( $this->_joins as $join )
+		{
+			list($joinMode, $joinTable, $joinKey) = $join;
+			$sql .= $joinMode . ' JOIN ' . $db->prefix().$joinTable . ' ';
+			if ( $joinKey )
+			{
+				$sql .= ' ON ( ';
+				$joinStack = array();
+				foreach ( (array)$joinKey as $k )
+				{
+					$k = $db->prepColumn($k);
+					$joinStack[] = "{$primaryTable}.{$k} = {$joinTable}.{$k}"; 
+				}
+				$sql .= implode(' AND ', $joinStack) . ' ) ';
+			}
+		}
+		
 		if ( count($conditions) > 0 )
 		{
 			$where = array();
 			foreach ( $conditions as $col => $val )
 			{
+				if ( in_array($col, $this->_extraKeys) )
+				{
+					$col = $primaryTable . '.' . $col;
+				}
 				$stb = $db->buildOperatorStatement($col, $val);
 				if ( is_array($stb) )
 				{
@@ -521,6 +606,7 @@ class SZ_ActiveRecord
 		{
 			$sql .= 'OFFSET ' . $this->_offset;
 		}
+		echo $sql;
 		return $db->query($sql, $bindData);
 	}
 }

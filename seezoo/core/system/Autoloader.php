@@ -124,7 +124,7 @@ class Autoloader
 			$dir       = 'classes/';
 			$className = substr($className, strlen(self::$coreClassPrefix));
 		}
-		else if ( $className === 'ActiveRecord' )
+		else if ( strpos($className, 'ActiveRecord') === 0 )
 		{
 			$dir = 'classes/';
 		}
