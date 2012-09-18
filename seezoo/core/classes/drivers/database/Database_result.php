@@ -154,7 +154,16 @@ class SZ_Database_result implements Iterator, ArrayAccess
 	{
 		if ( ! $this->_resultObject )
 		{
-			$this->_resultObject = $this->_stmt->fetchAll(PDO::FETCH_OBJ);
+			// rewind cursor
+			if ( FALSE != ($first = $this->_stmt->fetch(PDO::FETCH_OBJ, PDO::FETCH_ORI_ABS, 0)) )
+			{
+				$this->_resultObject = $this->_stmt->fetchAll(PDO::FETCH_OBJ);
+				array_unshift($this->_resultObject, $first);
+			}
+			else
+			{
+				$this->_resultObject = array();
+			}
 			$this->_resultCache[PDO::FETCH_OBJ] = $this->_resultObject;
 		}
 		return $this->_resultObject;
@@ -174,7 +183,16 @@ class SZ_Database_result implements Iterator, ArrayAccess
 	{
 		if ( ! $this->_resultArray )
 		{
-			$this->_resultArray = $this->_stmt->fetchAll(PDO::FETCH_ASSOC);
+			// rewind cursor
+			if ( FALSE != ($first = $this->_stmt->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_ABS, 0)) )
+			{
+				$this->_resultArray = $this->_stmt->fetchAll(PDO::FETCH_ASSOC);
+				array_unshift($this->_resultArray, $first);
+			}
+			else
+			{
+				$this->_resultArray = array();
+			}
 			$this->_resultCache[PDO::FETCH_ASSOC] = $this->_resultArray;
 		}
 		return $this->_resultArray;
