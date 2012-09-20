@@ -306,7 +306,7 @@ class SZ_Router
 			if ( method_exists($Controller, '_mapping') )
 			{
 				// execute mapping method
-				$Controller->_mapping($this->_method);
+				$rv = $Controller->_mapping($this->_method);
 			}
 			else
 			{
