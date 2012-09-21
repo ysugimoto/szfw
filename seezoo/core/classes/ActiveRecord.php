@@ -606,7 +606,6 @@ class SZ_ActiveRecord
 		{
 			$sql .= 'OFFSET ' . $this->_offset;
 		}
-		echo $sql;
 		return $db->query($sql, $bindData);
 	}
 }
