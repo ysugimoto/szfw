@@ -458,7 +458,6 @@ class Seezoo
 		{
 			$Mark->end('final', 'baseProcess:'. $process->level);
 			Event::fire('session_update');
-			Event::fire('final_output');
 			
 			// returns process result if buffermode is FALSE
 			if ( self::$outpuBufferMode === FALSE )
