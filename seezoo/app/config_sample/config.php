@@ -88,6 +88,25 @@ $config['date_timezone'] = 'Asia/Tokyo';
 
 /*
  * --------------------------------------------------
+ * Auto convert input variables
+ * 
+ * Auto convert encoding GLOBAL variables to UTF-8,
+ * when Request class instantiated
+ *   TRUE  : enable auto convert
+ *   FALSE ; disable auto convert
+ * --------------------------------------------------
+ */
+
+$config['auto_convert_input'] = array(
+  'POST'     => TRUE,  // $_POST
+  'GET'      => TRUE,  // $_GET
+  'COOKIE'   => TRUE,  // $_COOKIE
+  'PHPINPUT' => TRUE,  // php://input
+);
+
+
+/*
+ * --------------------------------------------------
  * Server encoding
  * 
  * set a your application server encoding

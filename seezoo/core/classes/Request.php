@@ -104,16 +104,24 @@ class SZ_Request
 	protected $_ip;
 	
 	
+	/**
+	 * Auto convert input data
+	 * @var array
+	 */
+	protected $_autoConverts;
+	
+	
 	public function __construct()
 	{
 		$this->env             = Seezoo::getENV();
 		$this->requestMethod   = $this->_detectRequestMethod();
 		$this->_serverEncoding = $this->env->getConfig('server_encoding');
 		$this->_appCharset     = $this->env->getConfig('charset');
-		$this->_cookie         = $this->_cleanFilter($_COOKIE);
+		$this->_autoConverts   = $this->env->getConfig('auto_convert_input');
+		$this->_cookie         = $this->_cleanFilter($_COOKIE, $this->_autoConverts['COOKIE']);
 		$this->_server         = $_SERVER;//( $this->env->api === 'cli' ) ? $_SERVER : $this->_cleanFilter($_SERVER);
-		$this->_post           = $this->_cleanFilter($_POST);
-		$this->_get            = $this->_cleanFilter($_GET);
+		$this->_post           = $this->_cleanFilter($_POST, $this->_autoConverts['POST']);
+		$this->_get            = $this->_cleanFilter($_GET, $this->_autoConverts['GET']);
 		$this->_input          = $this->_parseInput();
 		$this->_uri            = trim((string)$this->server('REQUEST_URI'), '/');
 		$this->_accessPathInfo = (string)$this->server('PATH_INFO');
@@ -405,9 +413,10 @@ class SZ_Request
 	 * 
 	 * @access protected
 	 * @param  array $data
+	 * @param  bool  $convert
 	 * @return mixed
 	 */
-	protected function _cleanFilter($data)
+	protected function _cleanFilter($data, $convert = TRUE)
 	{
 		$filtered = array();
 		foreach ( $data as $key => $value )
@@ -424,14 +433,18 @@ class SZ_Request
 					$value = stripslashes($value);
 				}
 				
-				// check encoding
-				if ( $this->env->isMBEnc && mb_check_encoding($value, $this->_serverEncoding) === TRUE )
+				// auto convert inputs if enabled
+				if ( $convert === TRUE )
 				{
-					$value = $this->_convertUTF8($value, $this->_serverEncoding);
-				}
-				else
-				{
-					$value = $this->_convertUTF8($value);
+					// check encoding
+					if ( $this->env->isMBEnc && mb_check_encoding($value, $this->_serverEncoding) === TRUE )
+					{
+						$value = $this->_convertUTF8($value, $this->_serverEncoding);
+					}
+					else
+					{
+						$value = $this->_convertUTF8($value);
+					}
 				}
 				
 				// kill invisible character
@@ -484,7 +497,7 @@ class SZ_Request
 			// Raw input should have been encoded
 			$data[$key] = rawurldecode($value);
 		}
-		return $this->_cleanFilter($data);
+		return $this->_cleanFilter($data, $this->_autoConverts['PHPINPUT']);
 	}
 	
 	
