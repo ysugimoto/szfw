@@ -387,14 +387,22 @@ class SZ_Validation extends SZ_Driver
 		// loop of parts
 		foreach ( $this->_parts[$group] as $index => $v )
 		{
-			$name = $v->getName();
+			$name  = $v->getName();
 			// field data is exists?
 			if ( ! isset($data[$name]) )
 			{
-				continue;
+				if ( ! $v->isDelegateValidation() )
+				{
+					continue;
+				}
+				$value = '';
+			}
+			else
+			{
+				$value = $data[$name];
 			}
 			
-			$value   = $data[$name];
+			// Mark success
 			$success = TRUE;
 			
 			// target data is array?
@@ -402,101 +410,111 @@ class SZ_Validation extends SZ_Driver
 			$is_array = ( is_array($value) ) ? TRUE : FALSE;
 			$value    = ( $is_array ) ? $value : array($value);
 			
-			// loop of field loop
-			foreach ( $v->getRules() as $rule )
+			// Does field enabled to delegete validation?
+			if ( $v->isDelegateValidation() )
 			{
-				if ( $rule === '' )
+				$rules = $v->getRules();
+				$success = $rules[0]->validate($v);
+			}
+			else
+			{
+				// loop of field
+				foreach ( $v->getRules() as $rule )
 				{
-					continue;
-				}
-				$class = $this->_verify;
-				// Is special syncronized rule?
-				if ( preg_match($this->_syncRegex, $rule, $matches) )
-				{
-					$condition = $this->getField($matches[2]);
-					// Is target filed already processed?
-					if ( isset($executed[$matches[2]]) && $executed[$matches[2]] === $condition )
+					if ( $rule === '' )
 					{
-						if ( ! $this->{'_sync_' . $matches[1]}($value[0], $condition->getValue()) )
-						{
-							$msg = sprintf(
-								$this->_verify->messages[$matches[1]],
-								$condition->getLabel()
-							);
-							$condition->setMessage($msg);
-							$success = FALSE;
-						}
+						continue;
 					}
-					else
-					{
-						$condition->setRules('required');
-						
-					}
-					continue;
-				}
-				// Does rule has a condition parameter?
-				else if ( preg_match($this->_paramRegex, $rule, $matches) )
-				{
-					list(, $rule, $condition) = $matches;
-					if ( $rule === 'matches' )
-					{
-						$condition = ( isset($this->_targetData[$condition]) )
-						               ? $this->_targetData[$condition]
-						               : null;
-					}
-				}
-				// Does rule declared by Controller/Process method?
-				else if ( preg_match($this->_origRegex, $rule, $matches) )
-				{
-					$class     = Seezoo::getInstance();
-					$rule      = $matches[1];
-					$condition = ( isset($matches[2]) ) ? $matches[2] : FALSE;
-				}
-				// No condition.
-				else
-				{
-					$condition = FALSE;
-				}
-				
-				// Does rule method really exisits?
-				if ( ! method_exists($class, $rule) )
-				{
-					if ( ! isset($class->lead) || ! method_exists($class->lead, $rule) )
-					{
-						throw new Exception('Undefined ' . $rule . ' rules method in ' . get_class($class) . '!');
-					}
-					$class = $class->lead;
-				}
-				
-				// loop of field value
-				// @note string value also treats as an array.
-				foreach ( $value as $key => $val )
-				{
-					// verify method execute.
-					$result = $class->{$rule}($val, $condition);
 					
-					// Does method returns result ( TRUE / FALSE ) flag?
-					if ( is_bool($result) )
+					$class = $this->_verify;
+					// Is special syncronized rule?
+					if ( preg_match($this->_syncRegex, $rule, $matches) )
 					{
-						if ( $result === FALSE )
+						$condition = $this->getField($matches[2]);
+						// Is target filed already processed?
+						if ( isset($executed[$matches[2]]) && $executed[$matches[2]] === $condition )
 						{
-							if ( ! isset($this->_verify->messages[$rule]) )
+							if ( ! $this->{'_sync_' . $matches[1]}($value[0], $condition->getValue()) )
 							{
-								throw new Exception('Undefined Validation message of ' . $rule);
-								return FALSE;
+								$msg = sprintf(
+									$this->_verify->messages[$matches[1]],
+									$condition->getLabel()
+								);
+								$condition->setMessage($msg);
+								$success = FALSE;
 							}
-							// generate error message
-							$msg = ( $condition !== FALSE )
-							         ? sprintf($this->_verify->messages[$rule], $v->getLabel(), $condition)
-							         : sprintf($this->_verify->messages[$rule], $v->getLabel());
-							$v->setMessage($msg);
-							$success = FALSE;
+						}
+						else
+						{
+							$condition->setRules('required');
+							
+						}
+						continue;
+					}
+					// Does rule has a condition parameter?
+					else if ( preg_match($this->_paramRegex, $rule, $matches) )
+					{
+						list(, $rule, $condition) = $matches;
+						if ( $rule === 'matches' )
+						{
+							$condition = ( isset($this->_targetData[$condition]) )
+							               ? $this->_targetData[$condition]
+							               : null;
 						}
 					}
-					// else, method returns processed value.
+					// Does rule declared by Controller/Process method?
+					else if ( preg_match($this->_origRegex, $rule, $matches) )
+					{
+						$class     = Seezoo::getInstance();
+						$rule      = $matches[1];
+						$condition = ( isset($matches[2]) ) ? $matches[2] : FALSE;
+					}
+					// No condition.
 					else
 					{
-						$value[$key] = $result;
+						$condition = FALSE;
+					}
+					
+					// Does rule method really exisits?
+					if ( ! method_exists($class, $rule) )
+					{
+						if ( ! isset($class->lead) || ! method_exists($class->lead, $rule) )
+						{
+							throw new Exception('Undefined ' . $rule . ' rules method in ' . get_class($class) . '!');
+						}
+						$class = $class->lead;
+					}
+					
+					// loop of field value
+					// @note string value also treats as an array.
+					foreach ( $value as $key => $val )
+					{
+						// verify method execute.
+						$result = $class->{$rule}($val, $condition);
+						
+						// Does method returns result ( TRUE / FALSE ) flag?
+						if ( is_bool($result) )
+						{
+							if ( $result === FALSE )
+							{
+								if ( ! isset($this->_verify->messages[$rule]) )
+								{
+									throw new Exception('Undefined Validation message of ' . $rule);
+									return FALSE;
+								}
+								// generate error message
+								$msg = ( $condition !== FALSE )
+								         ? sprintf($this->_verify->messages[$rule], $v->getLabel(), $condition)
+								         : sprintf($this->_verify->messages[$rule], $v->getLabel());
+								$v->setMessage($msg);
+								$success = FALSE;
+							}
+						}
+						// else, method returns processed value.
+						else
+						{
+							$value[$key] = $result;
+						}
 					}
 				}
 			}

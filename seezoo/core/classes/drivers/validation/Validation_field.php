@@ -147,7 +147,7 @@ class SZ_Validation_Field
 	
 	
 	/**
-	 * Filed value getter
+	 * Field value getter
 	 * 
 	 * @access public
 	 * @param  bool $escape
@@ -191,6 +191,10 @@ class SZ_Validation_Field
 		{
 			$this->_rules = $rules;
 		}
+		else if ( $rules instanceof Validatable )
+		{
+			$this->_rules[] = $rules;
+		}
 		else
 		{
 			foreach ( explode('|', $rules) as $rule )
@@ -202,6 +206,38 @@ class SZ_Validation_Field
 			}
 		}
 		return $this;
+	}
+	
+	
+	// --------------------------------------------------
+	
+	
+	/**
+	 * Delegate validation
+	 * 
+	 * @access public
+	 * @param  object $instance ( Validatealbe interface implemented )
+	 * @return $this
+	 */
+	public function delegate(Validatable $instance)
+	{
+		$this->_rules = array($instance);
+	}
+	
+	
+	// --------------------------------------------------
+	
+	
+	/**
+	 * Is delegate validation?
+	 * 
+	 * @access public
+	 * @return bool
+	 */
+	public function isDelegateValidation()
+	{
+		return ( isset($this->_rules[0])
+		         && $this->_rules[0] instanceof Validatable ) ? TRUE : FALSE;
 	}
 	
 	
@@ -288,65 +324,78 @@ class SZ_Validation_Field
 		
 		$this->_value = $value;
 		
-		// loop and validate
-		foreach ( $this->_rules as $rule )
+		if ( $this->isDelegateValidation() )
 		{
-			if ( $rule === '' )
+			###!!!notice!!!####
+			// varsion until 5.2 causes segmentation fault when member function call with "$this".
+			// so, we clone $this object and call it.
+			$cloned  = clone $this;
+			$success = $this->rules[0]->validate($cloned);
+		}
+		else
+		{
+			// loop and validate
+			foreach ( $this->_rules as $rule )
 			{
-				continue;
-			}
-			$class = $verify;
-			// rule has condition parameter?
-			if ( preg_match($this->_paramRegex, $rule, $matches) )
-			{
-				list(, $rule, $condition) = $matches;
-			}
-			// elseif, rule-method declared by Controller or Process instance?
-			else if ( preg_match($this->_origRegex, $rule, $matches) )
-			{
-				$class     = Seezoo::getInstance();
-				$rule      = $matches[1];
-				$condition = ( isset($matches[2]) ) ? $matches[2] : FALSE;
-			}
-			else
-			{
-				// rule have not condition
-				$condition = FALSE;
-			}
-			
-			// rule-method really exists?
-			if ( ! method_exists($class, $rule) )
-			{
-				throw new Exception('Undefined ' . $rule . ' rules method in ' . get_class($class) . '!');
-				return FALSE;
-			}
-			
-			// value loop and rule-method execute!
-			foreach ( $value as $key => $val )
-			{
-				$result = $class->{$rule}($value, $condition);
-				// If method returns boolean (TRUE/FALSE), validate error/success.
-				if ( is_bool($result) )
+				if ( $rule === '' )
 				{
-					if ( $result === FALSE )
-					{
-						if ( ! isset($this->_messages[$rule]) )
-						{
-							throw new Exception('Undefined Validation message of ' . $rule);
-							return FALSE;
-						}
-						$msg = ( $condition !== FALSE )
-						         ? sprintf($verify->_messages[$rule], $this->_label)
-						         : sprintf($verify->_messages[$rule], $this->_label, $condition);
-						$this->setMessage($msg);
-						// switch down flag
-						$success = FALSE;
-					}
+					continue;
 				}
-				// else, method returns processed value
+				$class = $verify;
+				// rule has condition parameter?
+				if ( preg_match($this->_paramRegex, $rule, $matches) )
+				{
+					list(, $rule, $condition) = $matches;
+				}
+				// elseif, rule-method declared by Controller or Process instance?
+				else if ( preg_match($this->_origRegex, $rule, $matches) )
+				{
+					$class     = Seezoo::getInstance();
+					$rule      = $matches[1];
+					$condition = ( isset($matches[2]) ) ? $matches[2] : FALSE;
+				}
 				else
 				{
-					$value[$key] = $result;
+					// rule have not condition
+					$condition = FALSE;
+				}
+				
+				// rule-method really exists?
+				if ( ! method_exists($class, $rule) )
+				{
+					if ( ! isset($class->lead) || ! method_exists($class->lead, $rule) )
+					{
+						throw new Exception('Undefined ' . $rule . ' rules method in ' . get_class($class) . '!');
+					}
+				}
+				
+				// value loop and rule-method execute!
+				foreach ( $value as $key => $val )
+				{
+					$result = $class->{$rule}($value, $condition);
+					// If method returns boolean (TRUE/FALSE), validate error/success.
+					if ( is_bool($result) )
+					{
+						if ( $result === FALSE )
+						{
+							if ( ! isset($this->_messages[$rule]) )
+							{
+								throw new Exception('Undefined Validation message of ' . $rule);
+								return FALSE;
+							}
+							$msg = ( $condition !== FALSE )
+							         ? sprintf($verify->_messages[$rule], $this->_label)
+							         : sprintf($verify->_messages[$rule], $this->_label, $condition);
+							$this->setMessage($msg);
+							// switch down flag
+							$success = FALSE;
+						}
+					}
+					// else, method returns processed value
+					else
+					{
+						$value[$key] = $result;
+					}
 				}
 			}
 		}

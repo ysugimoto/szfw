@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Upload
+class SZ_Upload implements Validatable
 {
 	/**
 	 * Stack error message
@@ -228,13 +228,50 @@ class SZ_Upload
 				$dat->fullpath = $destDir . $dat->filename . '.' . $dat->extension; 
 			}
 		}
+		
+		// Event fire before file upload
+		$event = new stdClass;
+		$event->from     = $file['tmp_name'];
+		$event->to       = $dat->fullpath;
+		$event->fileInfo = $dat;
+		Event::fire('before_upload', $event);
+
 		// try movefile
 		if ( ! @move_uploaded_file($file['tmp_name'], $dat->fullpath) )
 		{
 			return $this->_setError('Uploaded file didn\'t move target directory!');
 		}
 		
+		// Event fire after file upload
+		Event::fire('after_upload', $event);
+		
 		return $dat;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Validatable interface implements
+	 * 
+	 * @access public
+	 * @param  object $field
+	 * @return bool
+	 */
+	public function validate($field)
+	{
+		$name    = $field->getName();
+		$destDir = trail_slash($this->_settings['upload_dir']);
+		
+		if ( FALSE === ($data = $this->_upload_process($name, $destDir)) )
+		{
+			$field->setMessage($this->getError());
+			return FALSE;
+		}
+		
+		$field->setValidatedMessage($data);
+		return TRUE;
 	}
 	
 	
@@ -406,5 +443,20 @@ class SZ_Upload
 	{
 		$this->_error = $msg;
 		return FALSE;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Get error string
+	 * 
+	 * @access public
+	 * @return string
+	 */
+	protected function getError()
+	{
+		return $this->_error;
 	}
 }
