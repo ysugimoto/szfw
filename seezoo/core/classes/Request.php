@@ -333,6 +333,32 @@ class SZ_Request
 	
 	
 	/**
+	 * Get STDIN data
+	 * 
+	 * @access public
+	 * @return string
+	 */
+	public function stdin()
+	{
+		if ( PHP_SAPI !== 'cli' )
+		{
+			throw new RuntimeException('STD_INPUT can get CLI request only!');
+		}
+		
+		$stdin = '';
+		while ( FALSE !== ($line = fgets(STDIN, 8192)) )
+		{
+			$stdin .= $line;
+		}
+		
+		return $stdin;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
 	 * Get HTTP requested PATH_INFO
 	 * 
 	 * @access public
