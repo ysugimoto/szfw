@@ -152,6 +152,12 @@ class SZ_Exception extends Exception
 	 */
 	public function handleError($errorNum = 0 ,$message = '', $file = '', $line = 0)
 	{
+		// Do not show an error that occurred in the operator "@"
+		if ( error_reporting() === 0 )
+		{
+			return FALSE;
+		}
+		
 		if ( defined('SZ_COMMANDLINE_WORKER') ) 
 		{
 			echo sprintf('Error:%s in %s line %d', $message, $file, $line) . PHP_EOL;
