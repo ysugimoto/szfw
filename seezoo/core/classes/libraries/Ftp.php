@@ -111,7 +111,7 @@ class SZ_Ftp
 		
 		// Try to connect FTP server
 		$this->handle = @ftp_connect($hostname, (int)$this->_get('port'));
-		if ( ! is_resource($this->_handle) )
+		if ( ! is_resource($this->handle) )
 		{
 			return $this->_log('CONNECT: FTP server connection failed.');
 		}
@@ -176,7 +176,7 @@ class SZ_Ftp
 	 */
 	public function mkdir($directory, $permission = NULL)
 	{
-		if ( $path === '' || ! is_resource($this->handle) )
+		if ( $directory === '' || ! is_resource($this->handle) )
 		{
 			return FALSE;
 		}
@@ -225,6 +225,12 @@ class SZ_Ftp
 		}
 		
 		$mode = ( $binary ) ? FTP_BINARY : FTP_ASCII;
+		
+		// clone filename if remote file is directory
+		if ( substr($remoteFile, -1, 1) === '/' )
+		{
+			$remoteFile .= basename($localFile);
+		}
 		
 		if ( ! @ftp_put($this->handle, $remoteFile, $localFile, $mode) )
 		{
@@ -351,9 +357,9 @@ class SZ_Ftp
 			return FALSE;
 		}
 		
-		if ( ! $this->chdir($remotePath) )
+		if ( ! $this->chdir($remoteDir) )
 		{
-			if ( ! $this->mkdir($remotePath, $permission) || ! $this->chdir($remotePath) )
+			if ( ! $this->mkdir($remoteDir, $permission) || ! $this->chdir($remoteDir) )
 			{
 				return FALSE;
 			}
@@ -376,7 +382,7 @@ class SZ_Ftp
 				{
 					$this->sendDir($localDir . (string)$file, $remoteDir . (string)$file, $binary, $permission);
 				}
-				else if ( $file->isFile )
+				else if ( $file->isFile() )
 				{
 					$this->sendFile($localDir . (string)$file, $remoteDir . (string)$file, $binary, $permission);
 				}
@@ -386,6 +392,7 @@ class SZ_Ftp
 		catch ( Exception $e )
 		{
 			$this->_log('SENDDIR: Failed to send directory recursive.');
+			throw $e;
 		}
 		
 		return FALSE;
@@ -453,7 +460,7 @@ class SZ_Ftp
 			return FALSE;
 		}
 		
-		if ( ! @ftp_delete($this->handlq, $remoteFile) )
+		if ( ! @ftp_delete($this->handle, $remoteFile) )
 		{
 			return $this->_log('DELETE: Failed to delete file.');
 		}
@@ -573,6 +580,7 @@ class SZ_Ftp
 		
 		if ( is_array($list) )
 		{
+			$path = trail_slash($path);
 			foreach ( $list as $raw )
 			{
 				$stat = new stdClass;
@@ -580,10 +588,15 @@ class SZ_Ftp
 				{
 					return $this->_log('RAWLIST: invalid raw list returns.');
 				}
+				if ( $matches[2] === '.' || $matches[2] === '..' )
+				{
+					continue;
+				}
 				$stat->isDirectory = ( strtolower($matches[1]) === 'd') ? TRUE : FALSE;
 				$stat->isLink      = ( strtolower($matches[1]) === 'l') ? TRUE : FALSE;
 				$stat->isFile      = ! $stat->isDirectory;
 				$stat->name        = $matches[2];
+				$stat->fullPath    = $path . $matches[2];
 				$return[]          = $stat;
 			}
 		}
