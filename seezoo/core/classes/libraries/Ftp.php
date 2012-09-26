@@ -35,8 +35,7 @@ class SZ_Ftp
 		'password' => '',
 		'hostname' => '',
 		'port'     => 21,
-		'passive'  => TRUE,
-		'logging'  => TRUE
+		'passive'  => TRUE
 	);
 	
 	
@@ -54,7 +53,7 @@ class SZ_Ftp
 	public function __construct()
 	{
 		$env       = Seezoo::getENV();
-		$ftpConfig = $env->getConfig('ftp');
+		$ftpConfig = $env->getConfig('FTP');
 		
 		$this->configure((array)$ftpConfig);
 	}
@@ -108,7 +107,7 @@ class SZ_Ftp
 		$this->close();
 		
 		// normalize hostname
-		$hostname = rtrim(preg_replace('|^[.+]://|', '', $this->_get('hotname')), '/');
+		$hostname = rtrim(preg_replace('|^[.+]://|', '', $this->_get('hostname')), '/');
 		
 		// Try to connect FTP server
 		$this->handle = @ftp_connect($hostname, (int)$this->_get('port'));

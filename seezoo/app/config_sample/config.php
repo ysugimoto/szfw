@@ -367,6 +367,23 @@ $config['picture_manipulation'] = 'gd';
 $config['imagemagick_lib_path'] = '/usr/bin/convert';
 
 
-
+/*
+ * --------------------------------------------------
+ * FTP server environment
+ * 
+ * Please set some parameters if you use FTP library:
+ * 
+ * hostname : FTP server address ( no need ftp:// protocol )
+ * username : your account username
+ * password : your account password
+ * port     : FTP server port number
+ * passive  : passive ransport mode boolean
+ * --------------------------------------------------
+ */
+$config['FTP']['hostname'] = '';
+$config['FTP']['username'] = '';
+$config['FTP']['password'] = '';
+$config['FTP']['port']     = 21;
+$config['FTP']['passive']  = TRUE;
 
 // EOF
