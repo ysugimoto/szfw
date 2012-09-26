@@ -8,7 +8,7 @@
  * A simple MVC/action Framework on PHP 5.1.0 or newer
  * 
  * 
- * FTP wapper class
+ * FTP wrapper class
  * 
  * @package  Seezoo-Framework
  * @category Libraries
