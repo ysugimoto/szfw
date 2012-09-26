@@ -135,13 +135,10 @@ class SZ_ActiveRecord
 			list($columns, $conditions, $limit) = $this->_parseMethod(substr($method, 4), $args);
 			
 			$query  = $this->_execFindQuery($columns, $conditions, $limit)->get();
-			$result = $query->fetchAll(PDO::FETCH_CLASS, get_class($this));
 			$this->reset();
-			if ( $limit > 0 )
-			{
-				return ( isset($result[0]) ) ? $result[0] : FALSE;
-			}
-			return $result;
+			return ( $limit === 1 )
+			         ? $query->fetch(PDO::FETCH_CLASS, get_class($this), PDO::FETCH_ORI_ABS, 0)
+			         : $query->fetchAll(PDO::FETCH_CLASS, get_class($this));
 		}
 	}
 	
