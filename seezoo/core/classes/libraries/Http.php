@@ -422,7 +422,7 @@ class SZ_Http
 		fclose($fp);
 
 		// split header
-		$exp = explode("\r\n\r\n", $resp);
+		$exp = explode("\r\n\r\n", $resp, 2);
 		
 		if ( count($exp) < 2 )
 		{
