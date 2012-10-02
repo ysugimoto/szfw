@@ -31,10 +31,14 @@ class SZ_Driver
 	 * @param  bool   $instanticate
 	 * @throws Exception
 	 */
-	protected function _loadDriver($driverType, $driverClass, $instantiate = TRUE, $useBaseDriver = TRUE)
+	protected function _loadDriver(
+	                               $driverType,
+	                               $driverClass,
+	                               $instantiate = TRUE,
+	                               $useBaseDriver = TRUE)
 	{
 		$ENV        = Seezoo::getENV();
-		$packages   = $ENV->getConfig('package');
+		$packages   = Seezoo::getPackage();
 		$subClass   = $ENV->getConfig('subclass_prefix');
 		$driverPath = 'classes/drivers/' . $driverType . '/'; 
 		$driverBase = ucfirst($driverType) . '_driver';
@@ -57,29 +61,47 @@ class SZ_Driver
 			return $this->driver;
 		}
 		
-		if ( ! file_exists(COREPATH . $driverPath . $driverClass . '.php') )
+		// Mark the load class
+		$Class  = '';
+		if ( file_exists(COREPATH . $driverPath . $driverClass . '.php') )
 		{
-			throw new Exception('Driver: ' . $driverClass . ' file not exists.');
-			return FALSE;
+			require_once(COREPATH . $driverPath . $driverClass . '.php');
+			$Class    = 'SZ_' . $driverClass;
+		}
+		else
+		{
+			// If coreclass not exists, load the original driver
+			$subClass = '';
 		}
 		
-		require_once(COREPATH . $driverPath . $driverClass . '.php');
-		$Class = 'SZ_' . $driverClass;
+		$isLoaded = FALSE;
 		
 		// packages override
 		foreach ( $packages as $pkg )
 		{
-			$extPath = APPPATH . rtrim($pkg, '/') . '/';
+			$extPath = PKGPATH . $pkg . '/';
 			if ( file_exists($extPath . $driverPath . $subClass . $driverClass . '.php' ) )
 			{
-				require_once($extPath . $this->_driverPath . $subClass . $driverClass . '.php');
-				if ( ! class_exists($subClass . $driverClass) )
-				{
-					throw new Exception('class:' . $subClass . $driverClass . ' is not declared!');
-				}
-				$Class = $subClass . $driverClass;
+				require_once($extPath . $driverPath . $subClass . $driverClass . '.php');
+				$Class    = $subClass . $driverClass;
+				$isLoaded = TRUE;
 				break;
 			}
+		}
+		
+		// Load a driver from apps directory when package driver is not exists.
+		if ( $isLoaded === FALSE )
+		{
+			if ( file_exists(APPPATH . $driverPath . $subClass . $driverClass . '.php') )
+			{
+				require_once(APPPATH . $driverPath . $subClass . $driverClass . '.php');
+				$Class = $subClass . $driverClass;
+			}
+		}
+		
+		if ( $Class === '' || ! class_exists($Class) )
+		{
+			throw new Exception('DirverClass:' . $subClass . $driverClass . ' is not declared!');
 		}
 		
 		$this->driver = ( $instantiate === TRUE ) ? new $Class() : $Class;
