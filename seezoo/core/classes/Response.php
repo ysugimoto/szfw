@@ -117,12 +117,6 @@ class SZ_Response
 		// Is it possible to transfer compressed gzip?
 		$this->setGzipHandler();
 		
-		header('HTTP/1.1 200 OK');
-		foreach ( $this->_headers as $header )
-		{
-			@header($header[0], $header[1]);
-		}
-		
 		Event::fire('final_output', $output);
 		
 		if ( $this->env->getConfig('enable_debug') === TRUE )
@@ -130,6 +124,15 @@ class SZ_Response
 			$memory   = memory_get_usage();
 			$debugger = Seezoo::$Importer->classes('Debugger');
 			$output   = str_replace('</body>', $debugger->execute($memory) . "\n</body>", $output);
+		}
+		
+		if ( $this->env->api !== 'cli' )
+		{
+			header('HTTP/1.1 200 OK');
+			foreach ( $this->_headers as $header )
+			{
+				@header($header[0], $header[1]);
+			}
 		}
 		
 		echo $output;
