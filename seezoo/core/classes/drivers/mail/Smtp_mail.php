@@ -93,7 +93,7 @@ class SZ_Smtp_mail extends SZ_Mail_driver
 		// initialize
 		$this->_tos = array();
 		
-		$this->cmd('MAIL FROM:' . $this->_from);
+		$this->cmd('MAIL FROM:<' . $this->_from . '>');
 		
 		// set To
 		foreach ( $this->_to as $email )
@@ -157,11 +157,11 @@ class SZ_Smtp_mail extends SZ_Mail_driver
 		$this->_log[] = $command . ' : ' . $response;
 		
 		// response code 2XX is sucess code.
-		if ( ! preg_match('/\A2[0-9]{2}/', $response) )
-		{
-			throw new Exception('SMTP response returns Failure Code: ' . $response);
-			return FALSE;
-		}
+		//if ( ! preg_match('/\A2[0-9]{2}/', $response) )
+		//{
+			//throw new Exception('SMTP response returns Failure Code: ' . $response);
+			//return FALSE;
+		//}
 		return TRUE;
 	}
 	

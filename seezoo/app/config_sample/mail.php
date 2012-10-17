@@ -63,4 +63,52 @@ $mail['smtp']['password']  = '';
 $mail['smtp']['keepalive'] = FALSE;
 
 
+
+/* ===================================================================
+ *  Mail receiver settings
+ * ===================================================================*/
+
+ /*
+ * --------------------------------------------------------------------
+ * Mail receiver
+ * 
+ * you can choose these:
+ *   imap  : IMAP server
+ *   pop3  : POP3 server
+ *   stdin : get mail from STDIN
+ * --------------------------------------------------------------------
+ */
+$mail['receiver'] = 'stdin';
+
+/*
+ * --------------------------------------------------------------------
+ * IMAP settings
+ * 
+ * If you are using a mail server that supports IMAP,
+ * please set the following parameters.
+ * --------------------------------------------------------------------
+ */
+$mail['imap']['hostname'] = 'localhost';
+$mail['imap']['port']     = 143;
+$mail['imap']['email']    = '';
+$mail['imap']['password'] = '';
+$mail['imap']['ssl']      = FALSE;
+
+
+/*
+ * --------------------------------------------------------------------
+ * POP3 settings
+ * 
+ * If you are using a mail server that supports POP3,
+ * please set the following parameters.
+ * --------------------------------------------------------------------
+ */
+$mail['pop3']['hostname'] = 'localhost';
+$mail['pop3']['port']     = 110;
+$mail['pop3']['email']    = '';
+$mail['pop3']['password'] = '';
+$mail['pop3']['ssl']      = FALSE;
+
+
+
 // End of mail.php
