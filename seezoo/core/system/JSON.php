@@ -1,4 +1,4 @@
-<?php if ( ! defined('SZ_EXEC') ) exit('access_denied');
+<?php
 
 /**
  * ====================================================================
@@ -30,7 +30,7 @@ class JSON
 	 * escape unicode regex
 	 * @var string ( regex format )
 	 */
-	private $escapeRegex = '/((?:[^\x09\x0A\x0D\x20-\x7E]{3})+)/';
+	//private $escapeRegex = '/((?:[^\x09\x0A\x0D\x20-\x7E]{3})+)/';
 
 	
 	/**
@@ -41,11 +41,11 @@ class JSON
 		'"' => '"',    // quotation mark
 		'\\'=> '\\',   // reverse solidus
 		'/' => '/',    // solidus
-		'b' => 'b',    // backspace
-		'f' => 'f',    // formfeed
-		'n' => 'n',    // newline
-		'r' => 'r',    // carriage return
-		't' => 't'     // horizontal tab
+		'b' => "\b",    // backspace
+		'f' => "\f",    // formfeed
+		'n' => "\n",    // newline
+		'r' => "\r",    // carriage return
+		't' => "\t"     // horizontal tab
 	);
 	
 	// encode parameters
@@ -122,7 +122,13 @@ class JSON
 	private function _decode($str, $assoc)
 	{
 		$decoded = $this->_parse($str);
-		return ( $assoc === TRUE ) ? $this->_objectToArray($decoded) : $decoded;
+		if ( $assoc === TRUE )
+		{
+			return ( ! is_object($decoded) )
+			         ? get_object_vars($decoded)
+			         : $decoded;
+		}
+		return $decoded;
 	}
 	
 	
@@ -157,17 +163,21 @@ class JSON
 		$val = $data[$key];
 		$pat = array();
 		
-		if ( is_string($val) )
+		if ( $val === FALSE || $val === TRUE )
+		{
+			return ( $val ) ? 'true' : 'false';
+		}
+		else if ( is_string($val) )
 		{
 			return $this->_quote($val);
 		}
-		else if ( is_numeric($val) )
+		else if ( is_float($val) )
 		{
-			return ( is_infinite($val) ) ? strval($val) : 'null';
+			return ( ! is_infinite($val) ) ? (float)$val : 'null';
 		}
-		else if ( is_bool($val) )
+		else if ( is_int($val) )
 		{
-			return ( $val ) ? 'true' : 'false';
+			return ( ! is_infinite($val) ) ? (int)$val : 'null';
 		}
 		else if ( is_null($val) )
 		{
@@ -185,20 +195,16 @@ class JSON
 				$tr = $this->_strstr($k, $val);
 				$pat[$k] = ( $tr ) ? $tr : 'null';
 			}
+			
 			if ( count($pat) === 0 )
 			{
 				$ret = '[]';
 			}
 			else
 			{
-				if ( ! empty($this->gap) )
-				{
-					$ret = "[\n" . $this->gap . implode(",\n" . $this->gap, $pat) . "\n" . $m . ']';
-				}
-				else
-				{
-					$ret = '[' . implode(',', $pat) . ']';
-				}
+				$ret = ( ! empty($this->gap) )
+				         ? "[\n" . $this->gap . implode(",\n" . $this->gap, $pat) . "\n" . $m . ']'
+				         : '[' . implode(',', $pat) . ']';
 			}
 			$this->gap = $m;
 			return $ret;
@@ -210,14 +216,11 @@ class JSON
 				return 'null';
 			}
 			$this->gap .= $this->index;
-			$val = $this->_objectToArray($val);
+			$val = ( is_object($val) ) ? get_object_vars($val) : $val;
 			foreach ( $val as $k => $v )
 			{
 				$tmp = $this->_strstr($k, $val);
-				if ( $tmp )
-				{
-					$pat[] = $this->_quote($k) . (( $this->gap ) ? ': ' : ':') . $tmp;
-				}
+				$pat[] = $this->_quote($k) . (( $this->gap ) ? ': ' : ':') . $tmp;
 			}
 			
 			if ( count($pat) === 0 )
@@ -226,17 +229,12 @@ class JSON
 			}
 			else
 			{
-				if ( $this->gap )
-				{
-					$ret = "{\n" . $this->gap . implode(",\n" . $this->gap, $pat) . "\n" . $m . '}';
-				}
-				else
-				{
-					$ret = '{' . implode(',', $pat) . '}';
-				}
+				$ret = ( $this->gap )
+				         ? "{\n" . $this->gap . implode(",\n" . $this->gap, $pat) . "\n" . $m . '}'
+				         : '{' . implode(',', $pat) . '}';
 				$this->gap = $m;
-				return $ret;
 			}
+			return $ret;
 		}
 	}
 	
@@ -282,8 +280,10 @@ class JSON
 			throw new Exception("Expected '" . $char . "' instead of '" . $this->currentChar .  "'");
 		}
 		
-		$this->currentChar = substr($this->_textValue, $this->point, 1);
-		$this->point++;
+		$this->currentChar = ( isset($this->_textValue[$this->point]) )
+		                       ? $this->_textValue[$this->point++]
+		                       : null;
+
 		return $this->currentChar;
 	}
 	
@@ -304,7 +304,7 @@ class JSON
 			$str = '-';
 			$this->_next('-');
 		}
-		while ( $this->currentChar >= 0 && $this->currentChar <= 9 )
+		while ( ctype_digit($this->currentChar) && $this->currentChar >= 0 && $this->currentChar <= 9 )
 		{
 			$str .= $this->currentChar;
 			$this->_next();
@@ -333,7 +333,7 @@ class JSON
 			}
 		}
 		
-		if ( is_numeric($str) )
+		if ( is_infinite($str) )
 		{
 			throw new Exception('illegal number exists.');
 		}
@@ -371,7 +371,8 @@ class JSON
 						{
 							$uffff .= $this->_next();
 						}
-						$str .= $this->_unicodeUnEscape($uffff);
+						$str .= mb_convert_encoding(pack('H*', $uffff), 'UTF-8', 'UTF-16');
+						//$str .= $this->_unicodeUnEscape($uffff);
 					}
 					else if ( isset($this->_escChars[$this->currentChar]) )
 					{
@@ -558,7 +559,9 @@ class JSON
 			case '-':
 				return $this->_number();
 			default:
-				return ( $this->currentChar >= 0 && $this->currentChar <= 9 ) ? $this->_number() : $this->_word();
+				return ( ctype_digit($this->currentChar) && $this->currentChar >= 0 && $this->currentChar <= 9 )
+				         ? $this->_number()
+				         : $this->_word();
 		}
 	}
 	
@@ -580,14 +583,13 @@ class JSON
 			return FALSE;
 		}
 		
-		$i = 0;
+		$i = -1;
 		foreach ( $arr as $key => $val )
 		{
-			if ( $key !== $i )
+			if ( $key != ++$i )
 			{
 				return FALSE;
 			}
-			++$i;
 		}
 		return TRUE;
 	}
@@ -627,57 +629,26 @@ class JSON
 	 */
 	private function _quote($str)
 	{
-		if ( preg_match($this->escapeRegex, $str) )
+		if ( ! preg_match('/((?:[^\x09\x0A\x0D\x20-\x7E]{3})+)/', $str) )
 		{
-			return '"' . preg_replace_callback($this->escapeRegex, array($this, '_unicodeEscape'), $str) . '"';
+			return '"' . $str . '"';
 		}
-		return '"' . $str . '"';
-	}
-	
-	
-	// ---------------------------------------------------------------
-	
-	
-	/**
-	 * unicode escape
-	 * 
-	 * referenced:
-	 * @see http://d.hatena.ne.jp/iizukaw/20090422 thanks!
-	 * 
-	 * @access private
-	 * @param  array $matches
-	 * @return string
-	 */
-	private function _unicodeEscape($matches)
-	{
-		$utf16 = mb_convert_encoding($matches[1], 'UTF-16', 'UTF-8');
+		
+		$utf16 = mb_convert_encoding($str, 'UTF-16', 'UTF-8');
 		$ret   = '';
 		$len   = strlen($utf16);
+		$table = array();
 		for ( $i = 0; $i < $len; $i += 2 )
 		{
-			$ret .= "\u" . sprintf("%02x%02x", ord($utf16[$i]), ord($utf16[$i + 1]));
+			$hex = $utf16[$i] . $utf16[$i + 1];
+			if ( ! isset($table[$hex]) )
+			{
+				$table[$hex] = "\u" . sprintf("%02x%02x", ord($utf16[$i]), ord($utf16[$i + 1]));
+			}
+			$ret .= $table[$hex];
 		}
+		$table = null;
+			
 		return $ret;
 	}
-	
-	
-	// ---------------------------------------------------------------
-	
-	
-	/**
-	 * unicode unescape
-	 * 
-	 * referenced:
-	 * @see http://d.hatena.ne.jp/iizukaw/20090422 thanks!
-	 * 
-	 * @access private
-	 * @param  string $matches
-	 * @return string
-	 */
-	private function _unicodeUnEscape($str)
-	{
-		return mb_convert_encoding(pack('H*', $str), 'UTF-8', 'UTF-16');
-	}
-	
-	
 }
