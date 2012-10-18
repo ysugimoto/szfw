@@ -61,8 +61,8 @@ class SZ_Response
 	{
 		if ( ! preg_match('/^https?:/', $uri ) )
 		{
-			$rewrite = Seezoo::$config['enable_mod_rewrite'];
-			$uri     = Seezoo::$config['base_url']
+			$rewrite = $this->env->getConfig('enable_mod_rewrite');
+			$uri     = $this->env->getConfig('base_url')
 			           . (( $rewrite ) ? '' : DISPATCHER . '/') . ltrim($uri, '/');
 		}
 		header("Location: " . $uri, TRUE, $code);
@@ -199,13 +199,16 @@ class SZ_Response
 				$fileName = basename($filePath);
 			}
 			$fileSize = filesize($filePath);
-			$Mime     = Seezoo::$Importer->classes('Mimetype');
+			$Mime     = Seezoo::$Importer->library('Mimetype');
 			$mimeType = $Mime->detect($filePath);
-			
+			if ( ! $mimeType )
+			{
+				$mimeType = 'application/octet-stream';
+			}
 		}
 		
 		// send headers
-		$headers = array('Content-Type: "' . $mimeType . '"');
+		$headers = array('Content-Type: ' . $mimeType);
 		
 		if ( $this->env->isIE )
 		{

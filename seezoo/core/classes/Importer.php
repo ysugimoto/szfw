@@ -59,14 +59,10 @@ class SZ_Importer
 	 */
 	public function database($group = '')
 	{
-		if ( $group === '' )
+		if ( $group === ''
+		     && ! ($group = get_config('default_database_connection_handle')) )
 		{
-			$env   = Seezoo::getENV();
-			$group = $env->getConfig('default_database_connection_handle');
-			if ( ! $group )
-			{
-				$group = 'default';
-			} 
+			$group = 'default'; 
 		}
 		$db = $this->loadDatabase($group);
 		$this->_attachModule('db', $db);
@@ -90,13 +86,20 @@ class SZ_Importer
 	}
 	
 	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Load an activerecord
+	 * 
+	 * @access public
+	 * @return ActiveRecord instance
+	 */
 	public function activeRecord($arName)
 	{
 		$module = $this->loadModule($arName, 'activerecords', TRUE);
 		return $module->data;
 	}
-	
-	
 	
 	
 	// ---------------------------------------------------------------
@@ -183,12 +186,14 @@ class SZ_Importer
 			$alias = FALSE;
 		}
 		$H = $this->classes('Helpers');
+		
 		foreach ( (array)$helpers as $helper )
 		{
-			$name = str_replace('Helper', '', $helper);
-			$alias = ( $alias ) ? $alias : ucfirst($name);
+			$name   = str_replace('Helper', '', $helper);
+			$alias  = ( $alias ) ? $alias : ucfirst($name);
 			$module = $this->loadModule($name . 'Helper', 'helpers', TRUE, array(), $alias);
-			$H->{strtolower($name)} =  $module->data;
+
+			$H->{strtolower($name)} = $instance;
 		}
 		
 		return $module->data;
@@ -215,6 +220,7 @@ class SZ_Importer
 		{
 			$alias = FALSE;
 		}
+		
 		foreach ( (array)$models as $model )
 		{
 			$module = $this->loadModule($model, 'models', TRUE, $param);
@@ -255,8 +261,6 @@ class SZ_Importer
 	 */
 	public function vendor($vendors, $param = array())
 	{
-		$packages  = Seezoo::$config['package'];
-		
 		foreach ( (array)$vendors as $vendor )
 		{
 			// Does request class in a sub-directory?
@@ -274,11 +278,11 @@ class SZ_Importer
 			}
 			
 			$isLoaded = FALSE;
+			$filePath = $dir . $Class . '.php';
 		
 			// Is class already loaded?
-			if ( SeezooFactory::exists('vendors', $vendor) )
+			if ( FALSE !== ($stacked = SeezooFactory::get('vendors', $vendor)) )
 			{
-				$stacked = SeezooFactory::get('vendors', $vendor);
 				if ( is_object($stacked) )
 				{
 					$this->_attachModule($vendor, $stacked);
@@ -286,11 +290,11 @@ class SZ_Importer
 				continue;
 			}
 			
-			foreach ( $packages as $pkg )
+			foreach ( Seezoo::getPackage() as $pkg )
 			{
-				if ( file_exists(PKGPATH . $pkg . '/' . $dir . $Class . '.php') )
+				if ( file_exists(PKGPATH . $pkg . '/' . $filePath) )
 				{
-					require_once(PKGPATH . $pkg . '/' . $dir . $Class . '.php');
+					require_once(PKGPATH . $pkg . '/' . $filePath);
 					$isLoaded = TRUE;
 					break;
 				}
@@ -298,13 +302,13 @@ class SZ_Importer
 			
 			if ( $isLoaded === FALSE )
 			{
-				if ( file_exists(EXTPATH . $dir . $Class . '.php') )
+				if ( file_exists(EXTPATH . $filePath) )
 				{
-					require_once(EXTPATH . $dir . $Class . '.php');
+					require_once(EXTPATH . $filePath);
 				}
-				else if ( file_exists(APPPATH . $dir . $Class . '.php') )
+				else if ( file_exists(APPPATH . $filePath) )
 				{
-					require_once(APPPATH . $dir . $Class . '.php');
+					require_once(APPPATH . $filePath);
 				}
 				else
 				{
@@ -340,15 +344,14 @@ class SZ_Importer
 	public function lead($lead)
 	{
 		$systemLead = $this->classes('Lead');
-		$packages   = Seezoo::$config['package'];
 		
 		// Does request class in a sub-directory?
-		if ( strpos($lead, '/') !== FALSE )
+		if ( FALSE !== ($point = strrpos($lead, '/')) )
 		{
-			$exp   = explode('/', $lead);
-			$lead  = lcfirst(array_pop($exp));
+			$dir   = 'classes/leads/' . trim(substr($lead, 0, $point++), '/') . '/';
+			$lead  = lcfirst(substr($lead, $point));
 			$Class = $lead . 'Lead';
-			$dir   = 'classes/leads/' . trim(implode('/', $exp), '/') . '/';
+			
 		}
 		else
 		{
@@ -360,7 +363,7 @@ class SZ_Importer
 		$filePath = $dir . $lead . '.php';
 		$isLoaded = FALSE;
 		
-		foreach ( $packages as $pkg )
+		foreach ( Seezoo::getPackage() as $pkg )
 		{
 			if ( file_exists(PKGPATH . $pkg . '/' . $filePath) )
 			{
@@ -397,15 +400,12 @@ class SZ_Importer
 	 * @return array
 	 */
 	public function config($configName, $isOtherKey = FALSE)
-	{
-		$packages  = Seezoo::$config['package'];
-		
+	{	
 		// Does request class in a sub-directory?
-		if ( strpos($configName, '/') !== FALSE )
+		if ( FALSE !== ($point = strrpos($configName, '/')) )
 		{
-			$exp  = explode('/', $configName);
-			$name = array_pop($exp);
-			$dir  = 'config/' . trim(implode('/', $exp), '/') . '/';
+			$dir  = 'config/' . trim(substr($configName, 0, $point++), '/') . '/';
+			$name = substr($configName, $point);
 		}
 		else
 		{
@@ -415,48 +415,39 @@ class SZ_Importer
 		
 		// remove php-extension
 		$name = preg_replace('/\.php\Z/u', '', $name);
-		$isLoaded = FALSE;
-		$stackedConfig = array();
 		
 		// Is config already loaded?
-		if ( SeezooFactory::exists('config', $name) )
+		if ( FALSE !== ($stacked = SeezooFactory::exists('config', $name)) )
 		{
-			return SeezooFactory::get('config', $name);
+			return $stacked;
 		}
+		
+		$isLoaded      = FALSE;
+		$stackedConfig = array();
+		$filePath      = $dir . $name . '.php';
 		
 		// Notice:
 		// Configure data is merged from base file cascading.
-		
-		// First, application base config exists?
-		if ( file_exists(APPPATH . $dir . $name . '.php') )
+		foreach ( array(APPPATH, EXTPATH) as $absPath )
 		{
-			require_once(APPPATH . $dir . $name . '.php');
-			if ( isset($config) )
+			if ( file_exists($absPath . $filePath) )
 			{
-				$stackedConfig = array_merge($stackedConfig, $config);
+				require_once($absPath . $filePath);
+				if ( isset($config) )
+				{
+					$stackedConfig = array_merge($stackedConfig, $config);
+				}
+				unset($config);
+				$isLoaded = TRUE;
 			}
-			unset($config);
-			$isLoaded = TRUE;
 		}
 		
-		// Second, extension config file exists?
-		if ( file_exists(EXTPATH . $dir . $name . '.php') )
+		// package config files exists?
+		foreach ( Seezoo::getPackage() as $pkg )
 		{
-			require_once(EXTPATH . $dir . $name . '.php');
-			if ( isset($config) )
+			if ( file_exists(PKGPATH . $pkg . '/' . $filePath) )
 			{
-				$stackedConfig = array_merge($stackedConfig, $config);
-			}
-			unset($config);
-			$isLoaded = TRUE;
-		}
-		
-		// Third, package config files exists?
-		foreach ( $packages as $pkg )
-		{
-			if ( file_exists(PKGPATH . $pkg . '/' . $dir . $name . '.php') )
-			{
-				require_once(PKGPATH . $pkg . '/' . $dir . $name . '.php');
+				require_once(PKGPATH . $pkg . '/' . $filePath);
 				if ( isset($config) )
 				{
 					$stackedConfig = array_merge($stackedConfig, $config);
@@ -500,9 +491,13 @@ class SZ_Importer
 			}
 			return $resp->body;
 		}
-		else
+		else if ( ! is_file($filePath) )
 		{
-			return @file_get_contents($filePath);
+			throw new InvalidArgumentException('import file is not found: '
+			                                   . get_class($this) . '::file');
+		}
+		{
+			return file_get_contents($filePath);
 		}
 	}
 	
@@ -556,59 +551,53 @@ class SZ_Importer
 	                               $instanciate = TRUE,         // If true, create instance
 	                               $params      = array(),      // pass parameter to class constructor
 	                               $alias       = FALSE         // property alias name
-	                                 )
+	                              )
 	{
-		$dir = ( $destDir !== 'tools' ) ? 'classes/' . $destDir : $destDir;
-		if ( empty($destDir) )
+		if ( FALSE !== ($point = strrpos($class, '/')) )
 		{
-			$destDir = 'classes';
-		}
-		// Does request class in a sub-directory?
-		if ( strpos($class, '/') !== FALSE )
-		{
-			$exp   = explode('/', $class);
-			$class = ucfirst(array_pop($exp));
-			//$Class = ( $destDir !== 'tools' ) ? ucfirst($class) : $class;
-			$dir   = rtrim($dir, '/') . '/' . trim(implode('/', $exp), '/') . '/';
+			$dir   = trim(substr($class, 0, $point++), '/') . '/';
+			$class = ucfirst(substr($class, $point));
 		}
 		else
 		{
+			$dir   = '';
 			$class = ucfirst($class);
-			//$Class = ( $destDir !== 'tools' ) ? ucfirst($class) : $class;
-			$dir   = rtrim($dir, '/') . '/';
+		}
+		$dir = 'classes/' . $destDir . '/' . $dir;
+		if ( $destDir === '' )
+		{
+			$destDir = 'classes';
 		}
 		
 		$module = new stdClass;
 		$module->name = lcfirst($class);
 		
 		// Is class already loaded?
-		if ( SeezooFactory::exists($destDir, $class) )
+		if ( FALSE !== ($stacked = SeezooFactory::get($destDir, $class)) )
 		{
-			$stacked =  SeezooFactory::get($destDir, $class);
 			if ( ! $instanciate )
 			{
 				$module->data = ( is_object($stacked) ) ? get_class($stacked) : $stacked;
-				return $module;
 			}
 			else
 			{
 				$module->data = ( ! is_object($stacked) ) ? new $stacked() : $stacked;
-				return $module;
 			}
+			return $module;
 		}
 		
-		$packages  = Seezoo::getPackage();
 		$prefix    = Seezoo::$config['subclass_prefix'];
 		$isLoaded  = FALSE;
+		$filePath  = $dir . $class . '.php';
 		
 		// Is model loaded, class file detection simply.
 		if ( $destDir === 'models' || $destDir === 'activerecords' )
 		{
-			foreach ( $packages as $pkg )
+			foreach ( Seezoo::getPackage() as $pkg )
 			{
-				if ( file_exists(PKGPATH . $pkg . '/' . $dir . $class . '.php') )
+				if ( file_exists(PKGPATH . $pkg . '/' . $filePath) )
 				{
-					require_once(PKGPATH . $pkg . '/' . $dir . $class . '.php');
+					require_once(PKGPATH . $pkg . '/' . $filePath);
 					$isLoaded = TRUE;
 					break;
 				}
@@ -616,18 +605,17 @@ class SZ_Importer
 			
 			if ( $isLoaded === FALSE )
 			{
-				if ( file_exists(EXTPATH . $dir . $class . '.php') )
+				if ( file_exists(EXTPATH . $filePath) )
 				{
-					require_once(EXTPATH . $dir . $class . '.php');
+					require_once(EXTPATH . $filePath);
 				}
-				else if ( file_exists(APPPATH. $dir . $class . '.php') )
+				else if ( file_exists(APPPATH. $filePath) )
 				{
-					require_once(APPPATH . $dir . $class . '.php');
+					require_once(APPPATH . $filePath);
 				}
 				else
 				{
 					throw new Exception('Undefined ' . substr($destDir, 0, -1) . ':' . $class);
-					return FALSE;
 				}
 			}
 
@@ -645,21 +633,22 @@ class SZ_Importer
 			return $module;
 			
 		}
+		
 		else if ( $destDir === 'helpers' )
 		{
 			// If core class exists, detection of extened class
-			if ( file_exists(COREPATH . $dir . $class . '.php') )
+			if ( file_exists(COREPATH . $filePath) )
 			{
-				require_once(COREPATH . $dir . $class . '.php');
+				require_once(COREPATH . $filePath);
 				$loadClass = 'SZ_' . $class;
 			}
 			
 			// extension or original helper detection
-			foreach ( $packages as $pkg )
+			foreach ( Seezoo::getPackage() as $pkg )
 			{
-				if ( file_exists(PKGPATH . $pkg . '/' . $dir . $class . '.php') )
+				if ( file_exists(PKGPATH . $pkg . '/' . $filePath) )
 				{
-					require_once(PKGPATH . $pkg . '/' . $dir . $class . '.php');
+					require_once(PKGPATH . $pkg . '/' . $filePath);
 					$loadClass = ( class_exists($prefix . $class) )  ? $prefix . $class : $class;
 					$isLoaded = TRUE;
 					break;
@@ -668,14 +657,14 @@ class SZ_Importer
 			
 			if ( $isLoaded === FALSE )
 			{
-				if ( file_exists(EXTPATH . $dir . $class . '.php') )
+				if ( file_exists(EXTPATH . $filePath) )
 				{
-					require_once(EXTPATH . $dir . $class . '.php');
+					require_once(EXTPATH . $filePath);
 					$loadClass = ( class_exists($prefix . $class) )  ? $prefix . $class : $class;
 				}
-				else if ( file_exists(APPPATH. $dir . $class . '.php') )
+				else if ( file_exists(APPPATH. $filePath) )
 				{
-					require_once(APPPATH . $dir . $class . '.php');
+					require_once(APPPATH . $filePath);
 					$loadClass = ( class_exists($prefix . $class) )  ? $prefix . $class : $class;
 				}
 			}
@@ -690,24 +679,27 @@ class SZ_Importer
 			return $module;
 		}
 		
+		
 		// Core classes, Libraries load section
 		// 
 		// If core class exists, detection of extened class
-		if ( ! file_exists(COREPATH . $dir . $class . '.php') )
+		if ( ! file_exists(COREPATH . $filePath) )
 		{
 			throw new Exception($class . ' is not specified.');
 		}
 		
 		// load the core class
-		require_once(COREPATH . $dir . $class . '.php');
+		require_once(COREPATH . $filePath);
 		
 		// Does extension class exists?
 		$loadClass = $prefix . $class;
-		foreach ( $packages as $pkg )
+		$filePath  = $dir . $loadClass . '.php';
+		
+		foreach ( Seezoo::getPackage() as $pkg )
 		{
-			if ( file_exists(PKGPATH . $pkg . '/' . $dir . $loadClass . '.php') )
+			if ( file_exists(PKGPATH . $pkg . '/' . $filePath) )
 			{
-				require_once(PKGPATH . $pkg . '/' . $dir . $loadClass . '.php');
+				require_once(PKGPATH . $pkg . '/' . $filePath);
 				$isLoaded = TRUE;
 				break;
 			}
@@ -715,13 +707,13 @@ class SZ_Importer
 		
 		if ( $isLoaded === FALSE )
 		{
-			if ( file_exists(EXTPATH . $dir . $loadClass . '.php') )
+			if ( file_exists(EXTPATH . $filePath) )
 			{
-				require_once(EXTPATH . $dir . $loadClass . '.php');
+				require_once(EXTPATH . $filePath);
 			}
-			else if ( file_exists(APPPATH. $dir . $loadClass . '.php') )
+			else if ( file_exists(APPPATH. $filePath) )
 			{
-				require_once(APPPATH . $dir . $loadClass . '.php');
+				require_once(APPPATH . $filePath);
 			}
 			// Else, create core class instance
 			else

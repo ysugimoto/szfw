@@ -88,6 +88,7 @@ class SZ_Mimetype
 	 */
 	public function detect($filePath, $ext = '')
 	{
+		$mime = null;
 		if ( ! empty($this->backend) && method_exists($this, $this->backend) )
 		{
 			$mime = $this->{$this->backend}($filePath, $ext);
@@ -116,7 +117,7 @@ class SZ_Mimetype
 	protected function _detectFromMimeList($path, $ext)
 	{
 		$mime      = null;
-		$mimes     = $this->env->getMimeTypeList();
+		$mimes     = $this->_getMimeTypeList();
 		$extension = ( ! empty($ext) ) ? $ext : $this->getFileExtension($path);
 		if ( isset($mimes[$extension]) )
 		{
@@ -125,6 +126,16 @@ class SZ_Mimetype
 		return $mime;
 	}
 	
+	
+	protected function _getMimeTypeList()
+	{
+		if ( ! file_exists(COREPATH . 'system/mimetypes.php') )
+		{
+			throw new RuntimeException('Mimetype list file is not exists.');
+		}
+		include(COREPATH . 'system/mimetypes.php');
+		return $mymetypes;
+	}
 	
 	// ---------------------------------------------------------------
 	

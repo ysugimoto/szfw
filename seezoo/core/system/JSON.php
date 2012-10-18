@@ -1,4 +1,4 @@
-<?php
+<?php if ( ! defined('SZ_EXEC') ) exit('access_denied');
 
 /**
  * ====================================================================
@@ -26,13 +26,6 @@
 
 class JSON
 {
-	/**
-	 * escape unicode regex
-	 * @var string ( regex format )
-	 */
-	//private $escapeRegex = '/((?:[^\x09\x0A\x0D\x20-\x7E]{3})+)/';
-
-	
 	/**
 	 * meta characters
 	 * @var array

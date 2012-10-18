@@ -44,12 +44,11 @@ class Autoloader
 	 */
 	public static function init()
 	{
-		$path = realpath(dirname(__FILE__));
+		$path = dirname(__FILE__);
 		require_once($path . '/constants.php');
 		require_once($path . '/common.php');
 		
 		spl_autoload_register(array('Autoloader', '_initLoad'));
-		spl_autoload_register(array('Autoloader', 'load'));
 		spl_autoload_register(array('Event', 'loadEventDispatcher'));
 	}
 		
@@ -65,6 +64,11 @@ class Autoloader
 	 */
 	public static function register($path)
 	{
+		// Register autoload first time!
+		if ( count(self::$loadDir) === 0 )
+		{
+			spl_autoload_register(array('Autoloader', 'load'));
+		}
 		self::$loadDir[] = trail_slash($path);
 	}
 	

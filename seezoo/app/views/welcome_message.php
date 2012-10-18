@@ -70,7 +70,7 @@
 	<h1>Welcome to SZFW!</h1>
 	
 	<div id="body">
-		<p><?php echo $this->filter->str($message);?></p>
+		<p><?php echo $message;?></p>
 	</div>
 </div>
 

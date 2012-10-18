@@ -159,24 +159,6 @@ class SeezooFactory
 	{
 		return end(self::$_processes);
 	}
-
-	
-	// ---------------------------------------------------------------
-	
-	
-	/**
-	 * Stack exists
-	 * 
-	 * @access public static
-	 * @param  string $type
-	 * @param  string $name
-	 * @return bool
-	 */
-	public static function exists($type, $name)
-	{
-		$type = str_replace('/', '_', $type);
-		return ( isset(self::${$type}) && isset(self::${$type}[$name]) ) ? TRUE : FALSE;
-	}
 	
 	
 	// ---------------------------------------------------------------
@@ -214,7 +196,10 @@ class SeezooFactory
 	 */
 	public static function get($type, $name)
 	{
-		return self::${$type}[$name][0];
+		$type = str_replace('/', '_', $type);
+		return ( isset(self::${$type}) && isset(self::${$type}[$name]) )
+		         ? self::${$type}[$name][0]
+		         : FALSE;
 	}
 	
 	

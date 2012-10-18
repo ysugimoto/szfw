@@ -86,6 +86,9 @@ class Seezoo
 	
 	public static $outpuBufferMode = TRUE;
 	
+	
+	private static $packages = array();
+	
 	// ---------------------------------------------------------------
 	
 	
@@ -263,9 +266,9 @@ class Seezoo
 	 */
 	public static function addPackage($package)
 	{
-		if ( ! in_array($package, self::$config['package']) )
+		if ( ! in_array($package, self::$packages) )
 		{
-			self::$config['package'][] = $package;
+			self::$packages[] = $package;
 		}
 	}
 	
@@ -281,9 +284,9 @@ class Seezoo
 	 */
 	public static function removePackage($package)
 	{
-		if ( FALSE !== ($key = array_search($package, self::$config['package'])) )
+		if ( FALSE !== ($key = array_search($package, self::$packages)) )
 		{
-			array_splice(self::$config['package'], $key, 1);
+			array_splice(self::$packages, $key, 1);
 		}
 	}
 	
@@ -298,7 +301,7 @@ class Seezoo
 	 */
 	public static function getPackage()
 	{
-		return self::$config['package'];
+		return self::$packages;
 	}
 	
 	
@@ -385,7 +388,7 @@ class Seezoo
 			// Does output hook method exists?
 			if ( method_exists($SZ, '_output') )
 			{
-				$output = $SZ->_output($SZ->view->getDisplayBUffer());
+				$output = $SZ->_output($SZ->view->getDisplayBuffer());
 				$SZ->view->replaceBuffer($output);
 			}
 			$Mark->end('process:' . $process->level . ':MVC:MethodExecuted', 'baseProcess:'. $process->level);
@@ -514,18 +517,25 @@ class Seezoo
 		
 		// Cofguration ----------------------------------------------
 		
-		include(COREPATH . 'config/config.php');
-		$coreConfig = $config;
-		// get configuration
 		if ( ! file_exists(APPPATH . 'config/config.php') )
 		{
 			throw new RuntimeException('Configuration file is not exists!');
 			exit;
 		}
 		include(APPPATH . 'config/config.php');
-		self::$config = array_merge($coreConfig, $config);
-		unset($config);
-		unset($coreConfig);
+		self::$config = $config;
+		
+		
+		// Init packages ----------------------------------------------
+		
+		if ( file_exists(APPPATH . 'config/package.php') )
+		{
+			include(APPPATH . 'config/package.php');
+			if ( isset($pakcage) )
+			{
+				self::$packages = $package;
+			}
+		}
 		
 		
 		// Application settings --------------------------------------
@@ -536,7 +546,6 @@ class Seezoo
 		
 		// Event startup ---------------------------------------------
 		
-		spl_autoload_register(array('Event', 'loadEventDispatcher'));
 		Event::addListenerFromFile(APPPATH . 'config/event.php');
 		Event::addListenerFromFile(EXTPATH . 'config/event.php');
 		
@@ -549,11 +558,10 @@ class Seezoo
 		
 		// Exception setting -----------------------------------------
 		
-		self::$Classes['Exception'] = self::$Importer->classes('Exception', FALSE);
-		$Exception = new self::$Classes['Exception']();
-		set_exception_handler(array($Exception, 'handleException'));
-		set_error_handler(array($Exception, 'handleError'));
-		register_shutdown_function(array($Exception, 'handleShutdown'));
+		self::$Classes['Exception'] = self::$Importer->classes('Exception');
+		set_exception_handler(array(self::$Classes['Exception'], 'handleException'));
+		set_error_handler(array(self::$Classes['Exception'], 'handleError'));
+		register_shutdown_function(array(self::$Classes['Exception'], 'handleShutdown'));
 		
 		// Preprocess event fire
 		Event::fire('preprocess');
@@ -564,21 +572,30 @@ class Seezoo
 		self::$_stackRequest     = self::$Importer->classes('Request');
 		self::$Response          = self::$Importer->classes('Response');
 		self::$Cache             = self::$Importer->classes('Cache');
-		self::$Classes['Driver'] = self::$Importer->classes('Driver', FALSE);
 		self::$Classes['View']   = self::$Importer->classes('View',   FALSE);
 		self::$Classes['Router'] = self::$Importer->classes('Router', FALSE);
 		
 		// Only once!
 		self::$startUpExecuted = TRUE;
 		
-		foreach ( self::getPackage() as $pkg )
+		foreach ( self::$packages as $pkg )
 		{
 			self::initPackage($pkg);
 		}
 		
 		Event::fire('startup');
 	}
-
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Registers packages init
+	 * 
+	 * @access public
+	 * @param  string $pkg
+	 */
 	public static function initPackage($pkg)
 	{
 		if ( file_exists(PKGPATH . $pkg . '/init.php') )

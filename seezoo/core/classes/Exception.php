@@ -171,7 +171,7 @@ class SZ_Exception extends Exception
 		               : 'Error';
 		
 		header('HTTP/1.1 500 Internal Server Error');
-		foreach ( $env->getConfig('package') as $pkg )
+		foreach ( Seezoo::getPackage() as $pkg )
 		{
 			if ( file_exists(SZPATH . $pkg . '/errors/' . $template . '.php') )
 			{

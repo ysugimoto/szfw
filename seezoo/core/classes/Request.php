@@ -119,7 +119,7 @@ class SZ_Request
 		$this->_appCharset     = $this->env->getConfig('charset');
 		$this->_autoConverts   = $this->env->getConfig('auto_convert_input');
 		$this->_cookie         = $this->_cleanFilter($_COOKIE, $this->_autoConverts['COOKIE']);
-		$this->_server         = $_SERVER;//( $this->env->api === 'cli' ) ? $_SERVER : $this->_cleanFilter($_SERVER);
+		$this->_server         = $_SERVER;
 		$this->_post           = $this->_cleanFilter($_POST, $this->_autoConverts['POST']);
 		$this->_get            = $this->_cleanFilter($_GET, $this->_autoConverts['GET']);
 		$this->_input          = $this->_parseInput();
@@ -255,7 +255,6 @@ class SZ_Request
 		if ( $pathinfo !== '' )
 		{
 			$segments = explode('/', $pathinfo);
-			//array_unshift($segments, '');
 		}
 		else
 		{

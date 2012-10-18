@@ -62,8 +62,8 @@
 <td width="33%"><?php echo $key + 1;?></td>
 <td width="34%">
 <?php if ( $process->mode == SZ_MODE_MVC ):?>
-<p><span><?php echo prep_str($process->router->getInfo('class'));?></span> class loaded.</p>
-<p><span><?php echo prep_str($process->router->getInfo('method'));?></span> method executed.</p>
+<p><span><?php echo prep_str(ucfirst($process->router->getInfo('class')));?></span> class loaded.</p>
+<p><span><?php echo prep_str($process->router->getInfo('execMethod'));?></span> method executed.</p>
 <?php if ( count($process->router->getInfo('arguments')) > 0 ):?>
 <p><span><?php echo implode(', ', $process->router->getInfo('arguments'));?></span> arguments passed.</p>
 <?php else:?>

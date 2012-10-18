@@ -96,6 +96,7 @@ class SZ_View extends SZ_Driver
 		$vars = ( ! is_string($name) )
 		        ? $this->_objectToArray($name)
 		        : array($name => $value);
+		
 		$this->_assignedVars = array_merge($this->_assignedVars, $vars);
 	}
 	
@@ -222,17 +223,21 @@ class SZ_View extends SZ_Driver
 	 */
 	protected function _renderView($path, $vars, $return, $escape = FALSE)
 	{
-		$assigns = array();
+		// First, set pre-adssign variables
+		$assigns = $this->_assignedVars;
 		// extra assign loaded helpers
 		$assigns['Helper'] = Seezoo::$Importer->classes('Helpers');
+		
 		$SZ = Seezoo::getInstance();
+		// Second, Lead process assigned variables if exists
 		if ( isset($SZ->lead) )
 		{
 			$assigns['Lead'] = $SZ->lead;
 			$assigns = array_merge($assigns, $SZ->lead->getAssignData(TRUE));
 		}
-		$assigns = array_merge($assigns, $this->_assignedVars);
-		$vars    = array_merge($assigns, $this->_objectToArray($vars));
+		
+		// Third, method parameter variables
+		$vars = array_merge($assigns, $this->_objectToArray($vars));
 		
 		// escape assign variable
 		if ( $escape )
@@ -240,15 +245,16 @@ class SZ_View extends SZ_Driver
 			$vars = array_map('prep_str', $vars);
 		}
 		
-		$viewFile = FALSE;
-		$viewDir  = FALSE;
+		$viewFile   = FALSE;
+		$viewDir    = FALSE;
+		$detectFile = $path . $this->_templateExtension;
 		
 		// Detect include file
 		foreach ( Seezoo::getPackage() as $pkg )
 		{
-			if ( file_exists(PKGPATH . $pkg . '/views/' . $path . $this->_templateExtension) )
+			if ( file_exists(PKGPATH . $pkg . '/views/' . $detectFile) )
 			{
-				$viewFile = PKGPATH . $pkg . '/views/' . $path . $this->_templateExtension;
+				$viewFile = PKGPATH . $pkg . '/views/' . $detectFile;
 				$viewDir  = PKGPATH . $pkg . '/views/';
 				break;
 			}
@@ -256,19 +262,19 @@ class SZ_View extends SZ_Driver
 		
 		if ( ! $viewFile )
 		{
-			if ( file_exists(EXTPATH . 'views/' . $path . $this->_templateExtension) )
+			if ( file_exists(EXTPATH . 'views/' . $detectFile) )
 			{
-				$viewFile = EXTPATH . 'views/' . $path . $this->_templateExtension;
+				$viewFile = EXTPATH . 'views/' . $detectFile;
 				$viewDir  = EXTPATH . 'views/';
 			}
-			else if ( file_exists(APPPATH . 'views/' . $path . '.php') )
+			else if ( file_exists(APPPATH . 'views/' . $detectFile) )
 			{
-				$viewFile = APPPATH . 'views/' . $path . $this->_templateExtension;
+				$viewFile = APPPATH . 'views/' . $detectFile;
 				$viewDir  = APPPATH . 'views/';
 			}
 			else
 			{
-				throw new Exception('Unable to load requested file:' . $path . '.php');
+				throw new Exception('Unable to load requested file:' . $detectFile);
 				return;
 			}
 		}
@@ -282,6 +288,8 @@ class SZ_View extends SZ_Driver
 		// do render with driver
 		$buffer = $this->driver->render($viewFile, $vars, $return);
 		
+		// And settings clean up
+		// (Buffer level should be 1)
 		$this->driver->cleanUp();
 		
 		return $buffer;
@@ -353,6 +361,7 @@ class SZ_View extends SZ_Driver
 	 */
 	public function engine($engine = 'default', $extension = FALSE)
 	{
+		// Current use engine
 		if ( $engine === $this->_templateEngine )
 		{
 			return;

@@ -204,20 +204,7 @@ $config['default_controller'] = 'welcome';
 $config['logging_level']     = 1;
 $config['logging_save_type'] = 'file';
 $config['logging_error']     = FALSE;
-$config['logging_save_dir']  = SZPATH . 'logs/';
-
-
-
-/*
- * --------------------------------------------------
- * package
- * 
- * Framework routing from subpackge system.
- * Controller, helper, model, library, and view detect subpackage.
- * --------------------------------------------------
- */
-
-$config['package'] = array();
+$config['logging_save_dir']  = ETCPATH . 'logs/';
 
 
 /*

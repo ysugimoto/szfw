@@ -137,11 +137,7 @@ class SZ_Environment
 		$this->isIE          = ( isset($_SERVER['HTTP_USER_AGENT'])  && strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE') !== FALSE) ? TRUE : FALSE;
 		
 		// load the configurations
-		//$this->_load('config');
 		$this->_config =& Seezoo::$config;
-		$this->_load('actions');
-		$this->_load('database');
-		$this->_load('mapping');
 		
 		// detect PHP API
 		$this->_detectAPI();
@@ -319,6 +315,10 @@ class SZ_Environment
 	 */
 	public function getDBSettings()
 	{
+		if ( ! $this->_database )
+		{
+			$this->_load('database');
+		}
 		return $this->_database;
 	}
 	
@@ -334,6 +334,10 @@ class SZ_Environment
 	 */
 	public function getMapping()
 	{
+		if ( ! $this->_mapping )
+		{
+			$this->_load('mapping');
+		}
 		return $this->_mapping;
 	}
 	
@@ -349,27 +353,11 @@ class SZ_Environment
 	 */
 	public function getActions()
 	{
-		return $this->_action;
-	}
-	
-	
-	// ---------------------------------------------------------------
-	
-	
-	/**
-	 * get mimetype list
-	 * 
-	 * @access public
-	 * @return array
-	 */
-	public function getMimeTypeList()
-	{
-		if ( count($this->_mimetypes) === 0 )
+		if ( ! $this->_action )
 		{
-			$this->_load('mimetypes');
+			$this->_load('actions');
 		}
-		
-		return $this->_mimetypes;
+		return $this->_action;
 	}
 	
 	
@@ -454,39 +442,16 @@ class SZ_Environment
 	 */
 	protected function _load($setting)
 	{
-		// First, load the core-based settings file if exists.
-		if ( file_exists(COREPATH . 'config/' . $setting . '.php') )
-		{	
-			include(COREPATH . 'config/' . $setting . '.php');
-			
-			if ( ! isset($$setting) ) // not typo.
-			{
-				throw new Exception($setting . ' is not declared!');
-				return;
-			}
-		}
-		else
-		{
-			$$setting = array();
-		}
-		
-		// Second, load the application settings if exists
+		// Load the application settings if exists
 		if ( file_exists(APPPATH . 'config/' . $setting . '.php') )
 		{
-			$stack = $$setting;
 			include(APPPATH . 'config/' . $setting . '.php');
-			// merge and override at application setting.
-			if ( isset($$setting) )
-			{
-				$stack = array_merge($stack, $$setting);
-			}
-			$this->{'_' . $setting} = $stack;
+			$this->{'_' . $setting} = ( isset($$setting) ) ? $$setting : array(); // not typo.
 		}
 		else
 		{
-			$this->{'_' . $setting} = $$setting;
+			$this->{'_' . $setting} = array();
 		}
-		unset($$setting);
 	}
 	
 	
@@ -529,7 +494,7 @@ class SZ_Environment
 		$times = isset($this->_memMap[$digit]) ? $this->_memMap[$digit] : 0;
 		while ( $times > 0 )
 		{
-			$limit = intval($limit) * 1024;
+			$limit = (int)$limit * 1024;
 			--$times;
 		}
 		return $limit;
@@ -551,7 +516,7 @@ class SZ_Environment
 		{
 			$this->api = 'cli';
 		}
-		else if ( substr(PHP_SAPI, 0, 3) === 'cgi' )
+		else if ( strpos(PHP_SAPI, 'cgi') !== FALSE )
 		{
 			$this->api = 'cgi';
 		}
