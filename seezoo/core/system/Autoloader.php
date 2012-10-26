@@ -34,6 +34,12 @@ class Autoloader
 	private static $loadDir = array();
 	
 	
+	private static $aliasClass = array(
+	                                    'ActiveRecord' => 'classes/',
+	                                    'Database'     => 'classes/'
+	                                  );
+	
+	
 	// ---------------------------------------------------------------
 	
 	
@@ -128,9 +134,9 @@ class Autoloader
 			$dir       = 'classes/';
 			$className = substr($className, strlen(self::$coreClassPrefix));
 		}
-		else if ( strpos($className, 'ActiveRecord') === 0 )
+		else if ( isset(self::$aliasClass[$className]) )
 		{
-			$dir = 'classes/';
+			$dir = self::$aliasClass[$className];
 		}
 		else
 		{

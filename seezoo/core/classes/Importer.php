@@ -64,7 +64,14 @@ class SZ_Importer
 		{
 			$group = 'default'; 
 		}
-		$db = $this->loadDatabase($group);
+		
+		$db = SeezooFactory::getDB($group);
+		if ( $db === FALSE )
+		{
+			$dbClass = $this->loadModule('Database', '', FALSE)->data;
+			$db      = new $dbClass($group);
+			SeezooFactory::pushDB($group, $db);
+		}
 		$this->_attachModule('db', $db);
 		
 		return $db;
@@ -82,7 +89,7 @@ class SZ_Importer
 	 */
 	public function dbforge()
 	{
-		return $this->library('databaseforge', array(), 'dbforge');
+		return $this->loadModule('databaseforge', '', TRUE, array(), 'dbforge');
 	}
 	
 	
@@ -132,7 +139,7 @@ class SZ_Importer
 	 * @param  string $alias
 	 * @return object
 	 */
-	public function library($libname, $param = array(), $alias = FALSE)
+	public function library($libname, $param = array(), $alias = FALSE, $instantiate = TRUE)
 	{
 		if ( is_array($libname) )
 		{
@@ -140,7 +147,7 @@ class SZ_Importer
 		}
 		foreach ( (array)$libname as $lib )
 		{
-			$module = $this->loadModule($lib, 'libraries', TRUE, $param, $alias);
+			$module = $this->loadModule($lib, 'libraries', $instantiate, $param, $alias);
 			$this->_attachModule(( $alias ) ? $alias : lcfirst($module->name), $module->data);
 		}
 		return $module->data;
@@ -581,7 +588,7 @@ class SZ_Importer
 			}
 			else
 			{
-				$module->data = ( ! is_object($stacked) ) ? new $stacked() : $stacked;
+				$module->data = ( ! is_object($stacked) ) ? new $stacked($params) : $stacked;
 			}
 			return $module;
 		}
@@ -727,30 +734,5 @@ class SZ_Importer
 		
 		// returns module object
 		return $module;
-	}
-	
-	
-	// ---------------------------------------------------------------
-	
-	
-	/**
-	 * Load the database
-	 * 
-	 * @access public static
-	 * @param  string $group
-	 * @return object $db
-	 */
-	protected function loadDatabase($group = 'default')
-	{
-		$this->_databaseClass = $this->loadModule('Database', 'libraries', FALSE)->data;
-		$db = SeezooFactory::getDB($group);
-		if ( $db === FALSE )
-		{
-			$dbClass = $this->_databaseClass;
-			$db = new $dbClass($group);
-			SeezooFactory::pushDB($group, $db);
-		}
-		
-		return $db;
 	}
 }

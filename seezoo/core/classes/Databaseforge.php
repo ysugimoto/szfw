@@ -24,7 +24,7 @@ class SZ_Databaseforge
 	protected $_columns = array();
 	
 	protected $_defaultColumn = array(
-		'null' => FALSE,
+		'null'    => FALSE,
 		'comment' => '',
 		'default' => '',
 		'index'   => FALSE
@@ -154,11 +154,11 @@ class SZ_Databaseforge
 		}
 		
 		$sql =
-				'ALTER TABLE '
-				. $this->db->prefix() . $table .' '
-				. 'ADD '
-				. $this->_makeColumnData($column);
-				
+		      'ALTER TABLE '
+		      . $this->db->prefix() . $table .' '
+		      . 'ADD '
+		      . $this->_makeColumnData($column);
+		
 		return (bool)$this->db->query($sql);
 	}
 	
@@ -183,12 +183,12 @@ class SZ_Databaseforge
 		}
 		
 		$sql =
-				'ALTER TABLE '
-				. $this->db->prefix() . $table .' '
-				. 'CHANGE '
-				. $this->db->prepColumn($name) . ' '
-				. $this->_makeColumnData($column);
-				
+		      'ALTER TABLE '
+		      . $this->db->prefix() . $table .' '
+		      .'CHANGE '
+		      . $this->db->prepColumn($name) . ' '
+		      . $this->_makeColumnData($column);
+		
 		return (bool)$this->db->query($sql);
 	}
 	
@@ -212,10 +212,10 @@ class SZ_Databaseforge
 		}
 		
 		$sql =
-				'ALTER TABLE '
-				. $this->db->prefix() . $table . ' '
-				.'DROP '
-				. $this->db->prepColumn($name);
+		      'ALTER TABLE '
+		      . $this->db->prefix() . $table . ' '
+		      .'DROP '
+		      . $this->db->prepColumn($name);
 		
 		return (bool)$this->db->query($sql);
 	}

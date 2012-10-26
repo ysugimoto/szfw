@@ -434,4 +434,25 @@ abstract class SZ_Session_driver
 			);
 		}
 	}
+	
+	
+	// --------------------------------------------------
+	
+	
+	/**
+	 * generate random session ID
+	 * 
+	 * @access protected
+	 * @return string $sessID
+	 */
+	protected function _generateSessionID()
+	{
+		$sessID = '';
+		while (strlen($sessID) < 32)
+		{
+			$sessID .= mt_rand(0, mt_getrandmax());
+		}
+		
+		return $sessID;
+	}
 }

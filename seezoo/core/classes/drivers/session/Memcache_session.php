@@ -81,8 +81,8 @@ class SZ_Memcache_session extends SZ_Session_driver
 	{
 		parent::__construct();
 		
-		$this->_host = $this->env->getConfig('session_memcache_host');
-		$this->_port = $this->env->getConfig('session_memcache_port');
+		$this->_host     = $this->env->getConfig('session_memcache_host');
+		$this->_port     = $this->env->getConfig('session_memcache_port');
 		$this->_pconnect = $this->env->getConfig('session_memcache_pconnect');
 
 		$this->_connect();
@@ -111,25 +111,22 @@ class SZ_Memcache_session extends SZ_Session_driver
 		// Does extension loaded?
 		if ( ! class_exists('Memcache') )
 		{
-			throw new Exception('Undefiend class "Memcache"! check extension is loaded.');
-			return;
+			throw new RuntimeException('Undefiend class "Memcache"! check extension is loaded.');
 		}
 		
 		$this->mc = new Memcache;
 		if ( $this->_pconnect === TRUE )
 		{
-			if ( ! $this->mc->pconnect($this->host, $this->port) )
+			if ( ! @$this->mc->pconnect($this->_host, $this->_port) )
 			{
-				throw new Exception('Memcache couldn\'t connect! check your memcache host/port.');
-				return;
+				throw new RuntimeException('Couldn\'t connect Memcache server! check your memcached host/port.');
 			}
 		}
 		else
 		{
-			if ( ! $this->mc->connect($this->host, $this->port) )
+			if ( ! @$this->mc->connect($this->_host, $this->_port) )
 			{
-				throw new Exception('Memcache couldn\'t connect! check your memcache host/port.');
-				return;
+				throw new RuntimeException('Couldn\'t connect Memcache ! check your memcache host/port.');
 			}
 		}
 		
@@ -198,7 +195,7 @@ class SZ_Memcache_session extends SZ_Session_driver
 		if ( $this->_encryptSession === TRUE )
 		{
 			$encrypt = Seezoo::$Importer->library('Encrypt');
-			$sess = $encrypt->decode($sess);
+			$sess    = $encrypt->decode($sess);
 		}
 		
 		if ( ! $sess )
@@ -293,26 +290,4 @@ class SZ_Memcache_session extends SZ_Session_driver
 		$this->_setSessionCookie($authKey);
 		@$this->mc->close();
 	}
-	
-	
-	// --------------------------------------------------
-	
-	
-	/**
-	 * generate random session ID
-	 * 
-	 * @access protected
-	 * @return string $sessID
-	 */
-	protected function _generateSessionID()
-	{
-		$sessID = '';
-		while (strlen($sessID) < 32)
-		{
-			$sessID .= mt_rand(0, mt_getrandmax());
-		}
-		
-		return $sessID;
-	}
-	
 }

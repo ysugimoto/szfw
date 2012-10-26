@@ -558,10 +558,11 @@ class Seezoo
 		
 		// Exception setting -----------------------------------------
 		
-		self::$Classes['Exception'] = self::$Importer->classes('Exception');
-		set_exception_handler(array(self::$Classes['Exception'], 'handleException'));
-		set_error_handler(array(self::$Classes['Exception'], 'handleError'));
-		register_shutdown_function(array(self::$Classes['Exception'], 'handleShutdown'));
+		self::$Classes['Exception'] = self::$Importer->classes('Exception', FALSE);
+		$Exception = new self::$Classes['Exception']();
+		set_exception_handler(array($Exception, 'handleException'));
+		set_error_handler(array($Exception, 'handleError'));
+		register_shutdown_function(array($Exception, 'handleShutdown'));
 		
 		// Preprocess event fire
 		Event::fire('preprocess');

@@ -262,26 +262,4 @@ class SZ_Database_session extends SZ_Session_driver
 		
 		$this->_setSessionCookie($authKey);
 	}
-	
-	
-	// --------------------------------------------------
-	
-	
-	/**
-	 * generate random session ID
-	 * 
-	 * @access protected
-	 * @return string $sessID
-	 */
-	protected function _generateSessionID()
-	{
-		$sessID = '';
-		while (strlen($sessID) < 32)
-		{
-			$sessID .= mt_rand(0, mt_getrandmax());
-		}
-		
-		return $sessID;
-	}
-	
 }

@@ -18,6 +18,29 @@
  * ====================================================================
  */
 
+/**
+ * Extra simple Access class
+ */
+class Database extends SZ_Database
+{
+	private static $_dbClass;
+	
+	public static function connect($dsn = 'default', $dsnConnection = FALSE)
+	{
+		if ( ! self::$_dbClass )
+		{
+			self::$_dbClass = Seezoo::$Importer->library('Database', array(), FALSE, FALSE);
+		}
+		
+		return new self::$_dbClass($dsn, $dsnConnection);
+	}
+	
+	public static function getInstance()
+	{
+		return Seezoo::$Importer->database();
+	}
+}
+
 
 Class SZ_Database extends SZ_Driver
 {
@@ -98,7 +121,18 @@ Class SZ_Database extends SZ_Driver
 	protected $_queryLog = array();
 	
 	
+	/**
+	 * Query result className
+	 * @var string
+	 */
 	protected $_resultClass;
+	
+	
+	/**
+	 * Flag of manual connection
+	 * @var bool
+	 */
+	protected $_manualConnect = FALSE;
 	
 	
 	/**
@@ -114,15 +148,33 @@ Class SZ_Database extends SZ_Driver
 		'firebird' => 'firebird:dbname=%s:%s'
 	);
 
-	public function __construct($group)
+
+	public function __construct($group, $dsnConnection = FALSE)
 	{
-		$this->env = Seezoo::getENV();
-		$this->_group = $group;
+		$this->env            = Seezoo::getENV();
+		$this->_manualConnect = is_array($group);
+		$this->_group         = $group;
+		$this->_resultClass   = $this->_loadDriver('database', 'Database_result', FALSE, FALSE);
+		
 		$this->_initialize($group);
-		$this->_resultClass = $this->_loadDriver('database', 'Database_result', FALSE, FALSE);
 		$this->_loadDriver('database', ucfirst($this->_info['driver']) . '_query');
 		
-		$this->connect();
+		// Initial connect when auto conection
+		if ( ! $this->_manualConnect )
+		{
+			$settings = $this->_makeConnectSettings();
+			$this->_connect(array(
+				'dsn'      => $settings['dsn_string'],
+				'username' => $this->_info['username'],
+				'password' => $this->_info['password'],
+				'option'   => $settings['options']
+			), $settings['dsn_only']);
+		}
+		// Either manual connection
+		else
+		{
+			$this->_connect($group, $dsnConnection);
+		}
 	}
 	
 	
@@ -134,27 +186,27 @@ Class SZ_Database extends SZ_Driver
 	 * 
 	 * @access public
 	 */
-	public function connect()
+	public function _connect($connection, $dsnOnly = FALSE)
 	{
 		if ( $this->_connectID )
 		{
 			return;
 		}
-		$settings = $this->_makeConnectSettings();
+		
 		try
 		{
-			if ( $settings['dsn_only'] === FALSE )
+			if ( $dsnOnly === FALSE )
 			{
 				$this->_connectID = new PDO(
-												$settings['dsn_string'],
-												$this->_info['username'],
-												$this->_info['password'],
-												$settings['options']
-											);
+				                             $connection['dsn'],
+				                             $connection['username'],
+				                             $connection['password'],
+				                             $connection['option']
+				                           );
 			}
 			else
 			{
-				$this->_connectID = new PDO($settings['dsn_string']);
+				$this->_connectID = new PDO($connection['dsn']);
 			}
 			$this->_connectID->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			// below code causes PDOStatement::execute() to error and shutting down...why?
@@ -227,27 +279,49 @@ Class SZ_Database extends SZ_Driver
 	public function query($sql, $bind = FALSE)
 	{
 		$this->_stackBench = $this->_bench();
-		if ( is_array($bind) && strpos($sql, '?') !== FALSE )
+		if ( is_array($bind) )
 		{
-			
-			// query binding chars and bind paramter is match?
-			if ( substr_count($sql, '?') !== count($bind) )
+			if ( strpos($sql, '?') !== FALSE ) {
+				// query binding chars and bind paramter is match?
+				if ( substr_count($sql, '?') !== count($bind) )
+				{
+					throw new PDOException('prepared statement count is not match.', SZ_ERROR_CODE_DATABASE);
+				}
+				
+				// current statement uses same query
+				if ( ! $this->_statement || $this->_statement->queryString !== $sql )
+				{
+					$this->_statement = $this->_connectID->prepare($sql);
+				}
+				$index = 0;
+				foreach ( $bind as $val )
+				{
+					$this->_statement->bindValue(++$index, $val, $this->typeof($val));
+				}
+			}
+			else if ( strpos($sql, ':') !== FALSE )
 			{
-				throw new Exception('prepared statement count is not match.', SZ_ERROR_CODE_DATABASE);
-				return FALSE;
+				if ( ($cnt = preg_match_all('|(:[a-zA-Z0-9\-_]+)\b|u', $sql, $matches)) && $cnt !== count($bind) )
+				{
+					throw new PDOException('prepared statement count is not match.', SZ_ERROR_CODE_DATABASE);
+				}
+				// current statement uses same query
+				if ( ! $this->_statement || $this->_statement->queryString !== $sql )
+				{
+					$this->_statement = $this->_connectID->prepare($sql);
+				}
+				foreach ( $matches[0] as $bindColumn )
+				{
+					if ( ! array_key_exists($bindColumn, $bind) )
+					{
+						throw new PDOException('Prepared statement "' . $bindColumn . '" is not supplied.', SZ_ERROR_CODE_DATABASE);
+					}
+					$this->_statement->bindValue($bindColumn, $bind[$bindColumn], $this->typeof($bind[$bindColumn]));
+				}
 			}
 			
+			$bind = NULL;
 			
-			// current statement uses same query
-			if ( ! $this->_statement || $this->_statement->queryString !== $sql )
-			{
-				$this->_statement = $this->_connectID->prepare($sql);
-			}
-			$index = 0;
-			foreach ( $bind as $val )
-			{
-				$this->_statement->bindValue(++$index, $val, $this->typeof($val));
-			}
 			if ( $this->_statement->execute() === FALSE )
 			{
 				$error = '';
@@ -255,8 +329,8 @@ Class SZ_Database extends SZ_Driver
 				{
 					$error = $this->_stackQueryLog($sql, $bind);
 				}
-				throw new Exception('SQL Failed. ' . $this->_statement->errorCode() . ': ' . implode(', ', $this->_statement->errorInfo()) . ' SQL : ' . $error, SZ_ERROR_CODE_DATABASE);
-				return FALSE;
+				throw new PDOException('SQL Failed. ' . $this->_statement->errorCode()
+				                       .': ' . implode(', ', $this->_statement->errorInfo()) . ' SQL : ' . $error, SZ_ERROR_CODE_DATABASE);
 			}
 			
 			// SQL debugging
@@ -274,8 +348,8 @@ Class SZ_Database extends SZ_Driver
 				{
 					$error = $this->_stackQueryLog($sql);
 				}
-				throw new Exception('SQL Failed :' . implode(', ', $this->_connectID->errorInfo()) . ' SQL : ' . $error, SZ_ERROR_CODE_DATABASE);
-				return FALSE;
+				throw new PDOException('SQL Failed :'
+				                       . implode(', ', $this->_connectID->errorInfo()) . ' SQL : ' . $error, SZ_ERROR_CODE_DATABASE);
 			}
 			
 			if ( $this->_info['query_debug'] === TRUE )
@@ -346,6 +420,10 @@ Class SZ_Database extends SZ_Driver
 					implode(', ', $columns),
 					implode(', ', $statements)
 				);
+				
+		//GC
+		$columns = $statements = $bindData = $data = NULL;
+		
 		$query = $this->query($sql, $bindData);
 		return ( $returnInsertID ) ? $this->insertID() : $query;
 	}
@@ -393,33 +471,17 @@ Class SZ_Database extends SZ_Driver
 		// Is limited update?
 		if ( is_array($where) )
 		{
-			$sql .= ' WHERE ';
 			$statements = array();
-			foreach ( $where as $column => $value )
-			{
-				$stb = $this->buildOperatorStatement($column, $value);
-				if ( is_array($stb) )
-				{
-					$statements[] = $stb[0];
-					if ( is_array($stb[1]) )
-					{
-						foreach ( $stb[1] as $bind )
-						{
-							$bindData[] = $bind;
-						}
-					}
-					else
-					{
-						$bindData[] = $stb[1];
-					}
-				}
-				else
-				{
-					$statements[] = $stb;
-				}
-			}
-			$sql .= implode(' AND ', $statements);
+			$this->_buildConditionStatement($where, $statements, $bindData);
+			$sql .= ' WHERE ' . implode(' AND ', $statements);
 		}
+		else if ( is_string($where) )
+		{
+			$sql .= ' WHERE ' . $where;
+		}
+		
+		// GC
+		$statements = $data = $where = NULL;
 		
 		return $this->query($sql, $bindData);
 	}
@@ -443,45 +505,21 @@ Class SZ_Database extends SZ_Driver
 		}
 		
 		// build query
-		$statements = array();
-		$bindData   = array();
-		$sql        = 'DELETE FROM ' . $this->prefix() . $table;
+		$bindData = array();
+		$sql      = 'DELETE FROM ' . $this->prefix() . $table;
 
 		if ( is_array($where) )
 		{
-			$sql .= ' WHERE ';
 			$statements = array();
-			foreach ( $where as $column => $value )
-			{
-				$stb = $this->buildOperatorStatement($column, $value);
-				if ( is_array($stb) )
-				{
-					$statements[] = $stb[0];
-					if ( is_array($stb[1]) )
-					{
-						foreach ( $stb[1] as $bind )
-						{
-							$bindData[] = $bind;
-						}
-					}
-					else
-					{
-						$bindData[] = $stb[1];
-					}
-				}
-				else
-				{
-					$statements[] = $stb;
-				}
-			}
-			$sql .= implode(' AND ', $statements);
+			$this->_buildConditionStatement($where, $statements, $bindData);
+			$sql .= ' WHERE ' . implode(' AND ', $statements);
 		}
 		else if ( is_string($where) )
 		{
-			$sql .= 'WHERE ' . $where;
+			$sql .= ' WHERE ' . $where;
 		}
 		
-		return $this->query($sql, $bindData);
+		return $this->query($sql, ( count($bindData) > 0 ) ? $bindDatad : FALSE);
 	}
 	
 	
@@ -704,6 +742,45 @@ Class SZ_Database extends SZ_Driver
 		else
 		{
 			$this->_info = $group;
+			foreach ( array('table_prefix', 'query_debug') as $key )
+			{
+				if ( ! isset($this->_info[$key]) )
+				{
+					$this->_info[$key] = FALSE;
+				}
+			}
+		}
+	}
+	
+	
+	// --------------------------------------------------
+	
+	
+	/**
+	 * Build where condintion statements
+	 * 
+	 * @access protected
+	 * @param  array $where
+	 * @param  array $statement ( reference )
+	 * @param  array $bindData ( reference )
+	 */
+	protected function _buildConditionStatement($where, &$statement, &$bindData)
+	{
+		foreach ( $where as $column => $value )
+		{
+			$statementBind = $this->buildOperatorStatement($column, $value);
+			if ( is_array($statementBind) )
+			{
+				$statement[] = $statementBind[0];
+				foreach ( (array)$statementBind[1] as $bind )
+				{
+					$bindData[] = $bind;
+				}
+			}
+			else
+			{
+				$statement[] = $statementBind;
+			}
 		}
 	}
 	
@@ -862,14 +939,26 @@ Class SZ_Database extends SZ_Driver
 		
 		if ( $bind !== FALSE )
 		{
-			$sqlPiece  = explode('?', $sql);
-			$lastPiece = array_pop($sqlPiece);
-			$logSQL    = '';
-			foreach ( $sqlPiece as $index => $piece )
+			if ( strpos($sql, '?') !== FALSE )
 			{
-				$logSQL .= $piece . $this->_connectID->quote($bind[$index]);
+				$logSQL    = '';
+				$sqlPiece  = explode('?', $sql);
+				$lastPiece = array_pop($sqlPiece);
+				foreach ( $sqlPiece as $index => $piece )
+				{
+					$logSQL .= $piece . $this->_connectID->quote($bind[$index]);
+				}
+				$logSQL .= $lastPiece;
 			}
-			$logSQL .= $lastPiece;
+			else if ( strpos($sql, ':') !== FALSE )
+			{
+				preg_match_all('|(:[a-zA-Z0-9\-_]+)\b|u', $sql, $matches);
+				foreach ( $matches[0] as $column )
+				{
+					$sql = preg_replace('#' . $column . '#', $this->_connectID->quote($bind[$column]), $sql, 1);
+				}
+				$logSQL = $sql;
+			}
 		}
 		else
 		{
@@ -901,11 +990,7 @@ Class SZ_Database extends SZ_Driver
 		if ( strpos($column, ',') !== FALSE )
 		{
 			$exp = explode(',', $column);
-			$ret = array();
-			foreach ( $exp as $col )
-			{
-				$ret[] = preg_replace('/[^0-9a-zA-Z\-_\.\s]/', '', trim($col));
-			}
+			$exp = array_map(array($this, 'prepColumn'), $exp);
 			return implode(',', $ret);
 		}
 		else

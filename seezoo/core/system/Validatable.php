@@ -9,6 +9,7 @@
  * 
  * 
  * Validatable interface
+ * Implemented interface class can use Validation rules 
  * 
  * @package  Seezoo-Framework
  * @category system

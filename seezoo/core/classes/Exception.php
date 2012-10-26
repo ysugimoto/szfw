@@ -125,7 +125,7 @@ class SZ_Exception extends Exception
 		// switch template
 		$template   = ( isset($this->_errorTemplates[$code]) ) ? $this->_errorTemplates[$code] : 'general';
 		
-		foreach ( $env->getConfig('package') as $pkg )
+		foreach ( Seezoo::getPackage() as $pkg )
 		{
 			if ( file_exists(SZPATH . $pkg . '/errors/' . $template . '.php') )
 			{
