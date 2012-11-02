@@ -89,14 +89,19 @@ class SZ_Driver
 			}
 		}
 		
-		// Load a driver from apps directory when package driver is not exists.
+		// Load a driver from extension/application directory when package driver is not exists.
 		if ( $isLoaded === FALSE )
 		{
-			if ( file_exists(APPPATH . $loadFile) )
+			foreach ( array(EXTPATH, APPPATH) as $paths )
 			{
-				require_once(APPPATH . $loadFile);
-				$Class = $subClass . $driverClass;
+				if ( file_exists($paths . $loadFile) )
+				{
+					require_once($paths . $loadFile);
+					$Class = $subClass . $driverClass;
+					break;
+				}
 			}
+			
 		}
 		
 		if ( $Class === '' || ! class_exists($Class) )

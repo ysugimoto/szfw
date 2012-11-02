@@ -135,6 +135,16 @@ END;
 	}
 	
 	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Field to Camel Case
+	 * 
+	 * @access public
+	 * @param  string field
+	 * @return string
+	 */
 	public function toCamelCase($field)
 	{
 		$field = preg_replace_callback(
@@ -143,6 +153,33 @@ END;
 								$field
 							);
 		return ucfirst($field);
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Get ActiveRecord enables table from DB
+	 * 
+	 * @access public
+	 * @return array
+	 */
+	public function _getActiveRecordTargetFiles()
+	{
+		$db      = Seezoo::$Importer->database();
+		$tables  = $db->tables();
+		$schemas = array();
+		foreach ( $tables as $table )
+		{
+			$fields    = $db->fields($table);
+			$schemas[] = array(
+				APPPATH . 'classes/activerecords/' . $this->toCamelCase($table) . '.php',
+				$this->getActiveRecordTemplate($table, $fields),
+				ucfirst($table) . 'ActiveRecord'
+			);
+		}
+		return $schemas;
 	}
 	
 	// --------------------------------------------------

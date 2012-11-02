@@ -42,6 +42,7 @@ class SZ_Console_command extends SZ_Command_driver
 		switch ( $args[0] )
 		{
 			case 'model':
+			case 'kennel':
 				$this->_runTest('models', $files);
 				break;
 			case 'helper':
@@ -51,7 +52,11 @@ class SZ_Console_command extends SZ_Command_driver
 				$this->_runTest('classes', $files);
 				break;
 			case 'controller':
+			case 'breeder':
 				$this->_runTest('controllers', $files);
+				break;
+			case 'leads':
+				$this->_runTest('leads', $files);
 				break;
 			case 'lib':
 			case 'library':
@@ -87,12 +92,12 @@ class SZ_Console_command extends SZ_Command_driver
 			{
 				$module = preg_replace('/\.php$/', '', $file);
 				$module = preg_replace('/Test$/', '', $module) . 'Test';
-				echo shell_exec('phpunit --colors ' . $module . ' ' . SZPATH . 'tests/' . $moduleName . '/' . $module . '.php');
+				echo shell_exec('phpunit --colors --bootstrap ' . SZPATH . 'bark.php ' . $module . ' ' . SZPATH . 'tests/' . $moduleName . '/' . $module . '.php');
 			}
 		}
 		else
 		{
-			echo shell_exec('phpunit --colors ' . SZPATH . 'tests/' . $moduleName . '/');
+			echo shell_exec('phpunit --colors --bootstrap ' . SZPATH . 'bark.php ' . SZPATH . 'tests/' . $moduleName . '/');
 		}
 	}
 	
@@ -108,10 +113,9 @@ class SZ_Console_command extends SZ_Command_driver
 	protected function _allTest()
 	{
 		echo 'SZFW All module Testing!' . PHP_EOL;
-		chdir(SZPATH);
 		if ( file_exists(SZPATH . 'tests/phpunit.xml') )
 		{
-			echo shell_exec('phpunit --colors -c tests/phpunit.xml');
+			echo shell_exec('phpunit --colors --bootstrap ' . SZPATH . 'bark.php -c tests/phpunit.xml');
 		}
 		else
 		{

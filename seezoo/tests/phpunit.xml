@@ -3,6 +3,9 @@
     <testsuite name="SZFW Controller Test">
       <directory>controllers</directory>
     </testsuite>
+    <testsuite name="SZFW Lead Test">
+      <directory>leads</directory>
+    </testsuite>
     <testsuite name="SZFW Class Test">
       <directory>classes</directory>
     </testsuite>

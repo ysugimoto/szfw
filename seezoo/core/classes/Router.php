@@ -311,7 +311,6 @@ class SZ_Router
 		if ( preg_match('/^_.+$/u', $this->_method) )
 		{
 			throw new Exception('Cannot call private method!');
-			return;
 		}
 		else
 		{

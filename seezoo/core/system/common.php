@@ -31,6 +31,7 @@ if ( ! function_exists('show_404') )
 	{
 		$e = Seezoo::$Importer->classes('Exception');
 		$e->error404($message, $backLinkPath);
+		exit;
 	}
 }
 

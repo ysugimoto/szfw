@@ -376,11 +376,14 @@ class Seezoo
 			}
 			$Mark->end('process:' . $process->level . ':MVC:Routed', 'baseProcess:'. $process->level);
 			// Load Controller and execute method
-			list($SZ, $rv) = $process->router->bootController($extraArgs);
-			if ( $SZ === FALSE )
+			$exec = $process->router->bootController($extraArgs);
+			if ( ! is_array($exec) )
 			{
 				show_404();
 			}
+			
+			// extract instance/returnvalue
+			list($SZ, $rv) = $exec;
 			
 			$Mark->end('process:' . $process->level . ':MVC:ControllerExecuted', 'baseProcess:'. $process->level);
 			Event::fire('controller_execute');
@@ -465,7 +468,7 @@ class Seezoo
 			// returns process result if buffermode is FALSE
 			if ( self::$outpuBufferMode === FALSE )
 			{
-				$output = ( isset($rv) ) ? $rv : NULL;
+				$output = ( isset($rv) ) ? $rv : $SZ->view->getDisplayBuffer();
 				return $output;
 			}
 			else

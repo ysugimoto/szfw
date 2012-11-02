@@ -51,6 +51,10 @@ class SZ_Exception extends Exception
 	
 	public function __construct($message = '', $code = 0)
 	{
+		if ( is_array($message) )
+		{
+			$message = reset($message);
+		}
 		parent::__construct((string)$message, $code);
 	}
 	
@@ -69,7 +73,7 @@ class SZ_Exception extends Exception
 	{
 		if ( defined('SZ_COMMANDLINE_WORKER') ) 
 		{
-			echo '404:' . (( ! empty($msg) ) ? $msg : 'Request not found.') . PHP_EOL;
+			echo '404:' . (( ! empty($message) ) ? $message : 'Request not found.') . PHP_EOL;
 			return;
 		}
 		header('HTTP/1.1 404 Not Found');
