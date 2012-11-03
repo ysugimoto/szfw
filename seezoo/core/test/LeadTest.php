@@ -24,6 +24,6 @@ class SZ_LeadTest extends PHPUnit_Framework_TestCase
 	public function __construct()
 	{
 		$targetClass = preg_replace('/(.+)Test$/', '$1', get_class($this));
-		$this->lead  = Seezoo::$Importer->lead($targetClass);
+		$this->lead  = Seezoo::$Importer->lead(lcfirst($targetClass));
 	}
 }

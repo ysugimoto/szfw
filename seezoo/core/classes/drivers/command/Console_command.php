@@ -55,7 +55,7 @@ class SZ_Console_command extends SZ_Command_driver
 			case 'breeder':
 				$this->_runTest('controllers', $files);
 				break;
-			case 'leads':
+			case 'lead':
 				$this->_runTest('leads', $files);
 				break;
 			case 'lib':
