@@ -257,8 +257,8 @@ class SZ_Database_session extends SZ_Session_driver
 			'user_data'     => $data
 		);
 		
-		$this->db->connect();
-		$this->db->update($this->_dbTableName, $updateData, array('session_id' => $sess));
+		$db = Database::getInstance();
+		$db->update($this->_dbTableName, $updateData, array('session_id' => $sess));
 		
 		$this->_setSessionCookie($authKey);
 	}

@@ -420,11 +420,10 @@ Class SZ_Database extends SZ_Driver
 					implode(', ', $columns),
 					implode(', ', $statements)
 				);
-				
+		$query = $this->query($sql, $bindData);
 		//GC
 		$columns = $statements = $bindData = $data = NULL;
 		
-		$query = $this->query($sql, $bindData);
 		return ( $returnInsertID ) ? $this->insertID() : $query;
 	}
 	

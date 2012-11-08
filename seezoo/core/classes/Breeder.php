@@ -24,7 +24,7 @@ class SZ_Breeder extends Process
 	 * Request instance
 	 * @var Request
 	 */
-	public $req;
+	public $request;
 	
 	
 	/**
