@@ -839,9 +839,17 @@ Class SZ_Database extends SZ_Driver
 				return FALSE;
 			
 		}
-		if ( $this->_info['pconnect'] === TRUE )
+		
+		// Persistent connection enables Not windows OS and not ODBC driver.
+		if ( $this->_info['pconnect'] === TRUE
+		     && $this->env->isWindows === FALSE
+			 && $this->_info['driver'] !== 'odbc')
 		{
 			$options[PDO::ATTR_PERSISTENT] = TRUE;
+		}
+		else
+		{
+			$options[PDO::ATTR_PERSISTENT] = FALSE;
 		}
 		return array(
 			'dsn_string' => $dsn,
