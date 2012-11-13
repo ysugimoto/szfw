@@ -32,13 +32,25 @@ class Autoloader
 	 * @var array
 	 */
 	private static $loadDir = array();
+	private static $loadPkgDir = array();
+	private static $loadExtDir = array();
+	private static $loadAppDir = array();
+	private static $loadCoreDir = array();
+	
 	
 	
 	private static $aliasClass = array(
-	                                    'ActiveRecord' => 'classes/',
-	                                    'Database'     => 'classes/'
+	                                    'ActiveRecord' => SZ_PREFIX_CORE,
+	                                    'Database'     => SZ_PREFIX_CORE
 	                                  );
 	
+	
+	public static $loadTargets = array(
+	                                    'classes'           => array(''),
+	                                    'classes/helpers'   => array('Helper'),
+	                                    'classes/libraries' => array(''),
+	                                    'classes/models'    => array('Model', '_model')
+	                                  );
 	
 	// ---------------------------------------------------------------
 	
@@ -54,7 +66,23 @@ class Autoloader
 		require_once($path . '/constants.php');
 		require_once($path . '/common.php');
 		
-		spl_autoload_register(array('Autoloader', '_initLoad'));
+		//spl_autoload_register(array('Autoloader', 'loadCoreModule'));
+		
+		self::register(COREPATH . 'system', array(''));
+		spl_autoload_register(array('Autoloader', 'load'));
+		
+		$packages = Seezoo::getPackage();
+		foreach ( self::$loadTargets as $path => $suffix )
+		{
+			foreach ( $packages as $pkg )
+			{
+				self::register(PKGPATH . $pkg . '/' . $path, $suffix, SZ_PREFIX_PKG);
+			}
+			self::register(EXTPATH .  $path, $suffix, SZ_PREFIX_EXT);
+			self::register(APPPATH .  $path, $suffix, SZ_PREFIX_APP);
+			self::register(COREPATH . $path, $suffix, SZ_PREFIX_CORE);
+		}
+		
 		spl_autoload_register(array('Event', 'loadEventDispatcher'));
 	}
 		
@@ -68,14 +96,33 @@ class Autoloader
 	 * @param public static
 	 * @param string $path
 	 */
-	public static function register($path)
+	public static function register($path, $suffix = array(), $prefix = NULL)
 	{
-		// Register autoload first time!
-		if ( count(self::$loadDir) === 0 )
+		$path = trail_slash($path);
+		switch ( $prefix )
 		{
-			spl_autoload_register(array('Autoloader', 'load'));
+			case SZ_PREFIX_PKG:
+				self::$loadPkgDir[$path] = $suffix;
+				break;
+			case SZ_PREFIX_EXT:
+				self::$loadExtDir[$path] = $suffix;
+				break;
+			case SZ_PREFIX_APP:
+				self::$loadAppDir[$path] = $suffix;
+				break;
+			case SZ_PREFIX_CORE:
+				self::$loadCoreDir[$path] = $suffix;
+				break;
+			default:
+				self::$loadDir[$path] = $suffix;
+				break;
 		}
-		self::$loadDir[] = trail_slash($path);
+		// Register autoload first time!
+		//if ( count(self::$loadDir) === 0 )
+		//{
+		//	spl_autoload_register(array('Autoloader', 'load'));
+		//}
+		//self::$loadDir[] = trail_slash($path);
 	}
 	
 	
@@ -90,9 +137,19 @@ class Autoloader
 	 */
 	public static function unregister($path)
 	{
-		if ( FALSE !== ( $key = array_search(trail_slash($path), self::$loadDir)) )
+		$path = trail_slash($path);
+		foreach ( array(self::$loadPkgDir,self::$loadExtDir,self::$loadAppDir,self::$loadDir) as $dir )
 		{
-			array_splice(self::$loadDir, $key, 1);
+			if ( array_key_exists($path, $dir) )
+			{
+				unset($dir[$path]);
+				break;
+			}
+			//if ( FALSE !== ( $key = array_search(trail_slash($path), $dir)) )
+			//{
+			//	array_splice($dir, $key, 1);
+			//	break;
+			//}
 		}
 	}
 	
@@ -108,13 +165,64 @@ class Autoloader
 	 */
 	public static function load($className)
 	{
-		foreach ( self::$loadDir as $dir )
+		$prefix = '';
+		if ( FALSE !== ($point = strpos($className, '_')) )
 		{
-			if ( file_exists($dir . $className . '.php') )
+			$prefix = substr($className, 0, ++$point);
+			$class  = substr($className, $point);
+		}
+		
+		if ( isset(self::$aliasClass[$className]) )
+		{
+			$prefix = self::$aliasClass[$className];
+			$class  = $className;
+		}
+		
+		switch ( $prefix )
+		{
+			case SZ_PREFIX_PKG:
+				$dirs = self::$loadPkgDir;
+				break;
+			case SZ_PREFIX_EXT:
+				$dirs = self::$loadExtDir;
+				break;
+			case SZ_PREFIX_APP:
+				$dirs = self::$loadAppDir;
+				break;
+			case SZ_PREFIX_CORE:
+				$dirs = self::$loadCoreDir;
+				break;
+			default:
+				$dirs  = self::$loadDir;
+				$class = $className;
+				break;
+		}
+		
+		foreach ( $dirs as $path => $suffixes )
+		{
+			foreach ( $suffixes as $suffix )
 			{
-				require_once($dir . $className . '.php');
+				$file = ( $suffix !== '' ) ? str_replace($suffix, '', $class) : $class;
+				if ( file_exists($path . ucfirst($file) . $suffix . '.php') )
+				{
+					require_once($path . ucfirst($file) . $suffix . '.php');
+					break;
+				}
+				else if ( file_exists($path . lcfirst($file) . $suffix . '.php') )
+				{
+					require_once($path . lcfirst($file) . $suffix . '.php');
+					break;
+				}
+				
 			}
 		}
+		//foreach ( self::$loadDir as $dir )
+		//{
+		//	if ( file_exists($dir . $className . '.php') )
+		//	{
+		//		require_once($dir . $className . '.php');
+		//	}
+		//}
 	}
 	
 	
@@ -127,7 +235,7 @@ class Autoloader
 	 * @access public static
 	 * @param  string
 	 */
-	public static function _initLoad($className)
+	public static function loadCoreModule($className)
 	{
 		if ( strpos($className, self::$coreClassPrefix) === 0 )
 		{

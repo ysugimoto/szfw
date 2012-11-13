@@ -27,6 +27,13 @@ define('PKGPATH',    SZPATH   . 'packages/');
 define('ETCPATH',    SZPATH   . 'etc/');
 define('ENGINEPATH', COREPATH . 'engines/');
 
+// Class prefix constants
+define('SZ_PREFIX_CORE', 'SZ_');
+define('SZ_PREFIX_APP',  'APP_');
+define('SZ_PREFIX_EXT',  'EXT_');
+define('SZ_PREFIX_PKG',  'PKG_');
+
+// Init mode constants
 define('SZ_MODE_MVC',      'mvc');
 define('SZ_MODE_ACTION',   'action');
 define('SZ_MODE_PROC',     'proc');

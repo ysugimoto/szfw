@@ -269,6 +269,10 @@ class Seezoo
 		if ( ! in_array($package, self::$packages) )
 		{
 			self::$packages[] = $package;
+			foreach ( Autoloader::$loadTargets as $path => $suffix )
+			{
+				Autoloader::register(PKGPATH . $package . '/' . $path, $suffix, SZ_PREFIX_PKG);
+			}
 		}
 	}
 	
@@ -287,6 +291,10 @@ class Seezoo
 		if ( FALSE !== ($key = array_search($package, self::$packages)) )
 		{
 			array_splice(self::$packages, $key, 1);
+			foreach ( Autoloader::$loadTargets as $path => $suffix )
+			{
+				Autoloader::unregister(PKGPATH . $package . '/' . $path);
+			}
 		}
 	}
 	
