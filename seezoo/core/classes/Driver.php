@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Driver
+class SZ_Driver extends SZ_Birth
 {
 	protected $driver;
 	

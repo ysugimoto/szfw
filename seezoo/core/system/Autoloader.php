@@ -78,8 +78,8 @@ class Autoloader
 			{
 				self::register(PKGPATH . $pkg . '/' . $path, $suffix, SZ_PREFIX_PKG);
 			}
-			self::register(EXTPATH .  $path, $suffix, SZ_PREFIX_EXT);
-			self::register(APPPATH .  $path, $suffix, SZ_PREFIX_APP);
+			self::register(EXTPATH  . $path, $suffix, SZ_PREFIX_EXT);
+			self::register(APPPATH  . $path, $suffix, SZ_PREFIX_APP);
 			self::register(COREPATH . $path, $suffix, SZ_PREFIX_CORE);
 		}
 		
@@ -117,12 +117,6 @@ class Autoloader
 				self::$loadDir[$path] = $suffix;
 				break;
 		}
-		// Register autoload first time!
-		//if ( count(self::$loadDir) === 0 )
-		//{
-		//	spl_autoload_register(array('Autoloader', 'load'));
-		//}
-		//self::$loadDir[] = trail_slash($path);
 	}
 	
 	
@@ -138,18 +132,13 @@ class Autoloader
 	public static function unregister($path)
 	{
 		$path = trail_slash($path);
-		foreach ( array(self::$loadPkgDir,self::$loadExtDir,self::$loadAppDir,self::$loadDir) as $dir )
+		foreach ( array(self::$loadPkgDir, self::$loadExtDir, self::$loadAppDir, self::$loadDir) as $dir )
 		{
 			if ( array_key_exists($path, $dir) )
 			{
 				unset($dir[$path]);
 				break;
 			}
-			//if ( FALSE !== ( $key = array_search(trail_slash($path), $dir)) )
-			//{
-			//	array_splice($dir, $key, 1);
-			//	break;
-			//}
 		}
 	}
 	
@@ -203,26 +192,41 @@ class Autoloader
 			foreach ( $suffixes as $suffix )
 			{
 				$file = ( $suffix !== '' ) ? str_replace($suffix, '', $class) : $class;
+				$className = $prefix . ucfirst($file) . $suffix;
 				if ( file_exists($path . ucfirst($file) . $suffix . '.php') )
 				{
 					require_once($path . ucfirst($file) . $suffix . '.php');
+					self::_prepareStaticClass($className);
 					break;
 				}
 				else if ( file_exists($path . lcfirst($file) . $suffix . '.php') )
 				{
 					require_once($path . lcfirst($file) . $suffix . '.php');
+					self::_prepareStaticClass($className);
 					break;
 				}
 				
 			}
 		}
-		//foreach ( self::$loadDir as $dir )
-		//{
-		//	if ( file_exists($dir . $className . '.php') )
-		//	{
-		//		require_once($dir . $className . '.php');
-		//	}
-		//}
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Prepare Face Late Static Binding
+	 * 
+	 * @access private static
+	 * @param  string $className
+	 */
+	private static function _prepareStaticClass($className)
+	{
+		if ( class_exists($className, FALSE)
+		     && method_exists($className, 'setBirthClass'))
+		{
+			call_user_func(array($className, 'setBirthClass'), $className);
+		}
 	}
 	
 	
