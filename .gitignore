@@ -14,5 +14,6 @@ seezoo/packages/*
 .project
 .settings
 .nbproject
+.buildpath
 *.DS_Store
-*.Thumbs.db
+*Thumbs.db
