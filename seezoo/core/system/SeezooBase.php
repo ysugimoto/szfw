@@ -84,24 +84,34 @@ class SeezooBase
 	
 	
 	/**
-	 * Re-create class instance
+	 * Create new class instance
 	 * 
 	 * @access public static
-	 * @param  bool $replace
 	 * @return object
 	 */
-	public static function birth($isClone = FALSE)
+	public static function birth()
 	{
 		$isEnableLSB = version_compare(PHP_VERSION, '5.3.0', '>=');
-		$instance = ( $isEnableLSB )
-		              ? new static()
-		              : new self::$_birthClassName();
-		
-		if ( $replace )
-		{
-			self::$_birthClassInstance = $instance;
-		}
-		return $instance;
+		return ( $isEnableLSB )
+		         ? new static()
+		         : new self::$_birthClassName();
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Re-create class instance ( cloned )
+	 * 
+	 * @access public static
+	 * @return object
+	 */
+	public static function rebirth()
+	{
+		return ( self::$_birthClassInstance )
+		         ? clone self::$_birthClassInstance
+		         : self::birth();
 	}
 	
 	
