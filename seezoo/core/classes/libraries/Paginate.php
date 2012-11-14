@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Paginate
+class SZ_Paginate extends SeezooBase
 {
 	/**
 	 * Process settings

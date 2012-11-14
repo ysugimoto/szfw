@@ -387,3 +387,18 @@ if ( ! function_exists('lcfirst') )
 		return strtolower($str[0]) . substr($str, 1);
 	}
 }
+
+
+// ---------------------------------------------------------------
+
+
+if ( ! function_exists('sz_get_class') )
+{
+	// Get Real class
+	function sz_get_class($object)
+	{
+		return ( $object instanceof Aspect )
+		         ? get_class($object->instance)
+		         : get_class($object);
+	}
+}

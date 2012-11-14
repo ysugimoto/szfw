@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Calendar
+class SZ_Calendar extends SeezooBase
 {
 	/**
 	 * Generate settings

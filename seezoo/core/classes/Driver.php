@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Driver extends SZ_Birth
+class SZ_Driver extends SeezooBase
 {
 	protected $driver;
 	

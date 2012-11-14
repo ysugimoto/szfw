@@ -31,7 +31,7 @@ class Aspect
 	 * Module instance
 	 * @var object
 	 */
-	protected $instance;
+	public $instance;
 	
 	
 	/**
@@ -72,7 +72,7 @@ class Aspect
 			$rv = $args['return'] = call_user_func_array(array($this->instance, $method), $args);
 			
 			// Calls joinpoint after
-			foreach ( self::$joinPoints[self::JOINPOINT_BEFORE] as $point )
+			foreach ( self::$joinPoints[self::JOINPOINT_AFTER] as $point )
 			{
 				call_user_func($point, $this->instance, $args);
 			}

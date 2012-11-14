@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Mimetype
+class SZ_Mimetype extends SeezooBase
 {
 	/**
 	 * Stack mimetype list

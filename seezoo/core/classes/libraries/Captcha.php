@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Captcha
+class SZ_Captcha extends SeezooBase
 {
 	/**
 	 * Captcha setting

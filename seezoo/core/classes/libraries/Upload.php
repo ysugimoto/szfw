@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Upload implements Validatable
+class SZ_Upload  extends SeezooBase implements Validatable
 {
 	/**
 	 * Stack error message

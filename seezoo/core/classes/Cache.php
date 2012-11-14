@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Cache
+class SZ_Cache extends SeezooBase
 {
 	/**
 	 * Cache destination directory

@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Helpers
+class SZ_Helpers extends SeezooBase
 {
 	
 	/**

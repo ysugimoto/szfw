@@ -17,7 +17,7 @@
  * 
  * ====================================================================
  */
-class SZ_Ftp
+class SZ_Ftp extends SeezooBase
 {
 	/**
 	 * FTP connection handle

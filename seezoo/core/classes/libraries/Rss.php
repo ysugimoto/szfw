@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Rss
+class SZ_Rss extends SeezooBase
 {
 	/**
 	 * Current build/parse setting

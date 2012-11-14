@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Verify
+class SZ_Verify extends SeezooBase
 {
 	/**
 	 * Error messages

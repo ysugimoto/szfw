@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Http
+class SZ_Http extends SeezooBase
 {
 	/**
 	 * Request class instance

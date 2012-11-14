@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Kennel
+class SZ_Kennel extends SeezooBase
 {
 	protected $table;
 	

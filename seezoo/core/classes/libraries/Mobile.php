@@ -21,7 +21,7 @@
  * ===============================================================================
  */
 
-class SZ_Mobile
+class SZ_Mobile extends SeezooBase
 {
 	// Full User-Agent string
 	protected $_agent;

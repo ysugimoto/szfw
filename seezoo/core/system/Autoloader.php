@@ -223,9 +223,9 @@ class Autoloader
 	private static function _prepareStaticClass($className)
 	{
 		if ( class_exists($className, FALSE)
-		     && method_exists($className, 'setBirthClass'))
+		     && method_exists($className, 'birthOf'))
 		{
-			call_user_func(array($className, 'setBirthClass'), $className);
+			call_user_func(array($className, 'birthOf'), $className);
 		}
 	}
 	
