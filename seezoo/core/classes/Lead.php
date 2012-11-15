@@ -100,6 +100,7 @@ class SZ_Lead
 	{
 		if ( method_exists($this, $this->_callInfo) )
 		{
+			DI::make($this)->inject($this->_callInfo);
 			$data = call_user_func_array(array($this, $this->_callInfo), $params);
 			if ( $autoAssign === TRUE )
 			{

@@ -58,9 +58,9 @@ class DI
 	 * @access private
 	 * @param  object $instance
 	 */
-	private function __construct($instance)
+	private function __construct(&$instance)
 	{
-		$this->instance = $instance;
+		$this->instance  = $instance;
 		$this->className = get_class($instance);
 	}
 	
@@ -127,6 +127,7 @@ class DI
 			}
 			foreach ( explode(',', $docs['di:' . $di]) as $module )
 			{
+				$module = trim($module);
 				$mod = lcfirst($module);
 				if ( ! property_exists($this->instance, $mod) )
 				{
@@ -167,11 +168,11 @@ class DI
 	private function _parseAnnotation($docc)
 	{
 		$ret  = array();
-		if ( preg_match_all('/@(.+)/u', $docc, $matches) )
+		if ( preg_match_all('/@(.+)/u', $docc, $matches, PREG_PATTERN_ORDER) )
 		{
 			foreach ( $matches[1] as $line )
 			{
-				list($key, $value) = explode(' ', $line, 2);
+				list($key, $value) = explode(' ', trim($line), 2);
 				$ret[$key] = $value;
 			}
 		}

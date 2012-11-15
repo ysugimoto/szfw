@@ -21,13 +21,10 @@
 class SZ_Kennel
 {
 	protected $table;
-	protected $modelSuffixRegex;
 	
 	
 	public function __construct()
 	{
-		$this->modelSuffixRegex = '#' . preg_quote(get_config('model_suffix')) . '$#';
-		
 		// Database autoloaded if "db" property is declared
 		if ( property_exists($this, 'db') )
 		{
@@ -42,9 +39,9 @@ class SZ_Kennel
 		{
 			return Seezoo::$Importer->database();
 		}
-		else if ( preg_match($this->modelSuffixRegex, $name) )
+		else if ( preg_match('/'. implode('|', Seezoo::getSuffix('model')) . '$/', $name) )
 		{
-			return Seezoo::$Importer->model($name);
+			return Seezoo::$Importer->model(Seezoo::removePrefix($name));
 		}
 	}
 	
