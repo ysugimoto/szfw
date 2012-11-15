@@ -149,9 +149,9 @@ class Autoloader
 	{
 		$prefix = '';
 		$class  = $className;
-		if ( PS::hasPrefix($className) )
+		if ( Seezoo::hasPrefix($className) )
 		{
-			list($prefix, $class) = PS::removePrefix($className, TRUE);
+			list($prefix, $class) = Seezoo::removePrefix($className, TRUE);
 		}
 		else if ( isset(self::$aliasClass[$className]) )
 		{
@@ -195,7 +195,7 @@ class Autoloader
 				
 				// Etc, Prefix-Suffixed load type
 				default:
-					foreach ( PS::getSuffix($type) as $suffix )
+					foreach ( Seezoo::getSuffix($type) as $suffix )
 					{
 						$file = ( $suffix !== '' ) ? str_replace($suffix, '', $class) : $class;
 						$className =  ucfirst($file) . $suffix;

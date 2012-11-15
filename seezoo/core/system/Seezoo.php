@@ -84,10 +84,42 @@ class Seezoo
 	private static $_propertyAliases = array();
 	
 	
+	/**
+	 * Output buffer mode flag
+	 * @var bool
+	 */
 	public static $outpuBufferMode = TRUE;
 	
 	
+	/**
+	 * Active packages list
+	 * @var array
+	 */
 	private static $packages = array();
+	
+	
+	/**
+	 * Prefix list
+	 * @var array
+	 */
+	private static $prefixes = array(
+	                             SZ_PREFIX_PKG,
+	                             SZ_PREFIX_EXT,
+	                             SZ_PREFIX_APP,
+	                             SZ_PREFIX_CORE
+	                           );
+	
+	/**
+	 * Default suffix list
+	 * @var array
+	 */
+	public static $suffixes = array(
+	                           'classes'      => array(''),
+	                           'helper'       => array('Helper', '_helper'),
+	                           'library'      => array(''),
+	                           'model'        => array('Model', '_model'),
+	                           'activerecord' => array('Activerecord')
+	                         );
 	
 	// ---------------------------------------------------------------
 	
@@ -219,6 +251,84 @@ class Seezoo
 	public static function getAliases()
 	{
 		return self::$_propertyAliases;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Check class has prefix
+	 * 
+	 * @access public static
+	 * @param  string $className
+	 * @return bool
+	 */
+	public static function hasPrefix($className)
+	{
+		$regex = '/^' . implode('|', self::$prefixes) . '/';
+		return ( preg_match($regex, $className) ) ? TRUE : FALSE;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Remove or split prefix
+	 * 
+	 * @access public static
+	 * @param  string $className
+	 * @param  bool $returnPrefix
+	 */
+	public static function removePrefix($className, $returnPrefix = FALSE)
+	{
+		$regex = '/^(' . implode('|', self::$prefixes) . ')(.+)$/';
+		if ( preg_match($regex, $className, $matches) )
+		{
+			return ( $returnPrefix )
+			         ? array($matches[1], $matches[2])
+			         : $matches[1];
+		}
+		return ( $returnPrefix ) ? array($className, '') : $className;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Add suffix format
+	 * 
+	 * @access public static
+	 * @param  string $type
+	 * @param  string $suffix
+	 */
+	public static function addSuffix($type, $suffix)
+	{
+		if ( ! isset(self::$suffixes[$type]) )
+		{
+			throw new LogicException($type . ' suffix is not defined.');
+		}
+		array_unshift(self::$suffixes[$type], $suffix);
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Get suffix
+	 * 
+	 * @access public static
+	 * @param  string $type
+	 * @return array
+	 */
+	public static function getSuffix($type)
+	{
+		return ( isset(self::$suffixes[$type]) )
+		         ? self::$suffixes[$type]
+		         : array('');
 	}
 	
 	

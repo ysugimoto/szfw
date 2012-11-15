@@ -630,7 +630,7 @@ class SZ_Importer implements Growable
 		$detections[] = array(SZ_PREFIX_CORE, COREPATH . $dir);
 		
 		// Do loop detection
-		foreach ( PS::getSuffix(substr($destDir, 0, -1)) as $suffix )
+		foreach ( Seezoo::getSuffix(substr($destDir, 0, -1)) as $suffix )
 		{
 			if ( $isLoaded === TRUE )
 			{
