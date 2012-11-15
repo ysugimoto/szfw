@@ -209,7 +209,7 @@ class SZ_Importer implements Growable
 		
 		foreach ( (array)$helpers as $helper )
 		{
-			$name   = str_replace(Seezoo::getPackage('helper'), '', $helper);
+			$name   = str_replace(Seezoo::getSuffix('helper'), '', $helper);
 			$alias  = ( $alias ) ? $alias : ucfirst($name);
 			$module = $this->loadModule($helper, TRUE, array(), $alias);
 
