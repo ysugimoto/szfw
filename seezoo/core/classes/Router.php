@@ -321,7 +321,7 @@ class SZ_Router implements Growable
 		$Controller = new $class();
 		$Controller->lead->prepare();
 		
-		// Deendency injection
+		// Dependency injection
 		DI::make($Controller)->inject('__construct');
 		
 		// under-score prefixed method cannot execute.
