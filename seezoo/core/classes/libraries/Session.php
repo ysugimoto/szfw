@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Session extends SZ_Driver
+class SZ_Session extends SZ_Driver implements Growable
 {
 	/**
 	 * Enviroment ckass instance
@@ -36,6 +36,18 @@ class SZ_Session extends SZ_Driver
 			$driverName = 'php';
 		}
 		$this->_loadDriver('session', ucfirst($driverName) . '_session');
+	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Session');
 	}
 	
 	

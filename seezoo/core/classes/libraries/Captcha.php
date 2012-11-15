@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Captcha extends SeezooBase
+class SZ_Captcha implements Growable
 {
 	/**
 	 * Captcha setting
@@ -57,6 +57,17 @@ class SZ_Captcha extends SeezooBase
 	public function __construct($conf = array())
 	{
 		$this->configure($conf);
+	}
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Captcha ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Captcha');
 	}
 	
 	

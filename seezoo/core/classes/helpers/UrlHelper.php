@@ -18,8 +18,19 @@
  * ====================================================================
  */
 
-class SZ_UrlHelper
+class SZ_UrlHelper implements Growable
 {
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->helper('Url');
+	}
+	
 	
 	/**
 	 * Generate popup-anchor

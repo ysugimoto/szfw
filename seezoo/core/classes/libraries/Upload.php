@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Upload  extends SeezooBase implements Validatable
+class SZ_Upload implements Validatable,Growable
 {
 	/**
 	 * Stack error message
@@ -79,6 +79,19 @@ class SZ_Upload  extends SeezooBase implements Validatable
 	{
 		$this->env = Seezoo::getENV();
 	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Upload ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Upload');
+	}
+	
 	
 	
 	// ---------------------------------------------------------------

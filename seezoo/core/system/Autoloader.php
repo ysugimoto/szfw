@@ -21,22 +21,19 @@
 class Autoloader
 {
 	/**
-	 * Core classname prefix
-	 * @var string
+	 * PSR Load constant
 	 */
-	private static $coreClassPrefix = 'SZ_';
-	
+	const LOAD_PSR = 'PSR';
 	
 	/**
 	 * Load destination directories
 	 * @var array
 	 */
-	private static $loadDir = array();
-	private static $loadPkgDir = array();
-	private static $loadExtDir = array();
-	private static $loadAppDir = array();
+	private static $loadDir     = array();
+	private static $loadPkgDir  = array();
+	private static $loadExtDir  = array();
+	private static $loadAppDir  = array();
 	private static $loadCoreDir = array();
-	
 	
 	
 	private static $aliasClass = array(
@@ -46,11 +43,12 @@ class Autoloader
 	
 	
 	public static $loadTargets = array(
-	                                    'classes'           => array(''),
-	                                    'classes/helpers'   => array('Helper'),
-	                                    'classes/libraries' => array(''),
-	                                    'classes/models'    => array('Model', '_model')
+	                                    'classes'           => 'classes',
+	                                    'classes/helpers'   => 'helper',
+	                                    'classes/libraries' => 'library',
+	                                    'classes/models'    => 'model'
 	                                  );
+	
 	
 	// ---------------------------------------------------------------
 	
@@ -66,21 +64,15 @@ class Autoloader
 		require_once($path . '/constants.php');
 		require_once($path . '/common.php');
 		
-		//spl_autoload_register(array('Autoloader', 'loadCoreModule'));
-		
-		self::register(COREPATH . 'system', array(''));
+		spl_autoload_register(array('Autoloader', 'loadSystem'));
 		spl_autoload_register(array('Autoloader', 'load'));
-		
-		$packages = Seezoo::getPackage();
+
 		foreach ( self::$loadTargets as $path => $suffix )
 		{
-			foreach ( $packages as $pkg )
-			{
-				self::register(PKGPATH . $pkg . '/' . $path, $suffix, SZ_PREFIX_PKG);
-			}
 			self::register(EXTPATH  . $path, $suffix, SZ_PREFIX_EXT);
 			self::register(APPPATH  . $path, $suffix, SZ_PREFIX_APP);
 			self::register(COREPATH . $path, $suffix, SZ_PREFIX_CORE);
+			self::register(APPPATH  . $path, $suffix);
 		}
 		
 		spl_autoload_register(array('Event', 'loadEventDispatcher'));
@@ -95,26 +87,28 @@ class Autoloader
 	 * 
 	 * @param public static
 	 * @param string $path
+	 * @param string $loadType
+	 * @param string $prefix
 	 */
-	public static function register($path, $suffix = array(), $prefix = NULL)
+	public static function register($path, $loadType = '', $prefix = NULL)
 	{
 		$path = trail_slash($path);
 		switch ( $prefix )
 		{
 			case SZ_PREFIX_PKG:
-				self::$loadPkgDir[$path] = $suffix;
+				self::$loadPkgDir[$path]  = $loadType;
 				break;
 			case SZ_PREFIX_EXT:
-				self::$loadExtDir[$path] = $suffix;
+				self::$loadExtDir[$path]  = $loadType;
 				break;
 			case SZ_PREFIX_APP:
-				self::$loadAppDir[$path] = $suffix;
+				self::$loadAppDir[$path]  = $loadType;
 				break;
 			case SZ_PREFIX_CORE:
-				self::$loadCoreDir[$path] = $suffix;
+				self::$loadCoreDir[$path] = $loadType;
 				break;
 			default:
-				self::$loadDir[$path] = $suffix;
+				self::$loadDir[$path]     = $loadType;
 				break;
 		}
 	}
@@ -131,7 +125,6 @@ class Autoloader
 	 */
 	public static function unregister($path)
 	{
-		$path = trail_slash($path);
 		foreach ( array(self::$loadPkgDir, self::$loadExtDir, self::$loadAppDir, self::$loadDir) as $dir )
 		{
 			if ( array_key_exists($path, $dir) )
@@ -155,13 +148,12 @@ class Autoloader
 	public static function load($className)
 	{
 		$prefix = '';
-		if ( FALSE !== ($point = strpos($className, '_')) )
+		$class  = $className;
+		if ( PS::hasPrefix($className) )
 		{
-			$prefix = substr($className, 0, ++$point);
-			$class  = substr($className, $point);
+			list($prefix, $class) = PS::removePrefix($className, TRUE);
 		}
-		
-		if ( isset(self::$aliasClass[$className]) )
+		else if ( isset(self::$aliasClass[$className]) )
 		{
 			$prefix = self::$aliasClass[$className];
 			$class  = $className;
@@ -187,45 +179,37 @@ class Autoloader
 				break;
 		}
 		
-		foreach ( $dirs as $path => $suffixes )
+		foreach ( $dirs as $path => $type )
 		{
-			foreach ( $suffixes as $suffix )
+			switch ( $type )
 			{
-				$file = ( $suffix !== '' ) ? str_replace($suffix, '', $class) : $class;
-				$className = $prefix . ucfirst($file) . $suffix;
-				if ( file_exists($path . ucfirst($file) . $suffix . '.php') )
-				{
-					require_once($path . ucfirst($file) . $suffix . '.php');
-					self::_prepareStaticClass($className);
+				// PSR load type
+				case self::LOAD_PSR:
+					$className = str_replace(array('\\', '_'), '/', $class);
+					if ( file_exists($path . $className . '.php') )
+					{
+						require_once($path . $className . '.php');
+						return;
+					}
 					break;
-				}
-				else if ( file_exists($path . lcfirst($file) . $suffix . '.php') )
-				{
-					require_once($path . lcfirst($file) . $suffix . '.php');
-					self::_prepareStaticClass($className);
-					break;
-				}
 				
+				// Etc, Prefix-Suffixed load type
+				default:
+					foreach ( PS::getSuffix($type) as $suffix )
+					{
+						$file = ( $suffix !== '' ) ? str_replace($suffix, '', $class) : $class;
+						$className =  ucfirst($file) . $suffix;
+						foreach ( array($prefix . ucfirst($className), ucfirst($className), lcfirst($className)) as $body )
+						{
+							if ( file_exists($path . $body . '.php') )
+							{
+								require_once($path . $body . '.php');
+								break;
+							}
+						}
+					}
+					break;
 			}
-		}
-	}
-	
-	
-	// ---------------------------------------------------------------
-	
-	
-	/**
-	 * Prepare Face Late Static Binding
-	 * 
-	 * @access private static
-	 * @param  string $className
-	 */
-	private static function _prepareStaticClass($className)
-	{
-		if ( class_exists($className, FALSE)
-		     && method_exists($className, 'birthOf'))
-		{
-			call_user_func(array($className, 'birthOf'), $className);
 		}
 	}
 	
@@ -239,25 +223,11 @@ class Autoloader
 	 * @access public static
 	 * @param  string
 	 */
-	public static function loadCoreModule($className)
+	public static function loadSystem($className)
 	{
-		if ( strpos($className, self::$coreClassPrefix) === 0 )
+		if ( file_exists(COREPATH . 'system/' . $className . '.php') )
 		{
-			$dir       = 'classes/';
-			$className = substr($className, strlen(self::$coreClassPrefix));
-		}
-		else if ( isset(self::$aliasClass[$className]) )
-		{
-			$dir = self::$aliasClass[$className];
-		}
-		else
-		{
-			$dir = 'system/';
-		}
-		
-		if ( file_exists(COREPATH . $dir . $className . '.php') )
-		{
-			require_once(COREPATH . $dir . $className . '.php');
+			require_once(COREPATH . 'system/' . $className . '.php');
 		}
 	}
 	

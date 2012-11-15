@@ -18,8 +18,20 @@
  * ====================================================================
  */
 
-class SZ_CsvHelper
+class SZ_CsvHelper implements Growable
 {
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->helper('Csv');
+	}
+	
+	
 	/**
 	 * Make csv string ( store file or download )
 	 * 

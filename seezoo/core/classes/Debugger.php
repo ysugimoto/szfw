@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Debugger
+class SZ_Debugger implements Growable
 {
 	/**
 	 * Environment class instance
@@ -47,11 +47,24 @@ class SZ_Debugger
 	 */
 	protected $_storedVars = array();
 	
+	
 	public function __construct()
 	{
 		$this->env = Seezoo::getENV();
 		$this->req = Seezoo::getRequest();
 		$this->bm  = Seezoo::$Importer->classes('Benchmark');
+	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->classes('Debugger');
 	}
 	
 	

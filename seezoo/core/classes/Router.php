@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Router
+class SZ_Router implements Growable
 {
 	protected $_level;
 	
@@ -98,6 +98,18 @@ class SZ_Router
 		$this->controllerSuffix  = $this->env->getConfig('controller_suffix');
 		$this->methodPrefix      = $this->env->getConfig('method_prefix');
 		$this->defaultController = $this->env->getConfig('default_controller');
+	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Router ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->classes('Router');
 	}
 	
 	

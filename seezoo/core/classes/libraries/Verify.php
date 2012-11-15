@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Verify extends SeezooBase
+class SZ_Verify implements Growable
 {
 	/**
 	 * Error messages
@@ -52,6 +52,18 @@ class SZ_Verify extends SeezooBase
 		'regex'       => '%sの形式が正しくありません。',
 		'matches'     => '%sの値が%sと一致しません。'
 	);
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Verify ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Verify');
+	}
 	
 	
 	// --------------------------------------------------

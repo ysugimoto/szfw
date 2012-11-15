@@ -402,3 +402,5 @@ if ( ! function_exists('sz_get_class') )
 		         : get_class($object);
 	}
 }
+
+// End of common.php

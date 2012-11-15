@@ -17,7 +17,7 @@
  * 
  * ====================================================================
  */
-class SZ_Xmlrpc extends SZ_Driver
+class SZ_Xmlrpc extends SZ_Driver implements Growable
 {
 	/**
 	 * Request options
@@ -57,6 +57,18 @@ class SZ_Xmlrpc extends SZ_Driver
 		$this->_options = $options;
 		$this->_decoder = $this->_loadDriver('xmlrpc', 'Xmlrpc_decoder', FALSE, FALSE);
 		$this->_encoder = $this->_loadDriver('xmlrpc', 'Xmlrpc_encoder', FALSE, FALSE);
+	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Xmlrpc');
 	}
 	
 	

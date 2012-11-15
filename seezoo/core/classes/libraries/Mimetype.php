@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Mimetype extends SeezooBase
+class SZ_Mimetype implements Growable
 {
 	/**
 	 * Stack mimetype list
@@ -48,6 +48,19 @@ class SZ_Mimetype extends SeezooBase
 		// feature detection
 		$this->_featureDetection();
 	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Mimetype ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Mimetype');
+	}
+	
 	
 	
 	// ---------------------------------------------------------------

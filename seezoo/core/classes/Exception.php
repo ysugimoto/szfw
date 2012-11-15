@@ -49,6 +49,7 @@ class SZ_Exception extends Exception
 		501 => 'database'
 	);
 	
+	
 	public function __construct($message = '', $code = 0)
 	{
 		if ( is_array($message) )

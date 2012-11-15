@@ -22,7 +22,7 @@
  * ====================================================================
  */
 
-class SZ_View extends SZ_Driver
+class SZ_View extends SZ_Driver implements Growable
 {
 	/**
 	 * pre assinged vars
@@ -79,6 +79,18 @@ class SZ_View extends SZ_Driver
 			$templateEngine = 'default';
 		}
 		$this->engine($templateEngine);
+	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->classes('View');
 	}
 	
 	

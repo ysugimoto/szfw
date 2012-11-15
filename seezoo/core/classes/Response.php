@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Response
+class SZ_Response implements Growable
 {
 	/**
 	 * output headers stack
@@ -40,10 +40,23 @@ class SZ_Response
 	 */
 	protected $req;
 	
+	
 	public function __construct()
 	{
 		$this->env = Seezoo::getENV();
 		$this->req = Seezoo::getRequest();
+	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Response ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->classes('Response');
 	}
 	
 	

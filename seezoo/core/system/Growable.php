@@ -8,8 +8,8 @@
  * A simple MVC/action Framework on PHP 5.1.0 or newer
  * 
  * 
- * Apectable interface
- * Implemented interface class may create Aspect wrapped when instatiate 
+ * Growable
+ * Implemented interface class must be able to create Extensible instance 
  * 
  * @package  Seezoo-Framework
  * @category system
@@ -18,4 +18,8 @@
  * 
  * ====================================================================
  */
-interface Aspectable {}
+
+interface Growable
+{
+	public static function grow();
+}

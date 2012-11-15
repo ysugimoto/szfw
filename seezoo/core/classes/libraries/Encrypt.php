@@ -17,7 +17,7 @@
  */
 
 
-class SZ_Encrypt extends SZ_Driver
+class SZ_Encrypt extends SZ_Driver implements Growable
 {
 	
 	/**
@@ -39,6 +39,18 @@ class SZ_Encrypt extends SZ_Driver
 		{
 			$this->mode = 'mcrypt';
 		}
+	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Encrypt');
 	}
 	
 	

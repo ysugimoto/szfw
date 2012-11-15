@@ -18,8 +18,19 @@
  * ====================================================================
  */
 
-class SZ_Filter
+class SZ_Filter implements Growable
 {
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->classes('Filter');
+	}
+	
 	
 	/**
 	 * Filter string

@@ -8,7 +8,7 @@
  * A simple MVC/action Framework on PHP 5.1.0 or newer
  * 
  * 
- * Dependecy injection management class
+ * Dependency injection Management Class
  * 
  * @package  Seezoo-Framework
  * @category System

@@ -18,7 +18,7 @@
  * ====================================================================
  */
  
-class SZ_Dog extends SZ_Driver
+class SZ_Dog extends SZ_Driver implements Growable
 {
 	/**
 	 * console arguments
@@ -32,6 +32,18 @@ class SZ_Dog extends SZ_Driver
 		$this->_argv  = $_SERVER['argv'];
 		$this->driver = $this->_loadDriver('command', 'Console_command', TRUE);
 	}
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Dog ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->classes('Dog');
+	}
+	
 	
 	
 	// ---------------------------------------------------------------

@@ -21,7 +21,7 @@
  * ===============================================================================
  */
 
-class SZ_Mobile extends SeezooBase
+class SZ_Mobile implements Growable
 {
 	// Full User-Agent string
 	protected $_agent;
@@ -105,6 +105,19 @@ class SZ_Mobile extends SeezooBase
 			$this->_detect_mobile();
 		}
 	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Mobile ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Mobile');
+	}
+	
 	
 	// Public methods ================================================
 	

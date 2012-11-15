@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Http extends SeezooBase
+class SZ_Http implements Growable
 {
 	/**
 	 * Request class instance
@@ -77,6 +77,19 @@ class SZ_Http extends SeezooBase
 		$this->req          = Seezoo::getRequest();
 		$this->_enable_curl = function_exists('curl_init');
 	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Http ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Http');
+	}
+	
 	
 	
 	// ---------------------------------------------------------------

@@ -21,7 +21,7 @@
  * ====================================================================
  */
 
-class SZ_Validation extends SZ_Driver
+class SZ_Validation extends SZ_Driver implements Growable
 {
 	/**
 	 * Validation field parts
@@ -88,6 +88,17 @@ class SZ_Validation extends SZ_Driver
 		$SZ->view->assign(array('Validation' => $this));
 	}
 	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Validation');
+	}
 	
 	// --------------------------------------------------
 	

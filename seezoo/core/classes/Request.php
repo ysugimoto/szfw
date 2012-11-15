@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Request
+class SZ_Request implements Growable
 {
 	/**
 	 * request method
@@ -126,8 +126,20 @@ class SZ_Request
 		$this->_uri            = trim((string)$this->server('REQUEST_URI'), '/');
 		$this->_accessPathInfo = (string)$this->server('PATH_INFO');
 	}
-
-
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Request ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->classes('Request');
+	}
+	
+	
 	// ---------------------------------------------------------------
 
 

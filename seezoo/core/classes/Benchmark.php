@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Benchmark
+class SZ_Benchmark implements Growable
 {
 	/**
 	 * marking points
@@ -34,9 +34,15 @@ class SZ_Benchmark
 	protected $_marked = array();
 	
 	
-	public function __construct()
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
 	{
-		
+		return Seezoo::$Importer->clases('Benchmark');
 	}
 	
 	

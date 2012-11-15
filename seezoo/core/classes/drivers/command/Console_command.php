@@ -20,8 +20,6 @@
 
 class SZ_Console_command extends SZ_Command_driver
 {
-	
-	
 	/**
 	 * option "-t" handler
 	 * 

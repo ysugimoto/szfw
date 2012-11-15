@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Rss extends SeezooBase
+class SZ_Rss implements Growable
 {
 	/**
 	 * Current build/parse setting
@@ -46,6 +46,19 @@ class SZ_Rss extends SeezooBase
 	{
 		$this->configure($conf);
 	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Rss ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Rss');
+	}
+	
 	
 	
 	// ---------------------------------------------------------------

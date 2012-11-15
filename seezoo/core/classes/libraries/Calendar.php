@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Calendar extends SeezooBase
+class SZ_Calendar implements Growable
 {
 	/**
 	 * Generate settings
@@ -71,6 +71,17 @@ class SZ_Calendar extends SeezooBase
 	public function __construct($conf = array())
 	{
 		$this->configure($conf);
+	}
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Calendar ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Calendar');
 	}
 	
 	

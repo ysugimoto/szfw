@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Importer
+class SZ_Importer implements Growable
 {	
 	/**
 	 * database class name
@@ -45,6 +45,19 @@ class SZ_Importer
 			$this->{$key} = $value;
 		}
 	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Importer ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->classes('Importer');
+	}
+	
 	
 	
 	// ---------------------------------------------------------------
@@ -198,9 +211,9 @@ class SZ_Importer
 		{
 			$name   = str_replace('Helper', '', $helper);
 			$alias  = ( $alias ) ? $alias : ucfirst($name);
-			$module = $this->loadModule($name . 'Helper', 'helpers', TRUE, array(), $alias);
+			$module = $this->loadModule($name, 'helpers', TRUE, array(), $alias);
 
-			$H->{strtolower($name)} = $instance;
+			$H->{strtolower($name)} = $module->data;
 		}
 		
 		return $module->data;
@@ -604,186 +617,39 @@ class SZ_Importer
 			return $module;
 		}
 		
-		//$prefix    = Seezoo::$config['subclass_prefix'];
-		$isLoaded  = FALSE;
-		$filePath  = $dir . $class . '.php';
-		
-		// Is model loaded, class file detection simply.
-		if ( $destDir === 'models' || $destDir === 'activerecords' )
-		{
-			foreach ( Seezoo::getPackage() as $pkg )
-			{
-				if ( file_exists(PKGPATH . $pkg . '/' . $filePath) )
-				{
-					require_once(PKGPATH . $pkg . '/' . $filePath);
-					$class = SZ_PREFIX_PKG . $class;
-					$isLoaded = TRUE;
-					break;
-				}
-			}
-			
-			if ( $isLoaded === FALSE )
-			{
-				if ( file_exists(EXTPATH . $filePath) )
-				{
-					require_once(EXTPATH . $filePath);
-					$class = SZ_PREFIX_EXT . $class;
-				}
-				else if ( file_exists(APPPATH. $filePath) )
-				{
-					require_once(APPPATH . $filePath);
-				}
-				else
-				{
-					throw new Exception('Undefined ' . substr($destDir, 0, -1) . ':' . $class);
-				}
-			}
-
-			if ( $destDir === 'activerecords' )
-			{
-				$class = $class . 'ActiveRecord';
-				if ( ! class_exists($class) )
-				{
-					throw new Exception('Undefined ActiveRecord Class: ' . $class);
-				}
-			}
-			
-			if ( $instanciate === TRUE )
-			{
-				$instance = new $class($params);
-				$module->data = ( $instance instanceof Aspectable )
-				                  ? Aspect::create($instance)
-				                  : $instance;
-			}
-			else
-			{
-				$module->data = $class;
-			}
-			
-			//$module->data = ( $instanciate === TRUE ) ? new $class($params) : $class;
-			SeezooFactory::push($destDir, $class, $alias, $module->data);
-			return $module;
-			
-		}
-		
-		else if ( $destDir === 'helpers' )
-		{
-			// If core class exists, detection of extened class
-			//if ( file_exists(COREPATH . $filePath) )
-			//{
-			//	require_once(COREPATH . $filePath);
-			//	$loadClass = 'SZ_' . $class;
-			//}
-			
-			// extension or original helper detection
-			foreach ( Seezoo::getPackage() as $pkg )
-			{
-				if ( file_exists(PKGPATH . $pkg . '/' . $filePath) )
-				{
-					require_once(PKGPATH . $pkg . '/' . $filePath);
-					$loadClass = ( class_exists(SZ_PREFIX_PKG . $class, FALSE) )
-					               ? SZ_PREFIX_PKG . $class
-					               : $class;
-					$isLoaded = TRUE;
-					break;
-				}
-			}
-			
-			if ( $isLoaded === FALSE )
-			{
-				if ( file_exists(EXTPATH . $filePath) )
-				{
-					require_once(EXTPATH . $filePath);
-					$loadClass = ( class_exists(SZ_PREFIX_EXT . $class, FALSE) )
-					               ? SZ_PREFIX_EXT . $class
-					               : $class;
-				}
-				else if ( file_exists(APPPATH. $filePath) )
-				{
-					require_once(APPPATH . $filePath);
-					$loadClass = ( class_exists(SZ_PREFIX_APP . $class, FALSE) )
-					               ? SZ_PREFIX_APP . $class
-					               : $class;
-				}
-			}
-			
-			if ( ! isset($loadClass) )
-			{
-				throw new LogicException('Undefined helper: ' . $class);
-			}
-			
-			if ( $instanciate === TRUE )
-			{
-				$instance = new $loadClass($params);
-				$module->data = ( $instance instanceof Aspectable )
-				                  ? Aspect::create($instance)
-				                  : $instance;
-			}
-			else
-			{
-				$module->data = $loadClass;
-			}
-			
-			if ( method_exists($loadClass, 'birthOf') )
-			{
-				call_user_func(array($loadClass, 'birthOf'), $loadClass);
-			}
-			
-			//$module->data = ( $instanciate === TRUE ) ? new $loadClass($params) : $class;
-			SeezooFactory::push($destDir, $class, $alias, $module->data);
-			return $module;
-		}
-		
-		
-		// Core classes, Libraries load section
-		// 
-		// If core class exists, detection of extened class
-		if ( ! file_exists(COREPATH . $filePath) )
-		{
-			throw new Exception($class . ' is not specified.');
-		}
-		
-		// load the core class
-		require_once(COREPATH . $filePath);
-		
-		// Does extension class exists?
-		$loadClass = SZ_PREFIX_CORE . $class;
-		$filePath  = $dir . $class . '.php';
+		$isLoaded   = FALSE;
+		// Loop of detections factory
+		$detections = array();
 		
 		foreach ( Seezoo::getPackage() as $pkg )
 		{
-			if ( file_exists(PKGPATH . $pkg . '/' . $filePath) )
+			$detections[] = array(SZ_PREFIX_PKG, PKGPATH . $pkg . '/' . $dir);
+		}
+		$detections[] = array(SZ_PREFIX_EXT,  EXTPATH  . $dir);
+		$detections[] = array(SZ_PREFIX_APP,  APPPATH  . $dir);
+		$detections[] = array(SZ_PREFIX_CORE, COREPATH . $dir);
+		
+		// Do loop detection
+		foreach ( PS::getSuffix(substr($destDir, 0, -1)) as $suffix )
+		{
+			if ( $isLoaded === TRUE )
 			{
-				require_once(PKGPATH . $pkg . '/' . $filePath);
-				$loadClass = ( class_exists(SZ_PREFIX_PKG . $class, FALSE) )
-				               ? SZ_PREFIX_PKG . $class
-				               : $class;
-				$isLoaded = TRUE;
 				break;
+			}
+			$classBody = str_replace($suffix, '', $class) . $suffix;
+			foreach ( $detections as $detect )
+			{
+				if ( FALSE !== ($loadClass = $this->_caseFileDetection($detect[0], $classBody, $detect[1])) )
+				{
+					$isLoaded = TRUE;
+					break;
+				}
 			}
 		}
 		
-		if ( $isLoaded === FALSE )
+		if ( $isLoaded === FALSE || ! isset($loadClass) )
 		{
-			if ( file_exists(EXTPATH . $filePath) )
-			{
-				require_once(EXTPATH . $filePath);
-				$loadClass = ( class_exists(SZ_PREFIX_EXT . $class, FALSE) )
-				               ? SZ_PREFIX_EXT . $class
-				               : $class;
-			}
-			else if ( file_exists(APPPATH. $filePath) )
-			{
-				require_once(APPPATH . $filePath);
-				$loadClass = ( class_exists(SZ_PREFIX_APP . $class, FALSE) )
-				               ? SZ_PREFIX_APP . $class
-				               : $class;
-			}
-			// Else, create core class instance
-			else
-			{
-				$loadClass = SZ_PREFIX_CORE . $class;
-			}
+			throw new Exception('Undefined class' . ':' . $class);
 		}
 		
 		if ( $instanciate === TRUE )
@@ -798,15 +664,35 @@ class SZ_Importer
 			$module->data = $loadClass;
 		}
 		
-		if ( method_exists($loadClass, 'birthOf') )
-		{
-			call_user_func(array($loadClass, 'birthOf'), $loadClass);
-		}
-			
-		//$module->data = ( $instanciate === TRUE ) ? new $loadClass($params) : $loadClass;
 		SeezooFactory::push($destDir, $class, $alias, $module->data);
-		
-		// returns module object
 		return $module;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Detect module file with consider Class-Case
+	 * 
+	 * @access protected
+	 * @param  string $prefix
+	 * @param  string $classBody
+	 * @param  string $detectionPath
+	 */
+	protected function _caseFileDetection($prefix, $classBody, $detectionPath)
+	{
+		$detectionPath = trail_slash($detectionPath);
+		foreach ( array($prefix . $classBody, $classBody, lcfirst($classBody)) as $body )
+		{
+			if ( file_exists($detectionPath . $body . '.php') )
+			{
+				require_once($detectionPath . $body . '.php');
+				return ( class_exists($prefix . $classBody, FALSE) )
+				         ? $prefix . $classBody
+				         : $classBody;
+			}
+		}
+		return FALSE;
 	}
 }

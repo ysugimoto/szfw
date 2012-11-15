@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_CookieHelper
+class SZ_CookieHelper implements Growable
 {
 	/**
 	 * Request class instance
@@ -54,6 +54,18 @@ class SZ_CookieHelper
 		
 		$this->_defaultCookie['domain'] = $this->env->getConfig('cookie_domain');
 		$this->_defaultCookie['path']   = $this->env->getConfig('cookie_path');
+	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->helper('Cookie');
 	}
 	
 	

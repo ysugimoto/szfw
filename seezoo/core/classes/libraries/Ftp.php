@@ -17,7 +17,7 @@
  * 
  * ====================================================================
  */
-class SZ_Ftp extends SeezooBase
+class SZ_Ftp implements Growable
 {
 	/**
 	 * FTP connection handle
@@ -44,6 +44,19 @@ class SZ_Ftp extends SeezooBase
 	 * @var array
 	 */
 	protected $logMessages = array();
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Ftp ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Ftp');
+	}
+	
 	
 	
 	// --------------------------------------------------------------------

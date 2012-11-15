@@ -21,7 +21,7 @@
 /**
  * Extra simple Access class
  */
-class Database extends SZ_Database
+class Database implements Growable
 {
 	private static $_dbClass;
 	
@@ -35,7 +35,7 @@ class Database extends SZ_Database
 		return new self::$_dbClass($dsn, $dsnConnection);
 	}
 	
-	public static function getInstance()
+	public static function grow()
 	{
 		return Seezoo::$Importer->database();
 	}
@@ -176,6 +176,7 @@ Class SZ_Database extends SZ_Driver
 			$this->_connect($group, $dsnConnection);
 		}
 	}
+	
 	
 	
 	// --------------------------------------------------

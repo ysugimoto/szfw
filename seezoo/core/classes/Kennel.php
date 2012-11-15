@@ -18,22 +18,23 @@
  * ====================================================================
  */
 
-class SZ_Kennel extends SeezooBase
+class SZ_Kennel
 {
 	protected $table;
-	
 	protected $modelSuffixRegex;
+	
 	
 	public function __construct()
 	{
 		$this->modelSuffixRegex = '#' . preg_quote(get_config('model_suffix')) . '$#';
 		
-		// Database autoloaded if the property is defined
+		// Database autoloaded if "db" property is declared
 		if ( property_exists($this, 'db') )
 		{
 			$this->_loadDatabase();
 		}
 	}
+	
 	
 	public function __get($name)
 	{
@@ -46,6 +47,7 @@ class SZ_Kennel extends SeezooBase
 			return Seezoo::$Importer->model($name);
 		}
 	}
+	
 	
 	// ---------------------- Short-cut Database SQL methods --------------------------- //
 	

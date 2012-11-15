@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Mail extends SZ_Driver
+class SZ_Mail extends SZ_Driver implements Growable
 {
 	/**
 	 * Mail settings
@@ -42,6 +42,18 @@ class SZ_Mail extends SZ_Driver
 		// load the driver
 		$this->_loadDriver('mail', ucfirst($this->driverType) . '_mail');
 		$this->driver->setup($this->setting);
+	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Mail');
 	}
 	
 	

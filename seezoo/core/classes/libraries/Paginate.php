@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Paginate extends SeezooBase
+class SZ_Paginate implements Growable
 {
 	/**
 	 * Process settings
@@ -66,6 +66,19 @@ class SZ_Paginate extends SeezooBase
 		$this->_defaultSetting['base_link'] = page_link();
 		$this->configure($conf);
 	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Paginate ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Paginate');
+	}
+	
 	
 	
 	// ---------------------------------------------------------------

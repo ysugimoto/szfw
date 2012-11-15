@@ -33,6 +33,9 @@ define('SZ_PREFIX_APP',  'APP_');
 define('SZ_PREFIX_EXT',  'EXT_');
 define('SZ_PREFIX_PKG',  'PKG_');
 
+// Special:PSR-Autload fragment
+define('SZ_AUTOLOAD_PSR', 0x001);
+
 // Init mode constants
 define('SZ_MODE_MVC',      'mvc');
 define('SZ_MODE_ACTION',   'action');

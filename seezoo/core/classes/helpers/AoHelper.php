@@ -18,8 +18,20 @@
  * ====================================================================
  */
 
-class SZ_AoHelper
+class SZ_AoHelper implements Growable
 {
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->helper('Ao');
+	}
+	
+	
 	/**
 	 * Data to Array
 	 * 

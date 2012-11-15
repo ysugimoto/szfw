@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Environment
+class SZ_Environment implements Growable
 {
 	/**
 	 * application configure data
@@ -142,7 +142,19 @@ class SZ_Environment
 		// detect PHP API
 		$this->_detectAPI();
 	}
-		
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Environment ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->classes('Environment');
+	}
+	
 	
 	// ---------------------------------------------------------------
 	

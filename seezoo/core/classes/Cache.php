@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Cache extends SeezooBase
+class SZ_Cache implements Growable
 {
 	/**
 	 * Cache destination directory
@@ -46,6 +46,19 @@ class SZ_Cache extends SeezooBase
 	{
 		$this->_cacheDir = ETCPATH . 'caches/';
 	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return SZ_Cache ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->classes('Cache');
+	}
+	
 	
 	
 	// ---------------------------------------------------------------

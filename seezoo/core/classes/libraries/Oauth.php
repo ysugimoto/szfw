@@ -17,7 +17,7 @@
  * 
  * ====================================================================
  */
-class SZ_Oauth extends SZ_Driver
+class SZ_Oauth extends SZ_Driver implements Growable
 {
 	/**
 	 * Support drivers
@@ -37,6 +37,18 @@ class SZ_Oauth extends SZ_Driver
 		{
 			$this->service($serviceName);
 		}
+	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Oauth');
 	}
 	
 	

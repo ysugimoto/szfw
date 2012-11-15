@@ -18,8 +18,20 @@
  * ====================================================================
  */
 
-class SZ_FilesystemHelper
+class SZ_FilesystemHelper implements Growable
 {
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->helper('Filesystem');
+	}
+	
+	
 	/**
 	 * Read file
 	 * 

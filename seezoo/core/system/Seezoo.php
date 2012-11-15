@@ -544,7 +544,10 @@ class Seezoo
 			include(APPPATH . 'config/package.php');
 			if ( isset($pakcage) )
 			{
-				self::$packages = $package;
+				foreach ( (array)$package as $pkg )
+				{
+					self::addPackage($pkg);
+				}
 			}
 		}
 		

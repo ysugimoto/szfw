@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Pict extends SZ_Driver
+class SZ_Pict extends SZ_Driver implements Growable
 {
 	/**
 	 * Driver type
@@ -43,6 +43,18 @@ class SZ_Pict extends SZ_Driver
 		$this->driverType = $env->getConfig('picture_manipulation');
 		
 		$this->_loadDriver('pict', ucfirst($this->driverType) .  '_pict');
+	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Pict');
 	}
 	
 	

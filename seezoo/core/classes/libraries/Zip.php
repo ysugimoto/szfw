@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Zip extends SZ_Driver
+class SZ_Zip extends SZ_Driver implements Growable
 {
 	/**
 	 * Driver class name
@@ -38,6 +38,20 @@ class SZ_Zip extends SZ_Driver
 		$this->_featureDetection();
 		// and load Dirver
 		$this->_loadDriver('zip', $this->driverClass . '_zip');
+	}
+	
+	
+	// --------------------------------------------------
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Zip');
 	}
 	
 	

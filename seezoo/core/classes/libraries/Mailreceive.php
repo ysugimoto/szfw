@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Mailreceive extends SZ_Driver
+class SZ_Mailreceive extends SZ_Driver implements Growable
 {
 	/**
 	 * Mail settings
@@ -45,6 +45,18 @@ class SZ_Mailreceive extends SZ_Driver
 		{
 			$this->driver->configure($this->settings[$this->receiver]);
 		}
+	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->library('Mailreceive');
 	}
 	
 	

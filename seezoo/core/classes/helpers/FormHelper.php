@@ -18,8 +18,19 @@
  * ====================================================================
  */
 
-class SZ_FormHelper
+class SZ_FormHelper implements Growable
 {
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->helper('Form');
+	}
+	
 	
 	/**
 	 * stack validated value

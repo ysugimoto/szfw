@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Logger
+class SZ_Logger implements Growable
 {
 	/**
 	 * logfile save dest path
@@ -39,6 +39,18 @@ class SZ_Logger
 		$this->_logPath = ( Seezoo::$config['logging_save_dir'] )
 		                    ? rtrim(Seezoo::$config['logging_save_dir'], '/') . '/'
 		                    : '';
+	}
+	
+	
+	/**
+	 * Growable interface implementation
+	 * 
+	 * @access public static
+	 * @return View ( extended )
+	 */
+	public static function grow()
+	{
+		return Seezoo::$Importer->classes('Logger');
 	}
 	
 	
