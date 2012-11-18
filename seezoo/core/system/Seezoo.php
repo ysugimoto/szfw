@@ -115,9 +115,9 @@ class Seezoo
 	 */
 	public static $suffixes = array(
 	                           'classes'      => array(''),
-	                           'helper'       => array('Helper', '_helper'),
+	                           'helper'       => array('Helper'),
 	                           'library'      => array(''),
-	                           'model'        => array('Model', '_model'),
+	                           'model'        => array(''),
 	                           'activerecord' => array('Activerecord')
 	                         );
 	
@@ -195,13 +195,13 @@ class Seezoo
 		{
 			throw new InvalidArgumentException('Second argument must be callable.');
 		}
-		$request  = self::getRequest();
+		$request  = self::$_stackRequest;
 		$path     = ltrim($request->getAccessPathInfo(), '/');
+		$regex    = '^' . trim(str_replace('|', '\|', $pathRegex), '^$') . '$';
 		if ( $request->server('query_string') )
 		{
 			$path .= '?' . $request->server('query_string');
 		}
-		$regex    = '^' . trim(str_replace('|', '\|', $pathRegex), '^$') . '$';
 
 		if ( $request->requestMethod === $method && preg_match('|' . $regex . '|', $path, $match) )
 		{

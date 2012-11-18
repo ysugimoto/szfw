@@ -154,10 +154,6 @@ class SZ_Importer implements Growable
 	 */
 	public function library($libname, $param = array(), $alias = FALSE, $instantiate = TRUE)
 	{
-		if ( is_array($libname) )
-		{
-			$alias = FALSE;
-		}
 		foreach ( (array)$libname as $lib )
 		{
 			$module = $this->loadModule($lib, 'libraries', $instantiate, $param, $alias);
@@ -281,20 +277,21 @@ class SZ_Importer implements Growable
 	 */
 	public function vendor($vendors, $param = array())
 	{
+		$dirBase = 'vendors/';
+		
 		foreach ( (array)$vendors as $vendor )
 		{
 			// Does request class in a sub-directory?
-			if ( strpos($vendor, '/') !== FALSE )
+			if ( FALSE !== ($point = strrpos($vendor, '/')) )
 			{
-				$exp    = explode('/', $vendor);
-				$vendor = array_pop($exp);
+				$dir    = $dirBase . substr($vendor, 0, ++$point);
+				$vendor = substr($vendor, $point);
 				$Class  = ucfirst($vendor);
-				$dir    = 'vendors/' . trim(implode('/', $exp), '/') . '/';
 			}
 			else
 			{
 				$Class = ucfirst($vendor);
-				$dir   = 'vendors/';
+				$dir   = $dirBase;
 			}
 			
 			$isLoaded = FALSE;
@@ -332,11 +329,11 @@ class SZ_Importer implements Growable
 				}
 				else
 				{
-					throw new Exception($Class . ' is not specified.');
+					throw new UndefinedClassException($Class . ' is not specified.');
 				}
 			}
 			
-			if ( class_exists($Class) )
+			if ( class_exists($Class, FALSE) )
 			{
 				$module = new $Class($param);
 				$this->_attachModule(strtolower($vendor), $module);
@@ -364,11 +361,12 @@ class SZ_Importer implements Growable
 	public function lead($lead)
 	{
 		$systemLead = $this->classes('Lead');
+		$dir        = 'classes/leads/';
 		
 		// Does request class in a sub-directory?
 		if ( FALSE !== ($point = strrpos($lead, '/')) )
 		{
-			$dir   = 'classes/leads/' . trim(substr($lead, 0, $point++), '/') . '/';
+			$dir  .= trail_slash(substr($lead, 0, ++$point));
 			$lead  = lcfirst(substr($lead, $point));
 			$Class = $lead . 'Lead';
 			
@@ -377,7 +375,6 @@ class SZ_Importer implements Growable
 		{
 			$Class = $lead . 'Lead';
 			$lead  = lcfirst($lead);
-			$dir   = 'classes/leads/';
 		}
 		
 		$filePath = $dir . $lead . '.php';
@@ -404,7 +401,10 @@ class SZ_Importer implements Growable
 				require_once(APPPATH . $filePath);
 			}
 		}
-		return ( class_exists($Class) ) ? new $Class() : $systemLead;
+		
+		return ( class_exists($Class, FALSE) )
+		         ? new $Class()
+		         : $systemLead;
 	}
 	
 	
@@ -420,37 +420,39 @@ class SZ_Importer implements Growable
 	 * @return array
 	 */
 	public function config($configName, $isOtherKey = FALSE)
-	{	
+	{
+		$dir = 'config/';
 		// Does request class in a sub-directory?
 		if ( FALSE !== ($point = strrpos($configName, '/')) )
 		{
-			$dir  = 'config/' . trim(substr($configName, 0, $point++), '/') . '/';
-			$name = substr($configName, $point);
-		}
-		else
-		{
-			$name = $configName;
-			$dir  = 'config/';
+			$dir .= trail_slash(substr($configName, 0, ++$point));
+			$configName = substr($configName, $point);
 		}
 		
 		// remove php-extension
-		$name = preg_replace('/\.php\Z/u', '', $name);
+		$configName = preg_replace('/\.php\Z/u', '', $configName);
 		
 		// Is config already loaded?
-		if ( FALSE !== ($stacked = SeezooFactory::exists('config', $name)) )
+		if ( FALSE !== ($stacked = SeezooFactory::exists('config', $configName)) )
 		{
 			return $stacked;
 		}
 		
 		$isLoaded      = FALSE;
 		$stackedConfig = array();
-		$filePath      = $dir . $name . '.php';
+		$filePath      = $dir . $configName . '.php';
 		
 		// Notice:
 		// Configure data is merged from base file cascading.
-		foreach ( array(APPPATH, EXTPATH) as $absPath )
+		$detections = array(APPPATH, EXTPATH);
+		foreach ( Seezoo::getPackage() as $pkg )
 		{
-			if ( file_exists($absPath . $filePath) )
+			$detections[] = PKGPATH . $pkg . '/';
+		}
+		
+		foreach ( $detections as $detect )
+		{
+			if ( file_exists($detect . $filePath) )
 			{
 				require_once($absPath . $filePath);
 				if ( isset($config) )
@@ -462,29 +464,15 @@ class SZ_Importer implements Growable
 			}
 		}
 		
-		// package config files exists?
-		foreach ( Seezoo::getPackage() as $pkg )
-		{
-			if ( file_exists(PKGPATH . $pkg . '/' . $filePath) )
-			{
-				require_once(PKGPATH . $pkg . '/' . $filePath);
-				if ( isset($config) )
-				{
-					$stackedConfig = array_merge($stackedConfig, $config);
-				}
-				unset($config);
-				$isLoaded = TRUE;
-			}
-		}
-		
 		if ( $isLoaded === FALSE )
 		{
-			throw new Exception('Configuration file ' . $name . ' is not exists.');
+			throw new UndefinedClassException('Configuration file ' . $configName . ' is not exists.');
 		}
 		
-		SeezooFactory::push('config', $name, $name, $stackedConfig);
+		SeezooFactory::push('config', $configName, $configName, $stackedConfig);
 		$env = Seezoo::getENV();
-		$env->importConfig($stackedConfig, $name, $isOtherKey);
+		$env->importConfig($stackedConfig, $configName, $isOtherKey);
+		
 		return $stackedConfig;
 	}
 	
@@ -617,7 +605,6 @@ class SZ_Importer implements Growable
 			return $module;
 		}
 		
-		$isLoaded   = FALSE;
 		// Loop of detections factory
 		$detections = array();
 		
@@ -630,26 +617,32 @@ class SZ_Importer implements Growable
 		$detections[] = array(SZ_PREFIX_CORE, COREPATH . $dir);
 		
 		// Do loop detection
-		foreach ( Seezoo::getSuffix(substr($destDir, 0, -1)) as $suffix )
+		$classSuffix = ( $destDir === 'libraries' )
+		                 ? 'library'
+		                 : substr($destDir, 0, -1);
+		foreach ( $detections as $detect )
 		{
-			if ( $isLoaded === TRUE )
+			if ( file_exists($detect[1] . $detect[0] . $class . '.php') )
 			{
+				require_once($detect[1] . $detect[0] . $class . '.php');
+				$loadClass = ( class_exists($detect[0] . $class, FALSE) )
+				                ? $detect[0] . $class
+				                : $class;
 				break;
 			}
-			$classBody = str_replace($suffix, '', $class) . $suffix;
-			foreach ( $detections as $detect )
+			else if ( file_exists($detect[1] . $class . '.php') )
 			{
-				if ( FALSE !== ($loadClass = $this->_caseFileDetection($detect[0], $classBody, $detect[1])) )
-				{
-					$isLoaded = TRUE;
-					break;
-				}
+				require_once($detect[1] . $class . '.php');
+				$loadClass = ( class_exists($detect[0] . $class, FALSE) )
+				                ? $detect[0] . $class
+				                : $class;
+				break;
 			}
 		}
 		
-		if ( $isLoaded === FALSE || ! isset($loadClass) )
+		if ( ! isset($loadClass) )
 		{
-			throw new Exception('Undefined class' . ':' . $class);
+			throw new UndefinedClassException('Undefined class' . ':' . $class);
 		}
 		
 		if ( $instanciate === TRUE )
@@ -666,33 +659,5 @@ class SZ_Importer implements Growable
 		
 		SeezooFactory::push($destDir, $class, $alias, $module->data);
 		return $module;
-	}
-	
-	
-	// ---------------------------------------------------------------
-	
-	
-	/**
-	 * Detect module file with consider Class-Case
-	 * 
-	 * @access protected
-	 * @param  string $prefix
-	 * @param  string $classBody
-	 * @param  string $detectionPath
-	 */
-	protected function _caseFileDetection($prefix, $classBody, $detectionPath)
-	{
-		$detectionPath = trail_slash($detectionPath);
-		foreach ( array($prefix . $classBody, $classBody, lcfirst($classBody)) as $body )
-		{
-			if ( file_exists($detectionPath . $body . '.php') )
-			{
-				require_once($detectionPath . $body . '.php');
-				return ( class_exists($prefix . $classBody, FALSE) )
-				         ? $prefix . $classBody
-				         : $classBody;
-			}
-		}
-		return FALSE;
 	}
 }

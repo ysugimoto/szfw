@@ -67,12 +67,12 @@ class Autoloader
 		spl_autoload_register(array('Autoloader', 'loadSystem'));
 		spl_autoload_register(array('Autoloader', 'load'));
 
-		foreach ( self::$loadTargets as $path => $suffix )
+		foreach ( self::$loadTargets as $path => $loadType )
 		{
-			self::register(EXTPATH  . $path, $suffix, SZ_PREFIX_EXT);
-			self::register(APPPATH  . $path, $suffix, SZ_PREFIX_APP);
-			self::register(COREPATH . $path, $suffix, SZ_PREFIX_CORE);
-			self::register(APPPATH  . $path, $suffix);
+			self::register(EXTPATH  . $path, $loadType, SZ_PREFIX_EXT);
+			self::register(APPPATH  . $path, $loadType, SZ_PREFIX_APP);
+			self::register(COREPATH . $path, $loadType, SZ_PREFIX_CORE);
+			self::register(APPPATH  . $path, $loadType);
 		}
 		
 		spl_autoload_register(array('Event', 'loadEventDispatcher'));
@@ -189,7 +189,6 @@ class Autoloader
 					if ( file_exists($path . $className . '.php') )
 					{
 						require_once($path . $className . '.php');
-						return;
 					}
 					break;
 				
@@ -197,15 +196,17 @@ class Autoloader
 				default:
 					foreach ( Seezoo::getSuffix($type) as $suffix )
 					{
-						$file = ( $suffix !== '' ) ? str_replace($suffix, '', $class) : $class;
-						$className =  ucfirst($file) . $suffix;
-						foreach ( array($prefix . ucfirst($className), ucfirst($className), lcfirst($className)) as $body )
+						$file = ( $suffix !== '' ) ? str_replace($suffix, '', $class) . $suffix : $class;
+						$body =  ucfirst($file);
+						if ( file_exists($path . $prefix . $body . '.php') )
 						{
-							if ( file_exists($path . $body . '.php') )
-							{
-								require_once($path . $body . '.php');
-								break;
-							}
+							require_once($path .$prefix . $body . '.php');
+							break;
+						}
+						else if ( file_exists($path . $body . '.php') )
+						{
+							require_once($path . $body . '.php');
+							break;
 						}
 					}
 					break;

@@ -235,3 +235,10 @@ class SZ_Exception extends Exception
 	}
 }
 
+/**
+ * Framework original exceptions
+ */
+ 
+class UndefinedClassException extends RuntimeException {}
+
+
