@@ -32,7 +32,7 @@
     
       <h3>Working environment</h3>
       <p>This page has been called from the following controllers:</p>
-      <code><?php //echo Seezoo::getInstance()->router->getInfo('loadedFile');?></code>
+      <code><?php echo Seezoo::getInstance()->router->getInfo('loadedFile');?></code>
       <p>This page has been rendered from the following view file:</p>
       <code><?php echo Application::get()->path;?>views/welcome/index.php</code>
       <p>The state of the process is as follows (Can be changed in the config) :</p>

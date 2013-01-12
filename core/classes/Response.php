@@ -171,12 +171,13 @@ class SZ_Response implements Growable, Singleton
 	
 	
 	/**
-	 * send browser buffer
+	 * Set response body
 	 * 
 	 * @access public
 	 * @param  string $output
+	 * @return $this
 	 */
-	public function display($output)
+	public function setBody($output)
 	{
 		// Is it possible to transfer compressed gzip?
 		$this->setGzipHandler();
@@ -192,12 +193,6 @@ class SZ_Response implements Growable, Singleton
 		
 		$this->outputQueue = $output;
 		
-		if ( $this->env->api !== 'cli' )
-		{
-			header('HTTP/1.1 200 OK');
-			$this->send();
-		}
-		
 		return $this;
 	}
 	
@@ -206,12 +201,13 @@ class SZ_Response implements Growable, Singleton
 	
 	
 	/**
-	 * send json formatted string
+	 * Set json formatted body
 	 * 
 	 * @access public
-	 * @param  string $json
+	 * @param  mixed $json
+	 * @return $this
 	 */
-	public function displayJSON($json)
+	public function setJsonBody($json)
 	{
 		// Is it possible to transfer compressed gzip?
 		$this->setGzipHandler();

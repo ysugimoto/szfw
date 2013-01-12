@@ -322,23 +322,12 @@ class Application
 	
 	
 	/**
-	 * Run status initialize
+	 * Get application conguration
 	 * 
-	 * @access private
-	 * @param  string $mode
-	 * @param  string $pathInfo
+	 * @access public static
+	 * @param  string $key
+	 * @return mixed
 	 */
-	private function initialize($mode, $pathInfo)
-	{
-		$this->mode     = $mode;
-		$this->level    = Seezoo::addProcess($this);
-		$this->pathinfo = Seezoo::getRequest()->setRequest($pathInfo, $mode, $this->level);
-		
-		$this->router->setPathInfo($this->pathinfo);
-		$this->router->setMode($mode);
-		$this->router->setLevel($this->level);
-	}
-	
 	public static function config($key)
 	{
 		return ( isset(self::$instance->config[$key]) ) ? self::$instance->config[$key] : FALSE;
@@ -537,7 +526,7 @@ class Application
 			Seezoo::releaseInstance($SZ);
 			$this->level--;
 			
-			Seezoo::$Response->display($SZ->view->getDisplayBuffer())
+			Seezoo::$Response->setBody($SZ->view->getDisplayBuffer())
 			                 ->send();
 		}
 		// -- complete!
