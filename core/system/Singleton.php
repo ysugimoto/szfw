@@ -1,6 +1,4 @@
-#!/usr/bin/env php
-<?php
-
+<?php if ( ! defined('SZ_EXEC') ) exit('access denied.');
 /**
  * ====================================================================
  * 
@@ -8,18 +6,16 @@
  * 
  * A simple MVC/action Framework on PHP 5.1.0 or newer
  * 
+ * ------------------------------------------------------------------
  * 
- * Command line bootstrap
+ * Singleton Interface
  * 
  * @package  Seezoo-Framework
+ * @category System
  * @author   Yoshiaki Sugimoto <neo.yoshiaki.sugimoto@gmail.com>
  * @license  MIT Licence
  * 
  * ====================================================================
  */
 
-// Set command line flag 
-define('SZ_COMMANDLINE_WORKER', 1);
-
-// include bootstrap file
-require_once(dirname(__FILE__) . '/seezoo.php'); 
+Interface Singleton {}
