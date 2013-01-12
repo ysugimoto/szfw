@@ -55,16 +55,16 @@ class ResponseTest extends SZ_ClassTest
 		$this->assertCount(3, $headers);
 	}
 	
-	public function test_displayメソッドからの出力が自身のインスタンスであれば通る()
+	public function test_setBodyメソッドからの出力が自身のインスタンスであれば通る()
 	{
 		$response = new SZ_Response();
-		$this->assertSame($response, $response->display('test_output'));
+		$this->assertSame($response, $response->setBody('test_output'));
 	}
 	
-	public function test_displayメソッド後に出力キューに入れば通る()
+	public function test_setBodyメソッド後に出力キューに入れば通る()
 	{
 		$response = new SZ_Response();
-		$response->display('test_output');
+		$response->setBody('test_output');
 		$output = $this->getProtectedProperty('outputQueue', $response);
 		
 		$this->assertEquals('test_output', $output);
