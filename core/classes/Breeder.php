@@ -92,6 +92,7 @@ class SZ_Breeder
 		$this->import   =  Seezoo::$Importer->classes('Importer');
 		$this->response =& Seezoo::$Response;
 		$this->view     =  new Seezoo::$Classes['View']();
+		$this->router   =& $this->app->router;
 		
 		$this->_extractAlias();
 		$this->lead = $this->app->router->bootLead();
