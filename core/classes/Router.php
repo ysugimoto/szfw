@@ -46,17 +46,17 @@ class SZ_Router implements Growable
 	
 	
 	/**
-	 * Default controller
+	 * Default module
 	 * @var string
 	 */
-	protected $defaultController;
+	protected $defaultModule;
 	
 	
 	/**
-	 * Detection directory
+	 * Inlucde module filename
 	 * @var string
 	 */
-	protected $detectDir;
+	protected $moduleFileName;
 	
 	
 	/**
@@ -126,150 +126,63 @@ class SZ_Router implements Growable
 		switch ( $mode )
 		{
 			case SZ_MODE_CLI:
-				$this->detectDir = 'classes/cli/';
+				$this->moduleFileName = 'controller.cli';
 				break;
 			case SZ_MODE_ACTION:
-				$this->detectDir = 'scripts/actions/';
-				break;
-			case SZ_MODE_PROC:
-				$this->detectDir = 'scripts/processes/';
+				$this->moduleFileName = 'action';
 				break;
 			default:
-				$this->detectDir = ( is_ajax_request() )
-				                    ? 'classes/ajax/'
-				                    : 'classes/controllers/';
+				$this->moduleFileName = ( is_ajax_request() ) ? 'controller.ajax' : 'controller';
 				break;
 		}
 	}
 	
 	
-	// ---------------------------------------------------------------
-	
-	
-	/**
-	 * Set process level
-	 * 
-	 * @access public
-	 * @param  int $level
-	 */
-	public function setLevel($level)
-	{
-		$this->_level = $level;
-	}
-	
-	// ---------------------------------------------------------------
-	
-	
-	/**
-	 * Boot action process
-	 * 
-	 * @access public
-	 */
-	public function bootAction()
+	public function boot($args)
 	{
 		if ( $this->routing() === FALSE )
 		{
 			return FALSE;
 		}
 		
-		$this->_loadedFile = $this->_package
-		                     . $this->detectDir
-		                     . $this->_directory
-		                     . $this->_class
-		                     . '.php';
+		$this->_loadedFile = $this->_package . '/' . $this->moduleFileName . '.php';
 		
-		require($this->_loadedFile);
-		return TRUE;
-	}
-	
-	
-	// ---------------------------------------------------------------
-	
-	
-	/**
-	 * Boot process process
-	 * 
-	 * @access public
-	 */
-	public function bootProcess()
-	{
-		if ( $this->routing() === FALSE )
+		if ( $args !== FALSE )
 		{
-			return FALSE;
+			array_push($this->_arguments, $args);
 		}
 		
-		$this->_loadedFile = $this->_package
-		                     . $this->detectDir
-		                     . $this->_directory
-		                     . $this->_class
-		                     . '.php';
-		
-		require($this->_loadedFile);
-		
-		// has a returnValue?
-		return ( isset($returnValue) ) ? $returnValue : null;
-	}
-	
-	
-	// ---------------------------------------------------------------o
-
-
-	/**
-	 * Boot Lead layer class
-	 *
-	 * @access public
-	 * @return object SZ_Lead
-	 */
-	public function bootLead()
-	{
-		$lead = Seezoo::$Importer->lead($this->_directory . $this->_class);
-		return Injector::inject($lead);
-	}
-
-
-	// ---------------------------------------------------------------
-	
-	
-	/**
-	 * Boot MVC/CLI controller
-	 * 
-	 * @access public
-	 */
-	public function bootController($extraArgs = FALSE)
-	{
-		if ( $this->routing() === FALSE )
+		if ( $this->_mode === SZ_MODE_ACTION )
 		{
-			return FALSE;
+			// Action mode process single filed output.
+			// method contains on arguments
+			array_unshift($this->_arguments, $this->_method);
+			$args = $this->_arguments;
+			$SZ   = new Seezoo::$Classes['Breeder']();
+			
+			// Include process file
+			$SZ->view->bufferStart();
+			require($this->_loadedFile);
+			$SZ->view->getBufferEnd();
+			
+			Event::fire('module_loaded');
+			
+			return array($SZ, Signal::finished);
 		}
 		
-		$this->_loadedFile = $this->_package
-		                     . $this->detectDir
-		                     . $this->_directory
-		                     . $this->_class . '.php';
+		$class  = $this->_class . SZ_CONTROLLER_SUFFIX;
+		$return = require_once($this->_loadedFile);
 		
-		if ( ! file_exists($this->_loadedFile) )
-		{
-			return FALSE;
-		}
-		
-		require_once($this->_loadedFile);
-		$class = ucfirst($this->_class);
+		Event::fire('module_loaded');
 		
 		if ( ! class_exists($class, FALSE) )
 		{
-			$class .= SZ_CONTROLLER_SUFFIX;
-		}
-		if ( ! class_exists($class, FALSE) )
-		{
-			return FALSE;
+			throw new UndefinedClassException($class . ' is not defined.');
 		}
 		
 		$Controller = new $class();
 		$Controller->lead->prepare();
-		
-		$Controller->view->set(strtolower($this->_class . '/' . $this->_method));
-
-		Event::fire('controller_load');
+		$Controller->view->set(strtolower($this->_directory . '/' . $this->_method));
 		
 		// Does mapping method exists?
 		if ( method_exists($Controller, '_mapping') )
@@ -308,16 +221,54 @@ class SZ_Router implements Growable
 				return FALSE;
 			}
 			$Controller->lead->setExecuteMethod($this->_execMethod);
-			if ( $extraArgs !== FALSE )
-			{
-				array_push($this->_arguments, $extraArgs);
-			}
 			Injector::injectByAnnotation($Controller, $this->_execMethod);
 			$rv = call_user_func_array(array($Controller, $this->_execMethod), $this->_arguments);
 		}
 		$Controller->lead->teardown();
 		
 		return array($Controller, $rv);
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Set process level
+	 * 
+	 * @access public
+	 * @param  int $level
+	 */
+	public function setLevel($level)
+	{
+		$this->_level = $level;
+	}
+	
+	
+	// ---------------------------------------------------------------o
+	
+	
+	/**
+	 * Boot Lead layer class
+	 *
+	 * @access public
+	 * @return object SZ_Lead
+	 */
+	public function bootLead()
+	{
+		if ( ! file_exists($this->_package . '/lead.php') )
+		{
+			return Seezoo::$Importer->classes('Lead');
+		}
+		
+		require_once($this->_package . '/lead.php');
+		$Class = $this->_class . 'Lead';
+		if ( ! class_exists($Class, FALSE) )
+		{
+			throw new UndefinedClassException($Class . ' class is not declared on ' . $this->_package . '/lead.php.');
+		}
+		
+		return Injector::inject(new $Class());
 	}
 	
 	
@@ -332,35 +283,38 @@ class SZ_Router implements Growable
 	 */
 	protected function routing()
 	{
-		$this->requestMethod     = Seezoo::getRequest()->getRequestMethod();
-		$this->defaultController = get_config('default_controller');
-		$this->directory         = '';
+		$this->requestMethod = Seezoo::getRequest()->getRequestMethod();
+		$this->defaultModule = get_config('default_module');
 		
 		// If URI segments is empty array ( default page ),
-		// set default-controller and default method array.
+		// set default module and default method array.
 		$segments = ( empty($this->_pathinfo) )
-		              ? array($this->defaultController, 'index')
+		              ? array($this->defaultModule, 'index')
 		              : explode('/', $this->_pathinfo);
 		// Mark routing succeed
 		$isRouted = FALSE;
 		
 		foreach ( Seezoo::getApplication() as $app )
 		{
+			array_unshift($segments, $app->path . 'modules');
 			$this->directory = '';
-			$dir      = $this->detectDir;
-			$detected = $this->_detectController($segments, $app->path . $dir);
+			$this->_class    = '';
+			$detected = $this->_detectModule($segments);
 			
 			if ( is_array($detected) )
 			{
-				$this->_package   = $app->path;
-				$this->_class     = $detected[0];
-				$this->_method    = $detected[1];
-				$this->_arguments = array_slice($detected, 2);
+				list($package, $this->_method, $this->_arguments) = $detected;
+				$this->_package   = implode('/', $package);
+				array_shift($package);
+				foreach ( $package as $pkg )
+				{
+					$this->_class .= ucfirst($pkg);
+				}
 				$isRouted = TRUE;
 				break;
 			}
 		}
-
+		
 		if ( $isRouted === TRUE )
 		{
 			// Routing succeed!
@@ -390,47 +344,53 @@ class SZ_Router implements Growable
 	
 	
 	/**
-	 * Controller detection
+	 * Module detection
 	 * 
 	 * @access protected
 	 * @param  array $segments
 	 * @param  string $baseDir
-	 * @param  stdClass $routes ( reference )
 	 * @return mixed
 	 */
-	protected function _detectController($segments, $baseDir)
+	protected function _detectModule($segments, $arguments = array())
 	{
-		if ( file_exists($baseDir . $segments[0] . '.php') )
+		$searchDir = implode('/', $segments) . '/';
+		if ( file_exists($searchDir . $this->moduleFileName . '.php') )
 		{
-			if ( ! isset($segments[1]) || empty($segments[1]) )
-			{
-				$segments[1] = 'index';
-			}
-			return $segments;
+			$method = array_shift($arguments);
+			return array($segments, ( $method === '' ) ? 'index' : $method, $arguments) ;
 		}
 		
-		if ( is_dir($baseDir . $segments[0]) )
+		if ( ! is_dir($searchDir) )
 		{
-			$dir      = array_shift($segments);
-			$baseDir .= $dir . '/';
-			$this->_directory .= $dir . '/';
-			
-			if ( count($segments) === 0 )
+			$arguments[] = array_pop($segments);
+			if ( count($segments) === 1 )
 			{
-				if ( file_exists($baseDir . $this->defaultController . '.php') )
-				{
-					return array($this->defaultController, 'index');
-				}
-				else
-				{
-					return FALSE;
-				}
+				return FALSE;
 			}
-			return $this->_detectController($segments, $baseDir);
+			return $this->_detectModule($segments, $arguments);
 		}
 		else
 		{
 			return FALSE;
 		}
+		/*
+		$dir      = array_shift($segments);
+		$baseDir .= $dir . '/';
+		$this->_directory .= $dir . '/';
+		$this->_class     .= ucfirst(strtolower($dir));
+		
+		if ( count($segments) === 0 )
+		{
+			if ( file_exists($baseDir . $this->moduleFileName . '.php') )
+			{
+				return array($dir, 'index');
+			}
+			else
+			{
+				return FALSE;
+			}
+		}
+		return $this->_detectModule($segments, $baseDir);
+		*/
 	}
 }

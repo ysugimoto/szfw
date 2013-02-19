@@ -109,12 +109,11 @@ class SZ_Request implements Growable
 	 */
 	public function __construct($requestParam = null, $encodings = 'UTF-8')
 	{
-		if ( ! is_array($requestParam) )
+		if ( empty($requestParam) )
 		{
 			$requestParam = $GLOBALS;
 		}
 		$requestParam  = array_change_key_case($requestParam, CASE_LOWER);
-		
 		
 		$this->_post   = $this->_cleanFilter($this->_getKey($requestParam, 'post')  , $encodings);
 		$this->_cookie = $this->_cleanFilter($this->_getKey($requestParam, 'cookie'), $encodings);

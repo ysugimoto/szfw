@@ -346,6 +346,7 @@ class Application
 	 */
 	public function boot($mode = FALSE, $overridePathInfo = '', $extraArgs = FALSE)
 	{
+		$mode = ( $mode ) ? $mode : $this->config['default_process'];
 		Seezoo::prepare($this, $mode, $overridePathInfo);
 		
 		// Set Application Environment
@@ -355,94 +356,33 @@ class Application
 		// Benchmark start
 		$Mark = Seezoo::$Importer->classes('Benchmark');
 		
-		if ( $mode === FALSE
-		     && ($mode = Seezoo::getENV()->getConfig('default_process')) === FALSE )
-		{
-			// Default process is MVC.
-			$mode = SZ_MODE_MVC;
-		}
-		
 		// create process instance
 		$Mark->start('baseProcess:'. $this->level);
 		
-		Event::fire('process_start', $this);
+		// Process started event fire
+		Event::fire('module_prepare', $this);
 		
-		// Priority process MVC/CLI.
-		if ( $mode === SZ_MODE_MVC || $mode === SZ_MODE_CLI )
+		$exec = $this->router->boot($extraArgs);
+		if ( ! is_array($exec) )
 		{
-			$Mark->end('process:' . $this->level . ':MVC:Routed', 'baseProcess:'. $this->level);
-			// Load Controller and execute method
-			$exec = $this->router->bootController($extraArgs);
-			if ( ! is_array($exec) )
-			{
-				return show_404();
-			}
-			
-			// extract instance/returnvalue
-			list($SZ, $returnValue) = $exec;
-			
-			$Mark->end('process:' . $this->level . ':MVC:ControllerExecuted', 'baseProcess:'. $this->level);
-			Event::fire('controller_execute');
-			
-			$Mark->end('process:' . $this->level . ':MVC:MethodExecuted', 'baseProcess:'. $this->level);
+			return show_404();
 		}
-		else
-		{
-			$SZ = new Seezoo::$Classes['Breeder']();
-			
-			switch ( $mode )
-			{
-				// Case : default mode execute
-				// simple returns process instance.
-				case SZ_MODE_DEFAULT:
-					
-					return $SZ;
-					
-				// Case : action mode execute
-				// process execute from simple file, and get a output buffer
-				case SZ_MODE_ACTION:
-					
-					$SZ->view->bufferStart();
-					if ( ! $SZ->router->bootAction() )
-					{
-						return show_404();
-					}
-					$returnValue = $SZ->view->getBufferEnd(TRUE);
-					$Mark->end('process:' . $this->level . ':API:executed', 'baseProcess:'. $this->level);
-					
-				break;
-				
-				// Case : process mode execute
-				// process execute from simple file, and get a return-value
-				case SZ_MODE_PROC:
-					
-					if ( FALSE === ($result = $SZ->router->bootProcess()) )
-					{
-						return show_404();
-					}
-					self::releaseInstance($SZ);
-					$Mark->end('process:' . $this->level . ':end', 'baseProcess:'. $this->level);
-					return $result;
-					
-				break;
-
-				// Case : not found...
-				default:
-					
-					return show_404();
-					
-				break;
-			}
-		}
+		
+		$Mark->end('process:' . $this->level . ':module:Executed', 'baseProcess:' . $this->level);
+		
+		Event::fire('module_execute');
+		
+		// extract instance/returnvalue
+		list($SZ, $returnValue) = $exec;
 		
 		// process executed. release process instance.
 		$Mark->end('process:' . $this->level . ':end', 'baseProcess:'. $this->level);
 		Event::fire('process_end');
 		
-		if ( Seezoo::$outpuBufferMode === FALSE )
+		if ( Seezoo::$outputBufferMode === FALSE )
 		{
 			Seezoo::releaseInstance($SZ);
-			Seezoo::$outpuBufferMode = TRUE;
+			Seezoo::$outputBufferMode = TRUE;
 			return $returnValue;
 		}
 		
@@ -498,7 +438,6 @@ class Application
 					}
 			}
 		}
-		
 		
 		
 		// Is this process in a sub process?

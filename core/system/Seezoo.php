@@ -88,7 +88,7 @@ class Seezoo
 	 * Output buffer mode flag
 	 * @var bool
 	 */
-	public static $outpuBufferMode = TRUE;
+	public static $outputBufferMode = TRUE;
 	
 	
 	/**

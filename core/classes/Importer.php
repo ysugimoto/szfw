@@ -292,53 +292,6 @@ class SZ_Importer implements Growable
 	
 	
 	/**
-	 * Load a Breader's lead
-	 * 
-	 * @access public
-	 * @param  string lead
-	 * @return object
-	 */
-	public function lead($lead)
-	{
-		$systemLead = $this->classes('Lead');
-		$dir        = 'classes/leads/';
-		
-		// Does request class in a sub-directory?
-		if ( FALSE !== ($point = strrpos($lead, '/')) )
-		{
-			$dir  .= trail_slash(substr($lead, 0, ++$point));
-			$lead  = lcfirst(substr($lead, $point));
-			$Class = $lead . 'Lead';
-			
-		}
-		else
-		{
-			$Class = $lead . 'Lead';
-			$lead  = lcfirst($lead);
-		}
-		
-		$filePath = $dir . $lead . '.php';
-		$isLoaded = FALSE;
-		
-		foreach ( Seezoo::getApplication() as $app )
-		{
-			if ( file_exists($app->path . $filePath) )
-			{
-				require_once($app->path . $filePath);
-				break;
-			}
-		}
-		
-		return ( class_exists($Class, FALSE) )
-		         ? new $Class()
-		         : $systemLead;
-	}
-	
-	
-	// ---------------------------------------------------------------
-	
-	
-	/**
 	 * Load a vendor library
 	 * 
 	 * @access public

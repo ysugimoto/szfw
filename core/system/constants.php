@@ -44,7 +44,6 @@ define('SZ_MODE_MVC',     'mvc');
 define('SZ_MODE_ACTION',  'action');
 define('SZ_MODE_PROC',    'proc');
 define('SZ_MODE_CLI',     'cli');
-define('SZ_MODE_DEFAULT', 'default');
 
 define('SZ_TMPL_DEFAULT', 'default');
 define('SZ_TMPL_SMARTY',  'smarty');

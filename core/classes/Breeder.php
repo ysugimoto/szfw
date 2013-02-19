@@ -90,8 +90,9 @@ class SZ_Breeder
 		$this->request  =  Seezoo::getRequest();
 		$this->env      =  Seezoo::getENV();
 		$this->import   =  Seezoo::$Importer->classes('Importer');
-		$this->response =& Seezoo::$Response;
 		$this->view     =  new Seezoo::$Classes['View']();
+		
+		$this->response =& Seezoo::$Response;
 		$this->router   =& $this->app->router;
 		
 		$this->_extractAlias();
