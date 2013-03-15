@@ -554,7 +554,7 @@ class SZ_Importer
 	                               $class,                      // module name
 	                               $destDir     = 'libraries',  // load target directory
 	                               $instanciate = TRUE,         // If true, create instance
-	                               $params      = array(),      // pass parameter to class constructor
+	                               $params      = NULL,      // pass parameter to class constructor
 	                               $alias       = FALSE         // property alias name
 	                                 )
 	{
