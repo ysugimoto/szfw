@@ -110,7 +110,7 @@ class SZ_Databaseforge
 			}
 			if ( $column['default'] !== '' )
 			{
-				$sql[] = "DEFAULT '" . $$column['default'] . "'";
+				$sql[] = "DEFAULT '" . $column['default'] . "'";
 			}
 			
 			if ( ! empty($column['comment']) )
