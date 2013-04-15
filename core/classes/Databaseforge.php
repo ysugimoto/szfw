@@ -110,7 +110,7 @@ class SZ_Databaseforge implements Singleton
 			}
 			if ( $column['default'] !== '' )
 			{
-				$sql[] = "DEFAULT '" . $$column['default'] . "'";
+				$sql[] = "DEFAULT '" . $column['default'] . "'";
 			}
 			
 			if ( ! empty($column['comment']) )
