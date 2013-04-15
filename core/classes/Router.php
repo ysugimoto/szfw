@@ -126,13 +126,13 @@ class SZ_Router implements Growable
 		switch ( $mode )
 		{
 			case SZ_MODE_CLI:
-				$this->moduleFileName = 'controller.cli';
+				$this->moduleFileName = 'cli';
 				break;
 			case SZ_MODE_ACTION:
 				$this->moduleFileName = 'action';
 				break;
 			default:
-				$this->moduleFileName = ( is_ajax_request() ) ? 'controller.ajax' : 'controller';
+				$this->moduleFileName = ( is_ajax_request() ) ? 'ajax' : 'controller';
 				break;
 		}
 	}
@@ -297,8 +297,6 @@ class SZ_Router implements Growable
 		foreach ( Seezoo::getApplication() as $app )
 		{
 			array_unshift($segments, $app->path . 'modules');
-			$this->directory = '';
-			$this->_class    = '';
 			$detected = $this->_detectModule($segments);
 			
 			if ( is_array($detected) )
@@ -306,11 +304,13 @@ class SZ_Router implements Growable
 				list($package, $this->_method, $this->_arguments) = $detected;
 				$this->_package   = implode('/', $package);
 				array_shift($package);
+				$this->_directory = implode('/', $package);
 				foreach ( $package as $pkg )
 				{
 					$this->_class .= ucfirst($pkg);
 				}
 				$isRouted = TRUE;
+				Autoloader::register($this->_package);
 				break;
 			}
 		}
@@ -357,7 +357,11 @@ class SZ_Router implements Growable
 		if ( file_exists($searchDir . $this->moduleFileName . '.php') )
 		{
 			$method = array_shift($arguments);
-			return array($segments, ( $method === '' ) ? 'index' : $method, $arguments) ;
+			return array(
+			              $segments,
+			              ( $method === NULL || $method === '' ) ? 'index' : $method,
+			              $arguments
+			            );
 		}
 		
 		if ( ! is_dir($searchDir) )
@@ -373,24 +377,5 @@ class SZ_Router implements Growable
 		{
 			return FALSE;
 		}
-		/*
-		$dir      = array_shift($segments);
-		$baseDir .= $dir . '/';
-		$this->_directory .= $dir . '/';
-		$this->_class     .= ucfirst(strtolower($dir));
-		
-		if ( count($segments) === 0 )
-		{
-			if ( file_exists($baseDir . $this->moduleFileName . '.php') )
-			{
-				return array($dir, 'index');
-			}
-			else
-			{
-				return FALSE;
-			}
-		}
-		return $this->_detectModule($segments, $baseDir);
-		*/
 	}
 }

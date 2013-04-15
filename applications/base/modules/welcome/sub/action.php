@@ -1,4 +1,9 @@
 <?php
 
-var_dump($args);
-echo 'ACTION EXECUTED ON SUB MODULE!';
+
+try {
+$kvs = Seezoo::$Importer->kvs();
+var_dump($kvs);
+} catch (Exception $e) {
+	
+}

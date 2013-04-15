@@ -131,13 +131,17 @@ class Autoloader
 	 */
 	public static function load($className)
 	{
-		$prefix = '';
-		$class  = $className;
-		
-		list($prefix,$class) = ( Seezoo::hasPrefix($className) )
-		                          ? Seezoo::removePrefix($className, TRUE)
-		                          : array(self::$aliasClass[$className], $className);
-		
+		if ( Seezoo::hasPrefix($className) )
+		{
+			list($prefix, $class) = Seezoo::removePrefix($className, TRUE);
+		}
+		else
+		{
+			$prefix = ( isset(self::$aliasClass[$className]) )
+			            ? self::$aliasClass[$className]
+			            : '';
+			$class  = $className;
+		}
 		
 		$dirs = ( isset(self::$loadDir[$prefix]) )
 		          ? self::$loadDir[$prefix]

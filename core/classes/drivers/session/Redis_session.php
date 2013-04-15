@@ -8,7 +8,7 @@
  * A simple MVC/action Framework on PHP 5.1.0 or newer
  * 
  * 
- * Session manages with Memcache
+ * Session manages with Redis
  * 
  * @package  Seezoo-Framework
  * @category Drivers
@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Memcache_session extends SZ_Session_driver
+class SZ_Redis_session extends SZ_Session_driver
 {
 	/**
 	 * Environement class instance
@@ -42,37 +42,32 @@ class SZ_Memcache_session extends SZ_Session_driver
 	
 	
 	/**
-	 * Memcache connection instance
-	 * @var Memcace
+	 * Redis connection instance
+	 * @var Redis
 	 */
-	protected $mc;
+	protected $redis;
 	
 	
 	/**
-	 * Memcache connection host
+	 * Redis connection host
 	 * @var string
 	 */
 	protected $_host;
 	
 	
 	/**
-	 * Memcache connection port
+	 * Redis connection port
 	 * @var int
 	 */
 	protected $_port;
 	
 	
 	/**
-	 * Memcache connect poersistance flag
+	 * Redis connect poersistance flag
 	 * @var bool
 	 */
 	protected $_pconnect;
 	
-	/**
-	 * memcache version
-	 * @var int
-	 */
-	protected $_version;
 	
 	/**
 	 * Constructor
@@ -81,9 +76,9 @@ class SZ_Memcache_session extends SZ_Session_driver
 	{
 		parent::__construct();
 		
-		$this->_host     = $this->env->getConfig('session_memcache_host');
-		$this->_port     = $this->env->getConfig('session_memcache_port');
-		$this->_pconnect = $this->env->getConfig('session_memcache_pconnect');
+		$this->_host     = $this->env->getConfig('session_redis_host');
+		$this->_port     = $this->env->getConfig('session_redis_port');
+		$this->_pconnect = $this->env->getConfig('session_redis_pconnect');
 
 		$this->_connect();
 		
@@ -102,29 +97,27 @@ class SZ_Memcache_session extends SZ_Session_driver
 	
 	
 	/**
-	 * Memcache connection start
+	 * Redis connection start
 	 * 
 	 * @access protected
 	 */
 	protected function _connect()
 	{
-		$this->mc = new Memcache;
+		$this->redis = new Redis;
 		if ( $this->_pconnect === TRUE )
 		{
-			if ( ! @$this->mc->pconnect($this->_host, $this->_port) )
+			if ( ! @$this->redis->pconnect($this->_host, $this->_port) )
 			{
-				throw new RuntimeException('Couldn\'t connect Memcache server! check your memcached host/port.');
+				throw new RuntimeException('Couldn\'t connect Redis server! check your redis host/port.');
 			}
 		}
 		else
 		{
-			if ( ! @$this->mc->connect($this->_host, $this->_port) )
+			if ( ! @$this->redis->connect($this->_host, $this->_port) )
 			{
-				throw new RuntimeException('Couldn\'t connect Memcache ! check your memcache host/port.');
+				throw new RuntimeException('Couldn\'t connect Redis server! check your redis host/port.');
 			}
 		}
-		
-		$this->_version = $this->mc->getVersion();
 	}
 	
 	
@@ -146,7 +139,7 @@ class SZ_Memcache_session extends SZ_Session_driver
 			'last_activity' => time(),
 			'user_data'     => ''
 		);
-		$this->mc->set($sessid, $authData);
+		$this->redis->set($sessid, $authData);
 		$this->_authData  = array(
 			'sessionID'    => $authData['session_id'],
 			'ipAddress'    => $authData['ip_address'],
@@ -166,7 +159,7 @@ class SZ_Memcache_session extends SZ_Session_driver
 	 */
 	protected function _sessionDestroy()
 	{
-		$this->mc->delete($this->_sessionID);
+		$this->redis->delete($this->_sessionID);
 		$this->_setSessionCookie('', -1000);
 	}
 	
@@ -200,7 +193,7 @@ class SZ_Memcache_session extends SZ_Session_driver
 		$len  = strlen($this->_sessionAuthorizeDatakey);
 		$sess = substr($sess, $len);
 		
-		if ( FALSE !== ( $result = $this->mc->get($sess)) )
+		if ( FALSE !== ( $result = $this->redis->get($sess)) )
 		{
 			$authData = array(
 				'sessionID'    => $sess,
@@ -270,18 +263,18 @@ class SZ_Memcache_session extends SZ_Session_driver
 		
 		if ( $sessID !== $this->_sessionID )
 		{
-			$this->mc->delete($sessID);
-			$this->mc->set($this->_sessionID, $updateData);
+			$this->redis->delete($sessID);
+			$this->redis->set($this->_sessionID, $updateData);
 		}
 		else
 		{
-			if ( FALSE === $this->mc->replace($sessID, $updateData) )
+			if ( FALSE === $this->redis->replace($sessID, $updateData) )
 			{
-				$this->mc->set($sessID, $updateData);
+				$this->redis->set($sessID, $updateData);
 			}
 		}
 		
 		$this->_setSessionCookie($authKey);
-		@$this->mc->close();
+		@$this->redis->quit();
 	}
 }

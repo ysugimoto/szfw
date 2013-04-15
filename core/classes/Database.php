@@ -8,10 +8,10 @@
  * A simple MVC/action Framework on PHP 5.1.0 or newer
  * 
  * 
- * Database library ( PDO driver )
+ * Database class ( PDO driver )
  * 
  * @package  Seezoo-Framework
- * @category Libraries
+ * @category Core
  * @author   Yoshiaki Sugimoto <neo.yoshiaki.sugimoto@gmail.com>
  * @license  MIT Licence
  * 

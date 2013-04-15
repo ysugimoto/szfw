@@ -120,6 +120,7 @@ class Seezoo
 	private static $_debugStack = array();
 	private static $level       = 0;
 	private static $dbs         = array();
+	private static $kvs         = array();
 	
 	/**
 	 * suffix of page_link
@@ -401,6 +402,38 @@ class Seezoo
 			return self::$dbs;
 		}
 		return ( isset(self::$dbs[$group]) ) ? self::$dbs[$group] : FALSE;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Add KVS stack
+	 * 
+	 * @access public static
+	 * @param  Kvs $kvs
+	 */
+	public static function pushKVS($driver, $kvs)
+	{
+		self::$kvs[$driver] =& $kvs;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Get KVS instance from stack
+	 * 
+	 * @access public static
+	 * @return mixed
+	 */
+	public static function getKVS($driver)
+	{
+		return ( isset(self::$kvs[$driver]) )
+		         ? self::$kvs[$driver]
+		         : FALSE;
 	}
 	
 	

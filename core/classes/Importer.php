@@ -97,6 +97,35 @@ class SZ_Importer implements Growable
 	
 	
 	/**
+	 * Load a KVS instance
+	 * 
+	 * @access public
+	 * @return Kvs $kvs
+	 */
+	public function kvs($driver = NULL)
+	{
+		if ( ! $driver )
+		{
+			$setting = Seezoo::getENV()->getKvsSettings();
+			$driver  = $setting['driver'];
+		}
+		
+		if ( FALSE === ($kvs = Seezoo::getKVS($driver)) )
+		{
+			$kvsClass = $this->loadModule('Kvs', '', FALSE)->data;
+			$kvs      = new $kvsClass($driver);
+			Seezoo::pushKVS($kvs);
+		}
+		$this->_attachModule('kvs', $kvs);
+		
+		return $kvs;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
 	 * Load an activerecord
 	 * 
 	 * @access public

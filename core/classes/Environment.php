@@ -36,6 +36,13 @@ class SZ_Environment implements Growable, Singleton
 	
 	
 	/**
+	 * application kvs settings
+	 * @var array
+	 */
+	protected $_kvs      = array();
+	
+	
+	/**
 	 * application uri-mapping data
 	 * @var array
 	 */
@@ -306,6 +313,25 @@ class SZ_Environment implements Growable, Singleton
 			$this->_load('database');
 		}
 		return $this->_database;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * get KVS settings
+	 * 
+	 * @access public
+	 * @return array
+	 */
+	public function getKvsSettings()
+	{
+		if ( ! $this->_kvs )
+		{
+			$this->_load('kvs');
+		}
+		return $this->_kvs;
 	}
 	
 	

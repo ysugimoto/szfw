@@ -1,11 +1,11 @@
 # ignore application config
-seezoo/app/config/
+applications/base/config/
 
 # ignore caches
-seezoo/etc/caches/session/*
-seezoo/etc/caches/smarty/*
-seezoo/etc/caches/twig/*
-seezoo/etc/logs/*
+etc/caches/session/*
+etc/caches/smarty/*
+etc/caches/twig/*
+etc/logs/*
 
 #ignore packages
 seezoo/packages/*
