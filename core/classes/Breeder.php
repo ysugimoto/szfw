@@ -97,8 +97,15 @@ class SZ_Breeder
 		
 		$this->_extractAlias();
 		$this->lead = $this->app->router->bootLead();
-		Injector::inject($this);
 		
+		Injector::injectDIContainer($this, $this->app->router->getInfo('package'));
+		Injector::injectByReflection($this);
+		
+	}
+	
+	public function getModulePath()
+	{
+		return $this->router->getInfo('pakcage');
 	}
 	
 	

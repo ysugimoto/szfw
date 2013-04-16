@@ -22,13 +22,47 @@ class Injector
 {
 	
 	/**
+	 * Injection from module DI container
+	 */
+	public static function injectDIContainer($instance, $modulePath)
+	{
+		// Does container file exists and that is array?
+		if ( ! file_exists($modulePath . '/DI.php')
+		     || ! is_array($DI = require($modulePath . '/DI.php')) )
+		{
+			return;
+		}
+		
+		// Type difinitions injection
+		foreach ( array('library', 'model', 'helper', 'vendor') as $mod )
+		{
+			$DI[$mod] = ( isset($DI[$mod]) ) ? $DI[$mod] : array();
+			foreach ( $DI[$mod] as $prop => $className )
+			{
+				$instance->{$prop} = Seezoo::$Importer->{$mod}($className);
+			}
+			unset($DI[$mod]);
+		}
+		
+		// Common class injection
+		foreach ( $DI as $prop => $className )
+		{
+			$instance->{$prop} = self::getInjectInstance($className);
+		}
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
 	 * Inject method detect and execute
 	 * 
 	 * @access public static
 	 * @param  object $instance
 	 * @return object $instance
 	 */
-	public static function inject(&$instance)
+	public static function injectByReflection($instance)
 	{
 		$ref = new ReflectionClass($instance);
 		foreach ( $ref->getMethods() as $method )
@@ -49,35 +83,51 @@ class Injector
 					continue;
 				}
 				
-				// Remove prefix
-				$npClass = Seezoo::removePrefix($className);
-				
-				// Does cache exists?
-				if ( FALSE === ($inject = Seezoo::getSingleton($npClass)) )
-				{
-					if ( ! class_exists($className) )
-					{
-						throw new UndefinedClassException('Class ' . $className . ' is undefined.');
-					}
-					
-					$inject = new $className();
-					// If inject object implments Growable interface, extend it
-					if ( $inject instanceof Growable )
-					{
-						$inject = call_user_func(array($inject, 'grow'));
-					}
-					
-					if ( $inject instanceof Singleton )
-					{
-						Seezoo::addSingleton($npClass, $inject);
-					}
-				}
-				$injections[] = $inject;
+				$injections[] = self::getInjectInstance($className);
 			}
 			// Execute injection
 			$method->invokeArgs($instance, $injections);
 		}
-		return $instance;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Get injection class instance
+	 * 
+	 * @access private
+	 * @param  string $className
+	 * @return object
+	 */
+	private static function getInjectInstance($className)
+	{
+		// Remove prefix
+		$npClass = Seezoo::removePrefix($className);
+		
+		// Does cache exists?
+		if ( NULL === ($inject = Seezoo::getSingleton($npClass)) )
+		{
+			if ( ! class_exists($className) )
+			{
+				throw new UndefinedClassException('Class ' . $className . ' is undefined.');
+			}
+			
+			$inject = new $className();
+			// If inject object implments Growable interface, extend it
+			if ( $inject instanceof Growable )
+			{
+				$inject = call_user_func(array($inject, 'grow'));
+			}
+			
+			if ( $inject instanceof Singleton )
+			{
+				Seezoo::addSingleton($npClass, $inject);
+			}
+		}
+		
+		return $inject;
 	}
 	
 	
@@ -92,7 +142,7 @@ class Injector
 	 * @param  mixed $methodName
 	 * @return $instance
 	 */
-	public static function injectByAnnotation(&$instance, $methodName = '')
+	public static function injectByAnnotation($instance, $methodName = '')
 	{
 		// If no argument supplied, inject from class annotation.
 		if ( $methodName === '' )

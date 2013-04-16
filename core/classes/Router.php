@@ -128,9 +128,11 @@ class SZ_Router implements Growable
 			case SZ_MODE_CLI:
 				$this->moduleFileName = 'cli';
 				break;
+				
 			case SZ_MODE_ACTION:
 				$this->moduleFileName = 'action';
 				break;
+				
 			default:
 				$this->moduleFileName = ( is_ajax_request() ) ? 'ajax' : 'controller';
 				break;
@@ -190,43 +192,58 @@ class SZ_Router implements Growable
 			// execute mapping method
 			$rv = $Controller->_mapping($this->_method);
 		}
-		else
+		else if ( '' === ($this->_execMethod = $this->_findMethod($Controller)) )
 		{
-			// request method suffix
-			$methodSuffix = ( $this->requestMethod === 'POST' ) ? '_post' : '';
-			
-			// First, call prefix-method-suffix ( ex.act_index_post ) if exists
-			if ( method_exists($Controller, SZ_EXEC_METHOD_PREFIX . $this->_method . $methodSuffix) )
-			{
-				$this->_execMethod = SZ_EXEC_METHOD_PREFIX . $this->_method . $methodSuffix;
-			}
-			// Second, call method-suffix ( *_post method ) if exists
-			else if ( method_exists($Controller, $this->_method . $methodSuffix) )
-			{
-				$this->_execMethod = $this->_method . $methodSuffix;
-			}
-			// Third, call prefix-method if exists
-			else if ( method_exists($Controller, SZ_EXEC_METHOD_PREFIX . $this->_method) )
-			{
-				$this->_execMethod = $this->methodPrefix . $this->_method;
-			}
-			// Fourth, call method simply if exists
-			else if ( method_exists($Controller, $this->_method) )
-			{
-				$this->_execMethod = $this->_method;
-			}
-			// Method doesn't exists...
-			else
-			{
-				return FALSE;
-			}
-			$Controller->lead->setExecuteMethod($this->_execMethod);
-			Injector::injectByAnnotation($Controller, $this->_execMethod);
-			$rv = call_user_func_array(array($Controller, $this->_execMethod), $this->_arguments);
+			return FALSE;
 		}
+		
+		$Controller->lead->setExecuteMethod($this->_execMethod);
+		$rv = call_user_func_array(array($Controller, $this->_execMethod), $this->_arguments);
+		
 		$Controller->lead->teardown();
 		
 		return array($Controller, $rv);
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Find executable method
+	 * 
+	 * @access protected
+	 * @param  SZ_Breeder $Controller
+	 * @return string
+	 */
+	protected function _findMethod($Controller)
+	{
+		// request method suffix
+		$methodSuffix = ( $this->requestMethod === 'POST' ) ? '_post' : '';
+		$execMethod   = '';
+		
+		// First, call prefix-method-suffix ( ex.act_index_post ) if exists
+		if ( method_exists($Controller, SZ_EXEC_METHOD_PREFIX . $this->_method . $methodSuffix) )
+		{
+			$execMethod = SZ_EXEC_METHOD_PREFIX . $this->_method . $methodSuffix;
+		}
+		// Second, call method-suffix ( *_post method ) if exists
+		else if ( method_exists($Controller, $this->_method . $methodSuffix) )
+		{
+			$execMethod = $this->_method . $methodSuffix;
+		}
+		// Third, call prefix-method if exists
+		else if ( method_exists($Controller, SZ_EXEC_METHOD_PREFIX . $this->_method) )
+		{
+			$execMethod = $this->methodPrefix . $this->_method;
+		}
+		// Fourth, call method simply if exists
+		else if ( method_exists($Controller, $this->_method) )
+		{
+			$execMethod = $this->_method;
+		}
+		
+		return $execMethod;
 	}
 	
 	
@@ -268,7 +285,11 @@ class SZ_Router implements Growable
 			throw new UndefinedClassException($Class . ' class is not declared on ' . $this->_package . '/lead.php.');
 		}
 		
-		return Injector::inject(new $Class());
+		$lead = new $Class();
+		Injector::injectDIContainer($lead, $this->_package);
+		Injector::injectByReflection($lead);
+		
+		return $lead;
 	}
 	
 	
