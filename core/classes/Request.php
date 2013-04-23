@@ -449,11 +449,7 @@ class SZ_Request implements Growable
 			// validate
 			if ( function_exists('filter_var') )
 			{
-				if ( ! filter_var(
-				             $ip,
-				             FILTER_VALIDATE_IP,
-				             FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
-				)
+				if ( ! filter_var($ip, FILTER_VALIDATE_IP) )
 				{
 					$ip = $default;
 				}
