@@ -97,7 +97,7 @@ class SZ_Exception
 	{
 		if ( defined('SZ_COMMANDLINE_WORKER') ) 
 		{
-			echo $e->message . PHP_EOL;
+			echo $e->getMessage() . PHP_EOL;
 			return;
 		}
 		$env = Seezoo::getENV();
