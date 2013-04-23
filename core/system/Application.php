@@ -85,7 +85,7 @@ class Application
 	
 	
 	/**
-	 * Run the subprocess with same environment
+	 * Fork the subprocess with same environment
 	 * 
 	 * @access public static
 	 * @param  string $mode
@@ -93,14 +93,14 @@ class Application
 	 * @param  array  $extraArgs
 	 * @return mixed
 	 */
-	public static function run($mode = FALSE, $overridePathInfo = '', $extraArgs = FALSE)
+	public static function fork($mode = FALSE, $overridePathInfo = '', $extraArgs = FALSE)
 	{
 		if ( ! self::$instance )
 		{
 			throw new RuntimeException('Application has not main process!');
 		}
-		$sub = clone self::$instance;
-		return $sub->boot($mode, $overridePathInfo, $extraArgs);
+		//$sub = clone self::$instance;
+		return self::$instance->boot($mode, $overridePathInfo, $extraArgs);
 		
 	}
 	
@@ -216,6 +216,8 @@ class Application
 			self::$instance->extend(SZ_BASE_APPLICATION_NAME . ':' . SZ_PREFIX_BASE);
 		}
 		
+		Event::fire('application_init');
+		
 		return self::$instance;
 	}
 	
@@ -330,7 +332,9 @@ class Application
 	 */
 	public static function config($key)
 	{
-		return ( isset(self::$instance->config[$key]) ) ? self::$instance->config[$key] : FALSE;
+		return ( isset(self::$instance->config[$key]) )
+		         ? self::$instance->config[$key]
+		         : FALSE;
 	}
 	
 	
@@ -360,7 +364,7 @@ class Application
 		$Mark->start('baseProcess:'. $this->level);
 		
 		// Process started event fire
-		Event::fire('module_prepare', $this);
+		Event::fire('process_start', $this);
 		
 		$exec = $this->router->boot($extraArgs);
 		if ( ! is_array($exec) )
@@ -438,7 +442,6 @@ class Application
 					}
 			}
 		}
-		
 		
 		// Is this process in a sub process?
 		if ( $this->level > 1 )
