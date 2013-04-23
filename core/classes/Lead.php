@@ -163,7 +163,7 @@ class SZ_Lead
 	{
 		if ( is_object($this->_assignData) )
 		{
-			return get_object_vars($this->assignData);
+			return get_object_vars($this->_assignData);
 		}
 		else if ( is_array($this->_assignData) )
 		{
