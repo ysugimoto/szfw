@@ -178,6 +178,7 @@ END;
 		foreach ( $tables as $table )
 		{
 			$fields    = $db->fields($table);
+			$table     = preg_replace('/\A' . $db->prefix() . '/', '', $table);
 			$schemas[] = array(
 				$dir . '/' . $this->toCamelCase($table) . '.php',
 				$this->getActiveRecordTemplate($table, $fields),
