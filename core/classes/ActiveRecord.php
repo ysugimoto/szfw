@@ -65,11 +65,12 @@ class SZ_ActiveRecord
 	 */
 	public static function finder($arName)
 	{
+		$prefix = Seezoo::$Importer->database()->prefix();
 		// inline to camel case
 		$arName = preg_replace_callback(
 		           '/_([a-zA-Z])/',
 		           create_function('$m', 'return strtoupper($m[1]);'),
-		           $arName
+		           preg_replace('/\A' . $prefix . '/', '', $arName)
 		          );
 		$arName = ucfirst($arName);
 		
@@ -90,11 +91,12 @@ class SZ_ActiveRecord
 	 */
 	public static function create($arName)
 	{
+		$prefix = Seezoo::$Importer->database()->prefix();
 		// inline to camel case
 		$arName = preg_replace_callback(
 		           '/_([a-zA-Z])/',
 		           create_function('$m', 'return strtoupper($m[1]);'),
-		           $arName
+		           preg_replace('/\A' . $prefix . '/', '', $arName)
 		          );
 		$arName = ucfirst($arName);
 		
