@@ -167,8 +167,6 @@ class SZ_Router implements Growable
 			require($this->_loadedFile);
 			$SZ->view->getBufferEnd();
 			
-			Event::fire('module_loaded');
-			
 			return array($SZ, Signal::finished);
 		}
 		
@@ -185,6 +183,8 @@ class SZ_Router implements Growable
 		$Controller = new $class();
 		$Controller->lead->prepare();
 		$Controller->view->set(strtolower($this->_directory . '/' . $this->_method));
+		
+		Event::fire('module_prepare');
 		
 		// Does mapping method exists?
 		if ( method_exists($Controller, '_mapping') )
@@ -309,7 +309,7 @@ class SZ_Router implements Growable
 		
 		// If URI segments is empty array ( default page ),
 		// set default module and default method array.
-		$segments = ( empty($this->_pathinfo) )
+		$_segments = ( empty($this->_pathinfo) )
 		              ? array($this->defaultModule, 'index')
 		              : explode('/', $this->_pathinfo);
 		// Mark routing succeed
@@ -317,6 +317,7 @@ class SZ_Router implements Growable
 		
 		foreach ( Seezoo::getApplication() as $app )
 		{
+			$segments = $_segments;
 			array_unshift($segments, $app->path . 'modules');
 			$detected = $this->_detectModule($segments);
 			
