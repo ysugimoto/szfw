@@ -71,12 +71,12 @@ class SZ_Mobile implements Growable
 	 */
 	public function __construct()
 	{
-		if ( ! file_exists(APPPATH . 'config/mobile.php') )
+		if ( ! file_exists(Application::get()->path . 'config/mobile.php') )
 		{
 			throw new Exception('Undefined mobile config file!');
 		}
 		
-		include(APPPATH . 'config/mobile.php');
+		include(Application::get()->path . 'config/mobile.php');
 		$this->_config = $mobile;
 		unset($mobile);
 		
