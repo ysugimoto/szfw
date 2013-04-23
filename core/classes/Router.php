@@ -184,7 +184,7 @@ class SZ_Router implements Growable
 		$Controller->lead->prepare();
 		$Controller->view->set(strtolower($this->_directory . '/' . $this->_method));
 		
-		Event::fire('module_prepare');
+		Event::fire('module_prepared');
 		
 		// Does mapping method exists?
 		if ( method_exists($Controller, '_mapping') )
