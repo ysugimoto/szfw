@@ -107,7 +107,7 @@ class SZ_Request implements Growable
 	 * @param  array $requestParam
 	 * @param  string $encodings
 	 */
-	public function __construct($requestParam = null, $encodings = 'UTF-8')
+	public function __construct($requestParam = null)
 	{
 		if ( empty($requestParam) )
 		{
@@ -115,9 +115,9 @@ class SZ_Request implements Growable
 		}
 		$requestParam  = array_change_key_case($requestParam, CASE_LOWER);
 		
-		$this->_post   = $this->_cleanFilter($this->_getKey($requestParam, 'post')  , $encodings);
-		$this->_cookie = $this->_cleanFilter($this->_getKey($requestParam, 'cookie'), $encodings);
-		$this->_get    = $this->_cleanFilter($this->_getKey($requestParam, 'get')   , $encodings);
+		$this->_post   = $this->_cleanFilter($this->_getKey($requestParam, 'post')  , Application::getEncoding('post'));
+		$this->_cookie = $this->_cleanFilter($this->_getKey($requestParam, 'cookie'), Application::getEncoding('cookie'));
+		$this->_get    = $this->_cleanFilter($this->_getKey($requestParam, 'get')   , Application::getEncoding('get'));
 		$this->_server = $this->_getKey($requestParam, 'server');
 		
 		$this->requestMethod   = $this->server('request_method');
@@ -489,7 +489,6 @@ class SZ_Request implements Growable
 			$key = $this->_filterString($key, $encoding);
 			if ( is_array($value) )
 			{
-				var_dump($value);
 				foreach ( $value as $k => $v )
 				{
 					$k = $this->_filterString($k, $encoding);
