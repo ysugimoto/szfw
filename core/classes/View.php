@@ -277,7 +277,7 @@ class SZ_View extends SZ_Driver implements Growable
 			if ( file_exists($app->path . 'views/' . $detectFile) )
 			{
 				$viewFile = $app->path . 'views/' . $detectFile;
-				$viewDir  = $app->path . 'views/' . trim(dirname($detectFile), './') . '/';
+				$viewDir  = $app->path . 'views/';// . trim(dirname($detectFile), './') . '/';
 				break;
 			}
 		}
