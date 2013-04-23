@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Session extends SZ_Driver implements Growable
+class SZ_Session extends SZ_Driver implements Growable, Singleton
 {
 	/**
 	 * Enviroment ckass instance
