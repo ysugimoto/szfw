@@ -43,7 +43,7 @@ class SZ_Phptal_view extends SZ_View_driver
 	 * abstruct implements
 	 * @see seezoo/core/drivers/view/SZ_View_driver::render()
 	 */
-	public function renderView($viewFile, $vars, $return)
+	public function renderView($viewFile, $vars = NULL, $return = FALSE)
 	{
 		$this->_stackVars =& $vars;
 		

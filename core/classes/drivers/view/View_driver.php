@@ -65,7 +65,7 @@ abstract class SZ_View_driver
 	 * @param bool   $return
 	 * ===========================================-
 	 */
-	abstract function renderView($path, $vars, $return);
+	abstract function renderView($viewFile, $vars = NULL, $return = FALSE);
 	
 	
 	public function __construct()
