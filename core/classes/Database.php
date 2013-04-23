@@ -36,6 +36,11 @@ class DB implements Growable, Singleton
 		return new self::$_dbClass($dsn, $dsnConnection);
 	}
 	
+	public static function prefix()
+	{
+		return self::grow()->prefix();
+	}
+	
 	public static function grow()
 	{
 		return Seezoo::$Importer->database();
@@ -573,8 +578,9 @@ Class SZ_Database extends SZ_Driver implements Singleton
 	 * 
 	 * @access public
 	 * @param  string $table
+	 * @param  bool   $needPrefix
 	 */
-	public function fields($table)
+	public function fields($table, $needPrefix = FALSE)
 	{
 		if ( ! $this->isAllowedTableName($table) )
 		{
@@ -583,8 +589,9 @@ Class SZ_Database extends SZ_Driver implements Singleton
 		
 		if ( ! isset($this->_fieldsCache[$table]) )
 		{
-			$sql   = $this->driver->columnListQuery($this->prefix() . $table);
-			$query = $this->_connectID->query($sql);
+			$prefix = ( $needPrefix ) ? $this->prefix() : '';
+			$sql    = $this->driver->columnListQuery($prefix . $table);
+			$query  = $this->_connectID->query($sql);
 			$this->_fieldsCache[$table] = array();
 			foreach ( $query->fetchAll(PDO::FETCH_OBJ) as $column )
 			{
