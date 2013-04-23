@@ -812,28 +812,27 @@ class Seezoo
 	 */
 	public static function prepare(Application &$app, $mode, $pathinfo)
 	{
-		if ( self::$prepared )
-		{
-			return;
-		}
-		else if ( empty($app->config) )
+		if ( empty($app->config) )
 		{
 			throw new RuntimeException('Application configuration is empty!');
 		}
 		
+		if ( ! self::$prepared )
+		{
+			// Swap core classes ( extend )
+			self::$Importer  = self::$Importer->classes('Importer');
+			self::$_stackENV = self::$Importer->classes('Environment');
+			self::$_stackENV->setAppConfig($app->config);
+			
+			self::$_stackRequest      = self::$Importer->classes('Request');
+			self::$Response           = self::$Importer->classes('Response');
+			self::$Cache              = self::$Importer->classes('Cache');
+			self::$Classes['View']    = self::$Importer->classes('View',    FALSE);
+			self::$Classes['Router']  = self::$Importer->classes('Router',  FALSE);
+			self::$Classes['Breeder'] = self::$Importer->classes('Breeder', FALSE);
+		}
+		
 		self::$application = $app;
-		
-		// Swap core classes ( extend )
-		self::$Importer  = self::$Importer->classes('Importer');
-		self::$_stackENV = self::$Importer->classes('Environment');
-		self::$_stackENV->setAppConfig($app->config);
-		
-		self::$_stackRequest      = self::$Importer->classes('Request');
-		self::$Response           = self::$Importer->classes('Response');
-		self::$Cache              = self::$Importer->classes('Cache');
-		self::$Classes['View']    = self::$Importer->classes('View',    FALSE);
-		self::$Classes['Router']  = self::$Importer->classes('Router',  FALSE);
-		self::$Classes['Breeder'] = self::$Importer->classes('Breeder', FALSE);
 		
 		$app->mode     = $mode;
 		$app->level    = Seezoo::addProcess($app);
