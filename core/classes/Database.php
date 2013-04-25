@@ -525,7 +525,7 @@ Class SZ_Database extends SZ_Driver implements Singleton
 			$sql .= ' WHERE ' . $where;
 		}
 		
-		return $this->query($sql, ( count($bindData) > 0 ) ? $bindDatad : FALSE);
+		return $this->query($sql, ( count($bindData) > 0 ) ? $bindData : FALSE);
 	}
 	
 	
