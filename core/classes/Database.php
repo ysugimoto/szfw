@@ -295,11 +295,7 @@ Class SZ_Database extends SZ_Driver implements Singleton
 					throw new PDOException('prepared statement count is not match.', SZ_ERROR_CODE_DATABASE);
 				}
 				
-				// current statement uses same query
-				if ( ! $this->_statement || $this->_statement->queryString !== $sql )
-				{
-					$this->_statement = $this->_connectID->prepare($sql);
-				}
+				$this->_statement = $this->_connectID->prepare($sql);
 				$index = 0;
 				foreach ( $bind as $val )
 				{
@@ -312,11 +308,8 @@ Class SZ_Database extends SZ_Driver implements Singleton
 				{
 					throw new PDOException('prepared statement count is not match.', SZ_ERROR_CODE_DATABASE);
 				}
-				// current statement uses same query
-				if ( ! $this->_statement || $this->_statement->queryString !== $sql )
-				{
-					$this->_statement = $this->_connectID->prepare($sql);
-				}
+				
+				$this->_statement = $this->_connectID->prepare($sql);
 				foreach ( $matches[0] as $bindColumn )
 				{
 					if ( ! array_key_exists($bindColumn, $bind) )
@@ -327,17 +320,19 @@ Class SZ_Database extends SZ_Driver implements Singleton
 				}
 			}
 			
-			$bind = NULL;
-			
-			if ( $this->_statement->execute() === FALSE )
+			try
+			{
+				$this->_statement->execute();
+			}
+			catch ( PDOException $e )
 			{
 				$error = '';
 				if ( $this->_info['query_debug'] === TRUE )
 				{
 					$error = $this->_stackQueryLog($sql, $bind);
 				}
-				throw new PDOException('SQL Failed. ' . $this->_statement->errorCode()
-				                       .': ' . implode(', ', $this->_statement->errorInfo()) . ' SQL : ' . $error, SZ_ERROR_CODE_DATABASE);
+				throw new PDOException($e->getMessage() . '<br />'
+				                       . ' Execute SQL: ' . $error, SZ_ERROR_CODE_DATABASE);
 			}
 			
 			// SQL debugging
@@ -345,6 +340,8 @@ Class SZ_Database extends SZ_Driver implements Singleton
 			{
 				$this->_stackQueryLog($sql, $bind);
 			}
+			
+			$bind = NULL;
 		}
 		else
 		{
@@ -683,9 +680,9 @@ Class SZ_Database extends SZ_Driver implements Singleton
 	 * @access public
 	 * @return int
 	 */
-	public function insertID()
+	public function insertID($name = NULL)
 	{
-		return (int)$this->_connectID->lastInsertId();
+		return (int)$this->_connectID->lastInsertId($name);
 	}
 	
 	
