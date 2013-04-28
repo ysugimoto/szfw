@@ -54,7 +54,7 @@ class SZ_Helpers implements Growable, Singleton
 					//echo $function;
 					eval($function);
 				}
-				
+				$compiled[$name] = 1;
 			}
 		}
 	}
