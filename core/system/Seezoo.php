@@ -817,6 +817,8 @@ class Seezoo
 			throw new RuntimeException('Application configuration is empty!');
 		}
 		
+		self::$application = $app;
+		
 		if ( ! self::$prepared )
 		{
 			// Swap core classes ( extend )
@@ -831,8 +833,6 @@ class Seezoo
 			self::$Classes['Router']  = self::$Importer->classes('Router',  FALSE);
 			self::$Classes['Breeder'] = self::$Importer->classes('Breeder', FALSE);
 		}
-		
-		self::$application = $app;
 		
 		$app->mode     = $mode;
 		$app->level    = Seezoo::addProcess($app);
