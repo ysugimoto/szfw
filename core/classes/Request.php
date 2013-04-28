@@ -254,6 +254,32 @@ class SZ_Request implements Growable
 	
 	
 	/**
+	 * Build current access URI
+	 * 
+	 * @access public
+	 * @return string
+	 */
+	public function getCurrentURL()
+	{
+		$uri = get_config('base_url')
+		       . implode('/', reset($this->_uriArray));
+		if ( ! get_config('enable_mod_rewrite') )
+		{
+			$uri .= DISPATCHER . '/';
+		}
+		if ( count($this->_get) > 0 )
+		{
+			$uri .= '?' . http_build_query($this->_get);
+		}
+		
+		return $uri;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
 	 * Set a process request
 	 * 
 	 * @access public
