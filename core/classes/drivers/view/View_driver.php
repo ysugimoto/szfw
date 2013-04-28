@@ -98,14 +98,11 @@ abstract class SZ_View_driver
 			throw new Exception('Unable to load requested file: ' . $path);
 		}
 		
-		if ( pathinfo($includeFile, PATHINFO_EXTENSION) === ltrim($viewExt, '.') )
-		{
-			$this->renderView($includeFile, $this->_stackVars, FALSE);
-		}
-		else
-		{
-			file_get_contents($includeFile);
-		}
+		$partial = ( pathinfo($includeFile, PATHINFO_EXTENSION) === ltrim($viewExt, '.') )
+		             ? $this->renderView($includeFile, $this->_stackVars, TRUE)
+		             : file_get_contents($includeFile);
+		
+		echo $partial;
 	}
 	
 	
@@ -223,16 +220,15 @@ abstract class SZ_View_driver
 	{
 		$buffer = ob_get_contents();
 		@ob_end_clean();
-		$this->_currentBufLevel--;
 		
 		if ( $returnValue === TRUE )
 		{
-			if ( $this->_currentBufLevel > $this->_initBufLevel )
-			{
-				echo $buffer;
-				$buffer = NULL;
-			}
 			return $buffer;
+		}
+		else if ( ob_get_level() > $this->_initBufLevel + 1 )
+		{
+			echo $buffer;
+			return;
 		}
 		
 		return $this->addBuffer($buffer);
