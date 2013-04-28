@@ -33,9 +33,6 @@ define('SZ_BASE_APPLICATION_NAME', 'base');
 define('SZ_PREFIX_CORE', 'SZ_');
 define('SZ_PREFIX_BASE', 'Base_');
 
-// Controller suffix
-define('SZ_CONTROLLER_SUFFIX',  'Controller');
-
 // Controller execute method prefix
 define('SZ_EXEC_METHOD_PREFIX',  'act_');
 
