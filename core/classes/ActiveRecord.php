@@ -287,12 +287,18 @@ class SZ_ActiveRecord
 	 * 
 	 * @access public
 	 */
-	public function insert()
+	public function insert($values = array())
 	{
 		if ( $this->_isFinderMode === TRUE )
 		{
 			throw new BadMethodCallException(get_class($this) . ' works Finder mode! Cannot be execute ' . get_class($this) . '::insert() method.');
 		}
+		
+		foreach ( $values as $key => $value )
+		{
+			$this->{$key} = $value;
+		}
+		
 		$dataSet = $this->validate();
 		$db      = Seezoo::$Importer->database();
 		
@@ -312,7 +318,7 @@ class SZ_ActiveRecord
 	 * 
 	 * @access public
 	 */
-	public function update()
+	public function update($values = array())
 	{
 		if ( $this->_isFinderMode === TRUE )
 		{
@@ -322,6 +328,11 @@ class SZ_ActiveRecord
 			  . get_class($this)
 			  . '::update() method.'
 			);
+		}
+		
+		foreach ( $values as $key => $value )
+		{
+			$this->{$key} = $value;
 		}
 		$dataSet = $this->validate();
 		$db      = Seezoo::$Importer->database();
@@ -342,20 +353,20 @@ class SZ_ActiveRecord
 	 * 
 	 * @access public
 	 */
-	public function save()
+	public function save($data = array())
 	{
 		if ( ! empty($this->_primary) && isset($this->{$this->_primary}) )
 		{
-			return $this->update();
+			return $this->update($data);
 		}
-		return $this->insert();
+		return $this->insert($data);
 	}
 	
 	
 	// ---------------------------------------------------------------
 	
 	
-	public function delete()
+	public function delete($conditions = array())
 	{
 		if ( $this->_isFinderMode === TRUE )
 		{
@@ -366,14 +377,11 @@ class SZ_ActiveRecord
 			  . '::delete() method.'
 			);
 		}
-		if ( ! isset($this->{$this->_primary}) )
-		{
-			throw new LogicException('Delete method requires primary key record');
-		}
+
 		$dataSet = $this->validate();
 		$db      = Seezoo::$Importer->database();
 		
-		if ( $db->update($this->_table, $this->_primary . ' = ' . $this->{$this->_primary}) )
+		if ( $db->delete($this->_table, $conditions) )
 		{
 			return TRUE;
 		}
@@ -550,7 +558,8 @@ class SZ_ActiveRecord
 		foreach ( $this->_joins as $join )
 		{
 			list($joinMode, $joinTable, $joinKey) = $join;
-			$sql .= $joinMode . ' JOIN ' . $db->prefix().$joinTable . ' ';
+			$joinTable = $db->prefix().$joinTable;
+			$sql .= $joinMode . ' JOIN ' . $joinTable . ' ';
 			if ( $joinKey )
 			{
 				$sql .= ' ON ( ';
@@ -608,6 +617,7 @@ class SZ_ActiveRecord
 		{
 			$sql .= 'OFFSET ' . $this->_offset;
 		}
+		
 		return $db->query($sql, ( count($bindData) > 0 ) ? $bindData : FALSE);
 	}
 }
