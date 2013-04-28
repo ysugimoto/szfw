@@ -245,6 +245,12 @@ class SZ_View extends SZ_Driver implements Growable
 		// extra assign loaded helpers
 		$assigns['Helper'] = Seezoo::$Importer->classes('Helpers');
 		
+		// Does helper need to compile?
+		if ( get_config('compile_helper') )
+		{
+			$assigns['Helper']->compile();
+		}
+		
 		$SZ = Seezoo::getInstance();
 		// Second, Lead process assigned variables if exists
 		if ( isset($SZ->lead) )
