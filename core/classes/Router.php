@@ -151,7 +151,7 @@ class SZ_Router implements Growable
 		
 		if ( $args !== FALSE )
 		{
-			array_push($this->_arguments, $args);
+			$this->_arguments = array_merge($this->_arguments, $args);
 		}
 		
 		if ( $this->_mode === SZ_MODE_ACTION )
@@ -170,7 +170,7 @@ class SZ_Router implements Growable
 			return array($SZ, Signal::finished);
 		}
 		
-		$class  = $this->_class . SZ_CONTROLLER_SUFFIX;
+		$class  = $this->_class . ucfirst($this->moduleFileName);
 		$return = require_once($this->_loadedFile);
 		
 		Event::fire('module_loaded');
@@ -196,9 +196,11 @@ class SZ_Router implements Growable
 		{
 			return FALSE;
 		}
-		
-		$Controller->lead->setExecuteMethod($this->_execMethod);
-		$rv = call_user_func_array(array($Controller, $this->_execMethod), $this->_arguments);
+		else
+		{
+			$Controller->lead->setExecuteMethod($this->_execMethod);
+			$rv = call_user_func_array(array($Controller, $this->_execMethod), $this->_arguments);;
+		}
 		
 		$Controller->lead->teardown();
 		
@@ -378,7 +380,8 @@ class SZ_Router implements Growable
 		$searchDir = implode('/', $segments) . '/';
 		if ( file_exists($searchDir . $this->moduleFileName . '.php') )
 		{
-			$method = array_shift($arguments);
+			$arguments = array_reverse($arguments);
+			$method    = array_shift($arguments);
 			return array(
 			              $segments,
 			              ( $method === NULL || $method === '' ) ? 'index' : $method,
