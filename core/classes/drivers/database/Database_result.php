@@ -28,9 +28,7 @@ class SZ_Database_result implements Iterator, ArrayAccess
 	protected $_pointer;
 	protected $_fetchMode;
 	protected $_currentResult;
-	protected $_resultCache = array();
 	
-	protected $_resultArray;
 	protected $_resultObject;
 	
 	
@@ -39,7 +37,6 @@ class SZ_Database_result implements Iterator, ArrayAccess
 		$this->_stmt      = $statement;
 		$this->_pointer   = 0;
 		$this->_fetchMode = PDO::FETCH_OBJ;
-		$this->_resultCache = array(PDO::FETCH_OBJ => array(), PDO::FETCH_ASSOC => array());
 	}
 	
 	
@@ -52,7 +49,8 @@ class SZ_Database_result implements Iterator, ArrayAccess
 	
 	public function current()
 	{
-		return $this->_resultCache[$this->_fetchMode][$this->_pointer];
+		$result = $this->result();
+		return $result[$this->_pointer];
 	}
 	
 	public function key()
@@ -67,35 +65,22 @@ class SZ_Database_result implements Iterator, ArrayAccess
 	
 	public function valid()
 	{
-		if ( ! isset($this->_resultCache[$this->_fetchMode][$this->_pointer]) )
-		{
-			if ( FALSE === ($row = $this->_stmt->fetch($this->_fetchMode, PDO::FETCH_ORI_ABS, $this->_pointer)) )
-			{
-				return FALSE;
-			}
-			$this->_resultCache[$this->_fetchMode][$this->_pointer] = $row;
-		}
-		return TRUE;
+		$result = $this->result();
+		return isset($result[$this->_pointer]);
 	}
 	
 	// ArrayAccess need implement methods ========
 	
 	public function offsetExists($offset)
 	{
-		if ( ! isset($this->_resultCache[$this->_fetchMode][$offset]) )
-		{
-			$this->_resultCache[$this->_fetchMode][$offset] = $this->_stmt->fetch($this->_fetchMode, PDO::FETCH_ORI_ABS, $offset);
-		}
-		return (bool)$this->_resultCache[$this->_fetchMode][$offset];
+		$result = $this->result();
+		return isset($result[$offset]);
 	}
 	
 	public function offsetGet($offset)
 	{
-		if ( ! isset($this->_resultCache[$this->_fetchMode][$offset]) )
-		{
-			$this->_resultCache[$this->_fetchMode][$offset] = $this->_stmt->fetch($this->_fetchMode, PDO::FETCH_ORI_ABS, $offset);
-		}
-		return $this->_resultCache[$this->_fetchMode][$offset];
+		$result = $this->result();
+		return $result[$offset];
 	}
 	
 	public function offsetSet($offset, $value)
@@ -106,24 +91,6 @@ class SZ_Database_result implements Iterator, ArrayAccess
 	public function offsetUnset($offset)
 	{
 		// nothing to do.
-	}
-	
-	public function fetchArray()
-	{
-		$this->_fetchMode = PDO::FETCH_ASSOC;
-		return $this;
-	}
-	
-	public function fetchObject()
-	{
-		$this->_fetchMode = PDO::FETCH_OBJ;
-		return $this;
-	}
-	
-	public function fetchNum()
-	{
-		$this->_fetchMode = PDO::FETCH_NUM;
-		return $this;
 	}
 	
 	// --------------------------------------------------
@@ -154,17 +121,7 @@ class SZ_Database_result implements Iterator, ArrayAccess
 	{
 		if ( ! $this->_resultObject )
 		{
-			// rewind cursor
-			if ( FALSE != ($first = $this->_stmt->fetch(PDO::FETCH_OBJ, PDO::FETCH_ORI_ABS, 0)) )
-			{
-				$this->_resultObject = $this->_stmt->fetchAll(PDO::FETCH_OBJ);
-				array_unshift($this->_resultObject, $first);
-			}
-			else
-			{
-				$this->_resultObject = array();
-			}
-			$this->_resultCache[PDO::FETCH_OBJ] = $this->_resultObject;
+			$this->_resultObject = $this->_stmt->fetchAll(PDO::FETCH_OBJ);
 		}
 		return $this->_resultObject;
 	}
@@ -181,21 +138,7 @@ class SZ_Database_result implements Iterator, ArrayAccess
 	 */
 	public function resultArray()
 	{
-		if ( ! $this->_resultArray )
-		{
-			// rewind cursor
-			if ( FALSE != ($first = $this->_stmt->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_ABS, 0)) )
-			{
-				$this->_resultArray = $this->_stmt->fetchAll(PDO::FETCH_ASSOC);
-				array_unshift($this->_resultArray, $first);
-			}
-			else
-			{
-				$this->_resultArray = array();
-			}
-			$this->_resultCache[PDO::FETCH_ASSOC] = $this->_resultArray;
-		}
-		return $this->_resultArray;
+		return array_map('get_object_vars', $this->result());
 	}
 	
 	
@@ -226,11 +169,9 @@ class SZ_Database_result implements Iterator, ArrayAccess
 	 */
 	public function row($index = 0)
 	{
-		$defMode = $this->_fetchMode;
-		$this->fetchObject();
-		$dat = $this[$index];
-		$this->_fetchMode = $defMode;
-		return $dat;
+		return ( isset($this[$index]) )
+		         ? $this[$index]
+		         : NULL;
 	}
 	
 	
@@ -246,11 +187,9 @@ class SZ_Database_result implements Iterator, ArrayAccess
 	 */
 	public function rowArray($index = 0)
 	{
-		$defMode = $this->_fetchMode;
-		$this->fetchArray();
-		$dat = $this[$index];
-		$this->_fetchMode = $defMode;
-		return $dat;
+		return ( isset($this[$index]) )
+		         ? get_object_vars($this[$index])
+		         : NULL;
 	}
 	
 	
