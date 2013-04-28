@@ -604,11 +604,11 @@ class SZ_Validation extends SZ_Driver implements Growable
 			$format->rule      = $matches[1];
 			$format->condition = ( isset($matches[2]) ) ? $matches[2] : FALSE;
 			
-			if ( ! method_exists($format->class, $lead) )
+			if ( ! method_exists($format->class, $format->rule) )
 			{
-				if ( ! isset($format->class->lead) || ! method_exists($format->class->lead, $rule) )
+				if ( ! isset($format->class->lead) || ! method_exists($format->class->lead, $format->rule) )
 				{
-					throw new BadMethodCallException('Undefined ' . $rule . ' rules method in ' . get_class($class) . '!');
+					throw new BadMethodCallException('Undefined ' . $format->rule . ' rules method in ' . get_class($format->class) . '!');
 				}
 				$format->class = $lead;
 			}
