@@ -81,6 +81,16 @@ class Application
 		return self::$encodings[$type];
 	}
 	
+	public static function getName()
+	{
+		return self::$instance->name;
+	}
+	
+	public static function getPath()
+	{
+		return self::$instance->path;
+	}
+	
 	// ---------------------------------------------------------------
 	
 	
