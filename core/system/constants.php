@@ -19,7 +19,7 @@
  */
 
 // Absolute path constants
-define('APPPATH',    SZPATH . 'applications/');
+define('APPPATH',    SZPATH . trail_slash(APPLICATION_DIR));
 define('ETCPATH',    SZPATH . 'etc/');
 define('ENGINEPATH', SZPATH . 'engines/');
 
@@ -34,23 +34,28 @@ define('SZ_PREFIX_CORE', 'SZ_');
 define('SZ_PREFIX_BASE', 'Base_');
 
 // Controller execute method prefix
-define('SZ_EXEC_METHOD_PREFIX',  'act_');
+define('SZ_EXEC_METHOD_PREFIX', 'act_');
 
 // Init mode constants
-define('SZ_MODE_MVC',     'mvc');
-define('SZ_MODE_ACTION',  'action');
-define('SZ_MODE_PROC',    'proc');
-define('SZ_MODE_CLI',     'cli');
+define('SZ_MODE_MVC',    'mvc');
+define('SZ_MODE_ACTION', 'action');
+define('SZ_MODE_CLI',    'cli');
 
+// Using template engine constants
 define('SZ_TMPL_DEFAULT', 'default');
 define('SZ_TMPL_SMARTY',  'smarty');
 define('SZ_TMPL_PHPTAL',  'phptal');
 define('SZ_TMPL_TWIG',    'twig');
 
-define('SZ_LOG_LEVEL_DEVELOPMENT', 1);
-define('SZ_LOG_LEVEL_DEPLOY', 0);
+// Framework logging level constants
+define('SZ_LOG_LEVEL_DEPLOY', 0x0000);
+define('SZ_LOG_LEVEL_TRACE',  0x0001);
+define('SZ_LOG_LEVEL_DEBUG',  0x0010);
+define('SZ_LOG_LEVEL_INFO',   0x0011);
+define('SZ_LOG_LEVEL_ALL',    0x0100);
 
-define('SZ_ERROR_CODE_GENERAL', 500);
+// Framework error code constants
+define('SZ_ERROR_CODE_GENERAL',  500);
 define('SZ_ERROR_CODE_DATABASE', 501);
 
 
