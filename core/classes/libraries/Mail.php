@@ -78,6 +78,23 @@ class SZ_Mail extends SZ_Driver implements Growable
 	
 	
 	/**
+	 * Set "reply-to"
+	 * This library use both reply-to and return-path
+	 * 
+	 * @access public
+	 * @param  string $file
+	 */
+	public function replyTo($replyTo)
+	{
+		$this->driver->replyTo($replyTo);
+		return $this;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
 	 * set "Cc"
 	 * 
 	 * @access public
