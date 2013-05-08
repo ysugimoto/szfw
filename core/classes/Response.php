@@ -122,6 +122,8 @@ class SZ_Response implements Growable, Singleton
 			  : @header($header[0], $header[1]);
 		}
 		
+		Event::fire('session_update');
+		
 		if ( ! empty($this->outputQueue) )
 		{
 			echo $this->outputQueue;
@@ -191,6 +193,7 @@ class SZ_Response implements Growable, Singleton
 			$output   = str_replace('</body>', $debugger->execute($memory) . "\n</body>", $output);
 		}
 		
+		header('HTTP/1.1 200 OK');
 		$this->outputQueue = $output;
 		
 		return $this;
