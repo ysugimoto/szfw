@@ -104,7 +104,12 @@ class SZ_Exception
 		$env = Seezoo::getENV();
 		Event::fire('session_update');
 		
-		if ( $env && $env->getConfig('error_reporting') === 0 )
+		if ( ! $env )
+		{
+			echo $e->getMessage();
+			return;
+		}
+		if ( $env->getConfig('error_reporting') === 0 )
 		{
 			return;
 		}
