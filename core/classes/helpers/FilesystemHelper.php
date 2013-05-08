@@ -203,6 +203,7 @@ class SZ_FilesystemHelper implements Growable
 	 * 
 	 * @access public
 	 * @param  string $dirPath
+	 * @param  bool $getFullPath
 	 * @return mixed
 	 */
 	public function directoryMap($dirPath, $getFullPath = FALSE)
@@ -224,14 +225,14 @@ class SZ_FilesystemHelper implements Growable
 			}
 			
 			$path = $dirPath . $file;
-			// if file is dirertory?
+			// File is dirertory?
 			if ( is_dir($path) )
 			{
-				$ret[basename($file)] = $this->directoryMap($path);
+				$ret[basename($file)] = $this->directoryMap($path, $getFullPath);
 			}
 			else
 			{
-				$ret[] = $file;
+				$ret[] = ( $getFullPath ) ? $path : $file;
 			}
 		}
 		$dp->close();
