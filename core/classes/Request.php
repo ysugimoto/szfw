@@ -325,7 +325,7 @@ class SZ_Request implements Growable
 				{
 					$pathinfo = ( isset($matches[1]) )
 					              ? preg_replace('|^' . $regex . '$|u', $map, $pathinfo)
-					              : $val;
+					              : $map;
 					break;
 					
 				}
