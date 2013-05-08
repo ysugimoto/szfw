@@ -551,7 +551,8 @@ class SZ_Importer implements Growable
 			                  : $instance;
 			
 			// Add stack if singleton class
-			if ( $instance instanceof Singleton )
+			if ( $instance instanceof Singleton
+			     || Application::config('class_treats_singleton') )
 			{
 				Seezoo::addSingleton($class . $classSuffix, $instance);
 			}
