@@ -92,11 +92,6 @@ class SZ_Breeder
 		$this->import   =  Seezoo::$Importer->classes('Importer');
 		$this->view     =  new Seezoo::$Classes['View']();
 		
-		if ( $this->level === 1 )
-		{
-			$this->view->bufferStart();
-		}
-		
 		$this->response =& Seezoo::$Response;
 		$this->router   =& $this->app->router;
 		
