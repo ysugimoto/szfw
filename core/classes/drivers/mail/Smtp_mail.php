@@ -202,15 +202,19 @@ class SZ_Smtp_mail extends SZ_Mail_driver
 	protected function _createHeader()
 	{
 		$header = array();
-		$uniq   = sha1(uniqid(mt_rand()));
+		$uniq   = sha1(uniqid(mt_rand(), TRUE));
 		$date   = date('D, j M Y H:i:s');
 		
 		$this->_boundary = 'szboundary' . $uniq;
 		
 		// Date
 		$header[] = 'Date: ' . $date;
+		
+		$replyTo  = ( $this->_replyTo ) ? $this->_replyTo : $this->_from;
 		// Return-Path
-		$header[] = 'Return-Path: ' . $this->_from;
+		$header[] = 'Return-Path: ' . $replyTo;
+		// Reply-to
+		$header[] = 'Reply-To: ' . $replyTo;
 		// From
 		$header[] = 'From: ' . $this->_addressFormat(array($this->_from, $this->_fromName));
 		
@@ -231,7 +235,7 @@ class SZ_Smtp_mail extends SZ_Mail_driver
 		{
 			$header[] = sprintf('Message-ID: <%s>', $this->_messageID);
 		}
-		$header[] = 'X-Mailer: DogFW MailClass.SMTPSender';
+		$header[] = 'X-Mailer: SZFW MailClass.SMTPSender';
 		
 		if ( count($this->_attachFiles) > 0 )
 		{

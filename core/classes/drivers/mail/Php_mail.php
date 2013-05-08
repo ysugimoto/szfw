@@ -52,6 +52,7 @@ class SZ_Php_mail extends SZ_Mail_driver
 		foreach ( $this->_to as $to )
 		{
 			$to = $this->_addressFormat($to);
+			
 			if ( ! $this->env->isSafeMode )
 			{
 				$ret = @mail(
@@ -85,7 +86,7 @@ class SZ_Php_mail extends SZ_Mail_driver
 			}
 		}
 		
-		return ( count($this->_errorSend) > 0 ) ? TRUE : FALSE;
+		return ( count($this->_errorSend) === 0 ) ? TRUE : FALSE;
 	}
 	
 	
@@ -101,7 +102,7 @@ class SZ_Php_mail extends SZ_Mail_driver
 	protected function _createHeader()
 	{
 		$header = array();
-		$uniq   = sha1(uniqid(mt_rand()));
+		$uniq   = sha1(uniqid(mt_rand(), TRUE));
 		$date   = date('D, j M Y H:i:s');
 		
 		// create boundary string ( but perhaps no use )
@@ -109,8 +110,12 @@ class SZ_Php_mail extends SZ_Mail_driver
 		
 		// Send date
 		$header[] = 'Date: ' . $date;
+		
+		$replyTo  = ( $this->_replyTo ) ? $this->_replyTo : $this->_from;
 		// Return-Path
-		$header[] = 'Return-Path: ' . $this->_from;
+		$header[] = 'Return-Path: ' . $replyTo;
+		// Reply-to
+		$header[] = 'Reply-To: ' . $replyTo;
 		// From
 		$header[] = 'From: ' . $this->_addressFormat(array($this->_from, $this->_fromName));
 		
@@ -138,7 +143,7 @@ class SZ_Php_mail extends SZ_Mail_driver
 		}
 		
 		// Set our Mail system name
-		$header[] = 'X-Mailer: DogFW MailClass.MailFunctionSender';
+		$header[] = 'X-Mailer: SZFW MailClass.MailFunctionSender';
 		
 		// Does attachment file exists?
 		if ( count($this->_attachFiles) > 0 )

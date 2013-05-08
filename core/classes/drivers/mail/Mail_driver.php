@@ -40,6 +40,7 @@ abstract class SZ_Mail_driver
 	protected $_bcc = array();
 	protected $_subject;
 	protected $_body;
+	protected $_replyTo;
 	
 	
 	/**
@@ -156,9 +157,9 @@ abstract class SZ_Mail_driver
 	{
 		if ( is_array($email) )
 		{
-			foreach ( $email as $email )
+			foreach ( $email as $e )
 			{
-				call_user_func_array(array($this, 'to'), $email);
+				call_user_func_array(array($this, 'to'), $e);
 			}
 			return;
 		}
@@ -176,6 +177,21 @@ abstract class SZ_Mail_driver
 		{
 			$this->_to[] = array($this->_removeLine($email), $this->_removeLine($toName));
 		}
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * set reply-to
+	 * 
+	 * @access public
+	 * @param  mixed  $email
+	 */
+	public function replyTo($email)
+	{
+		$this->_replyTo = $this->_removeLine($email);
 	}
 	
 	
@@ -402,6 +418,11 @@ abstract class SZ_Mail_driver
 	 */
 	public function send()
 	{
+		// Validate send parameters
+		if ( ! $this->_validate() )
+		{
+			return FALSE;
+		}
 		// encode transaction start
 		$defLang = mb_language();
 		$defEnc  = mb_internal_encoding();
@@ -415,6 +436,36 @@ abstract class SZ_Mail_driver
 		mb_internal_encoding($defEnc);
 		
 		return $ret;
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Validate mail send params is enough
+	 * 
+	 * @access protected
+	 * @return bool
+	 */
+	protected function _validate()
+	{
+		$error = FALSE;
+		
+		// Does send "to" is not empty?
+		if ( count($this->_to) === 0 )
+		{
+			$this->_log[] = 'Send to parameter is required.';
+			$error = TRUE;
+		}
+		// Does send "from" is not empty?
+		if ( empty($this->_from) )
+		{
+			$this->_log[] = 'Send from parameter is required.';
+			$error = TRUE;
+		}
+		
+		return $error;
 	}
 	
 	
