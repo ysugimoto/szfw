@@ -263,29 +263,44 @@ class SZ_Console_command extends SZ_Command_driver
 		
 		if ( count($createFiles) > 0 )
 		{
+			$isAllWrite = FALSE;
+			$isAllSkip  = FALSE;
 			foreach ( $createFiles as $files )
 			{
+				if ( $isAllSkip )
+				{
+					break;
+				}
 				list($path, $template, $class) = $files;
-				$isWrite = TRUE;
+				$isWrite    = TRUE;
 				echo 'Create: ' . $path . PHP_EOL;
-				if ( file_exists($path) )
+				if ( ! $isAllWrite && file_exists($path) )
 				{
 					// confirm overwrite
 					echo $path . ' is already exists.' . PHP_EOL;
-					echo 'Are you sure you want to overwrite it? [y/n]';
+					echo 'Are you sure you want to overwrite it? [y/n/ya/na]';
 					do
 					{
 						echo ':';
 						$input = fgets(STDIN, 10);
 						$input = trim($input, "\n");
-						if ( $input === 'y' || $input === 'yes' )
+						if ( $input === 'y' || $input === 'ya' )
 						{
 							echo 'Overwriting.' . PHP_EOL;
 							$isWrite = TRUE;
+							if ( $input === 'ya' )
+							{
+								$isAllWrite = TRUE;
+							}
 							break;
 						}
-						else if ( $input === 'n' || $input === 'no' )
+						else if ( $input === 'n' || $input === 'na' )
 						{
+							if ( $input === 'na' )
+							{
+								$isAllSkip = TRUE;
+								break;
+							}
 							echo 'Skipped.' . PHP_EOL;
 							$isWrite = FALSE;
 							break;
