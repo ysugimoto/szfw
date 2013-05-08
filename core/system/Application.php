@@ -58,9 +58,9 @@ class Application
 	
 	/**
 	 * Application current instance
-	 * @var Application
+	 * @var array
 	 */
-	private static $instance;
+	private static $instances = array();
 	
 	private static $encodings = array(
 	                              'internal' => 'UTF-8',
@@ -83,12 +83,17 @@ class Application
 	
 	public static function getName()
 	{
-		return self::$instance->name;
+		return self::get()->name;
 	}
 	
 	public static function getPath()
 	{
-		return self::$instance->path;
+		return self::get()->path;
+	}
+	
+	public static function isForked()
+	{
+		return count(self::$instances) > 1;
 	}
 	
 	// ---------------------------------------------------------------
@@ -105,12 +110,14 @@ class Application
 	 */
 	public static function fork($mode = FALSE, $overridePathInfo = '', $extraArgs = FALSE)
 	{
-		if ( ! self::$instance )
+		if ( count(self::$instances) === 0 )
 		{
 			throw new RuntimeException('Application has not main process!');
 		}
-		//$sub = clone self::$instance;
-		return self::$instance->boot($mode, $overridePathInfo, $extraArgs);
+		$instance = self::get();
+		$fork = clone $instance;
+		self::$instances[] = $fork;
+		return $fork->boot($mode, $overridePathInfo, $extraArgs);
 		
 	}
 	
@@ -141,7 +148,7 @@ class Application
 	 */
 	public static function get()
 	{
-		return self::$instance;
+		return end(self::$instances);
 	}
 	
 	
@@ -212,23 +219,23 @@ class Application
 	                            $prefix     = SZ_PREFIX_BASE,
 	                            $autoExtend = TRUE)
 	{
-		if ( self::$instance )
+		if ( count(self::$instances) > 0 )
 		{
 			throw new RuntimeException('Application has already created!');
 		}
 		// initialize applications
-		self::$apps     = array();
-		self::$instance = new Application($appName, $prefix);
+		self::$apps = array();
+		$instance   = new Application($appName, $prefix);
 		
 		// Are you use default application?
 		if ( $autoExtend && $appName !== SZ_BASE_APPLICATION_NAME )
 		{
-			self::$instance->extend(SZ_BASE_APPLICATION_NAME . ':' . SZ_PREFIX_BASE);
+			$instance->extend(SZ_BASE_APPLICATION_NAME . ':' . SZ_PREFIX_BASE);
 		}
 		
 		Event::fire('application_init');
 		
-		return self::$instance;
+		return self::$instances[] = $instance;
 	}
 	
 	
@@ -342,8 +349,10 @@ class Application
 	 */
 	public static function config($key)
 	{
-		return ( isset(self::$instance->config[$key]) )
-		         ? self::$instance->config[$key]
+		$instance = self::get();
+		
+		return ( isset($instance->config[$key]) )
+		         ? $instance->config[$key]
 		         : FALSE;
 	}
 	
@@ -362,10 +371,6 @@ class Application
 	{
 		$mode = ( $mode ) ? $mode : $this->config['default_process'];
 		Seezoo::prepare($this, $mode, $overridePathInfo);
-		
-		// Set Application Environment
-		date_default_timezone_set($this->config['date_timezone']);
-		error_reporting($this->config['error_reporting']);
 		
 		// Benchmark start
 		$Mark = Seezoo::$Importer->classes('Benchmark');
@@ -462,6 +467,7 @@ class Application
 				$SZ->view->replaceBuffer($SZ->_output($SZ->view->getDisplayBuffer()));
 			}
 			Seezoo::releaseInstance($SZ);
+			array_pop(self::$instances);
 			$this->level--;
 			return $SZ->view->getDisplayBuffer();
 		}
@@ -476,6 +482,7 @@ class Application
 				$SZ->view->replaceBuffer($SZ->_output($SZ->view->getDisplayBuffer()));
 			}
 			Seezoo::releaseInstance($SZ);
+			array_pop(self::$instances);
 			$this->level--;
 			
 			Seezoo::$Response->setBody($SZ->view->getDisplayBuffer())
