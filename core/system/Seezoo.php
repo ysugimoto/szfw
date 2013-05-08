@@ -113,7 +113,7 @@ class Seezoo
 	 * Using applications
 	 * @var array
 	 */
-	private static $application;
+	private static $applications = array();
 	
 	private static $_processes  = array();
 	private static $instances   = array();
@@ -476,7 +476,7 @@ class Seezoo
 	 */
 	public static function addApplication(Application $app)
 	{
-		self::$application = $app;
+		self::$applications[] = $app;
 	}
 	
 	
@@ -491,7 +491,8 @@ class Seezoo
 	 */
 	public static function getApplication()
 	{
-		return ( self::$application ) ? self::$application->getApps() : array();
+		$app = end(self::$applications);
+		return ( $app ) ? $app->getApps() : array();
 	}
 
 
@@ -817,10 +818,14 @@ class Seezoo
 			throw new RuntimeException('Application configuration is empty!');
 		}
 		
-		self::$application = $app;
+		self::$applications[] = $app;
 		
 		if ( ! self::$prepared )
 		{
+			// Set Application Environment
+			date_default_timezone_set($app->config['date_timezone']);
+			error_reporting($app->config['error_reporting']);
+			
 			// Swap core classes ( extend )
 			self::$Importer  = self::$Importer->classes('Importer');
 			self::$_stackENV = self::$Importer->classes('Environment');
@@ -828,7 +833,6 @@ class Seezoo
 			
 			self::$_stackRequest      = self::$Importer->classes('Request');
 			self::$Response           = self::$Importer->classes('Response');
-			self::$Cache              = self::$Importer->classes('Cache');
 			self::$Classes['View']    = self::$Importer->classes('View',    FALSE);
 			self::$Classes['Router']  = self::$Importer->classes('Router',  FALSE);
 			self::$Classes['Breeder'] = self::$Importer->classes('Breeder', FALSE);
