@@ -37,8 +37,8 @@ class SZ_Logger implements Growable
 	{
 		$env = Seezoo::getENV();
 		$this->_level   = $env->getConfig('logging_level');
-		$this->_logPath = ( $env->getConfigSeezoo('logging_save_dir') )
-		                    ? rtrim($env->getConfigSeezoo('logging_save_dir'), '/') . '/'
+		$this->_logPath = ( $env->getConfig('logging_save_dir') )
+		                    ? rtrim($env->getConfig('logging_save_dir'), '/') . '/'
 		                    : '';
 	}
 	
