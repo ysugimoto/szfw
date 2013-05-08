@@ -117,7 +117,7 @@ class SZ_CookieHelper implements Growable
 		
 		$cookie = array_merge($this->_defaultCookie, $cookie);
 		
-		setcookie($cookie['name'], $cookie['value'], $cookie['expire'], $cookie['path'], $cookie['domain'], 0);
+		setcookie($cookie['name'], $cookie['value'], time() + $cookie['expire'], $cookie['path'], $cookie['domain'], 0);
 	}
 	
 	
