@@ -164,10 +164,10 @@ class SZ_Router implements Growable
 			
 			// Include process file
 			$SZ->view->bufferStart();
-			require($this->_loadedFile);
+			$rv = require($this->_loadedFile);
 			$SZ->view->getBufferEnd();
 			
-			return array($SZ, Signal::finished);
+			return array($SZ, $rv);
 		}
 		
 		$class  = $this->_class . ucfirst($this->moduleFileName);
@@ -181,6 +181,7 @@ class SZ_Router implements Growable
 		}
 		
 		$Controller = new $class();
+		$Controller->view->bufferStart();
 		$Controller->lead->prepare();
 		$Controller->view->set(strtolower($this->_directory . '/' . $this->_method));
 		
@@ -203,6 +204,7 @@ class SZ_Router implements Growable
 		}
 		
 		$Controller->lead->teardown();
+		$Controller->view->getBufferEnd();
 		
 		return array($Controller, $rv);
 	}
