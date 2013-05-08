@@ -125,7 +125,7 @@ class Event
 	 */
 	public static function fire($type, $data = null)
 	{
-		if ( ! isset(self::$_handlers[$type]) || self::$isProcess === TRUE )
+		if ( Application::isForked() || ! isset(self::$_handlers[$type]) || self::$isProcess === TRUE )
 		{
 			return;
 		}
