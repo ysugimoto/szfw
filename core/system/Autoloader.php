@@ -56,9 +56,6 @@ class Autoloader
 	 */
 	public static function init()
 	{
-		require_once(SZPATH . 'core/system/constants.php');
-		require_once(SZPATH . 'core/system/common.php');
-		
 		spl_autoload_register(array('Autoloader', 'loadSystem'));
 		spl_autoload_register(array('Autoloader', 'load'));
 		
