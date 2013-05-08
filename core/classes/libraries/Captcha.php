@@ -118,7 +118,7 @@ class SZ_Captcha implements Growable
 		$img       = imagecreatetruecolor($width, $height);
 		$color     = imagecolorallocate($img, 0xff, 0xff, 0xff);
 		$textColor = imagecolorallocate($img, 0x33, 0x33, 0x33);
-		$font      = COREPATH . 'engines/font/mikachan.ttf';
+		$font      = SZPATH . 'engines/font/mikachan.ttf';
 		$pointX    = round(($width - 50) / $length);
 		$pointY    = round(($height / 2) + ($font_size / 2));
 		
