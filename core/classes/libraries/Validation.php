@@ -84,8 +84,10 @@ class SZ_Validation extends SZ_Driver implements Growable
 		$this->_verify = Seezoo::$Importer->library('Verify');
 		
 		// append for View
-		$SZ = Seezoo::getInstance();
-		$SZ->view->assign(array('Validation' => $this));
+		if ( FALSE !== ($SZ = Seezoo::getInstance()) )
+		{
+			$SZ->view->assign(array('Validation' => $this));
+		}
 	}
 	
 	
