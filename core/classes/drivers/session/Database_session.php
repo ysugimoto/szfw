@@ -69,8 +69,9 @@ class SZ_Database_session extends SZ_Session_driver
 			// If session cannnot read, create new session.
 			$this->_sessionCreate();
 		}
+		
 		// manually destruct
-		Event::addListener('session_update', array($this, '_sessionSaveManually'), TRUE);
+		Event::addListener('session_update', array($this, '_sessionSave'), TRUE);
 	}
 	
 	
@@ -169,7 +170,7 @@ class SZ_Database_session extends SZ_Session_driver
 				'userAgent'    => $result->user_agent,
 				'lastActivity' => $result->last_activity
 			);
-			$this->_authData = $authData;
+			//$this->_authData = $authData;
 			$this->_userData = $result->user_data;
 			return $authData;
 		}
@@ -223,16 +224,11 @@ class SZ_Database_session extends SZ_Session_driver
 	 * abstruct implements
 	 * @see seezoo/core/drivers/session/SZ_Session_driver::_sessionSave()
 	 */
-	protected function _sessionSave()
-	{
-		return TRUE;
-	}
-	
-	public function _sessionSaveManually()
+	public function _sessionSave()
 	{
 		$sess = $this->_sessionID;
 		// update sessionID when lastActivity is over
-		if ( $this->_authData['lastActivity'] + $this->_sessionUpdateTime < $this->_time )
+		if ( $this->_authData['lastActivity'] + $this->env->getConfig('session_update_time') < $this->_time )
 		{
 			$this->_sessionID                = $this->_generateSessionID();
 			$this->_authData['lastActivity'] = $this->_time;
@@ -241,7 +237,7 @@ class SZ_Database_session extends SZ_Session_driver
 		
 		//$sessID   = $this->_sessionID;
 		$authKey = $this->_sessionAuthorizeDatakey . $this->_sessionID;
-		$data     = serialize($this->_sessionCurrentTemporaryData);
+		$data    = serialize($this->_sessionCurrentTemporaryData);
 		
 		if ( $this->_encryptSession === TRUE )
 		{

@@ -94,7 +94,7 @@ class SZ_Memcache_session extends SZ_Session_driver
 		}
 		
 		// manually destruct
-		Event::addListener('session_update', array($this, '_sessionSaveManually'), TRUE);
+		Event::addListener('session_update', array($this, '_sessionSave'), TRUE);
 	}
 	
 	
@@ -236,12 +236,7 @@ class SZ_Memcache_session extends SZ_Session_driver
 	 * abstruct implements
 	 * @see seezoo/core/drivers/session/SZ_Session_driver::_sessionSave()
 	 */
-	protected function _sessionSave()
-	{
-		return TRUE;
-	}
-	
-	public function _sessionSaveManually()
+	public function _sessionSave()
 	{
 		$sessID   = $this->_sessionID;
 		// update sessionID when lastActivity is over

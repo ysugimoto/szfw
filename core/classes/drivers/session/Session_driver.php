@@ -159,6 +159,11 @@ abstract class SZ_Session_driver
 		
 	}
 	
+	public function save()
+	{
+		$this->_sessionSave();
+	}
+	
 	
 	// --------------------------------------------------
 	
@@ -410,12 +415,14 @@ abstract class SZ_Session_driver
 	 */
 	protected function _setSessionCookie($cookieData, $lifetime = FALSE)
 	{
+		$expire = ( $lifetime ) ? $lifetime : $this->env->getConfig('session_lifetime');
+		
 		if ( version_compare(PHP_VERSION, '5.2.0', '>') )
 		{
 			setcookie(
 				$this->_sessionName,
 				$cookieData,
-				( $lifetime ) ? $lifetime : $this->_sessionLifetime + time(),
+				$expire + time(),
 				$this->_cookiePath,
 				$this->_cookieDomain,
 				( $this->req->server('HTTPS') === 'on' ) ? TRUE : FALSE,
@@ -427,7 +434,7 @@ abstract class SZ_Session_driver
 			setcookie(
 				$this->_sessionName,
 				$cookieData,
-				$this->env->getConfig('session_lifetime') + time(),
+				$expire + time(),
 				$this->_cookiePath,
 				$this->_cookieDomain,
 				( $this->req->server('HTTPS') === 'on' ) ? TRUE : FALSE
