@@ -174,4 +174,21 @@ class SZ_Session extends SZ_Driver implements Growable, Singleton
 		$this->driver->keepFlash($key);
 		return $this;
 	}
+	
+	
+	// --------------------------------------------------
+	
+	
+	/**
+	 * Save sessions
+	 * 
+	 * @access public
+	 * @return $this
+	 */
+	public function save()
+	{
+		$this->driver->save();
+		return $this;
+	}
+
 }
