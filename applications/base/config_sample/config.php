@@ -139,6 +139,34 @@ $config['default_process'] = SZ_MODE_MVC;
 
 $config['default_module'] = 'welcome';
 
+/*
+ * --------------------------------------------------
+ * compile helper
+ * 
+ * Loaded helpers are able to use function
+ * at viewfile that like CodeIgniter.
+ * ex:
+ * $Helpler->form->open() -> form_open()
+ * --------------------------------------------------
+ */
+
+$config['compile_helper'] = TRUE;
+
+
+/*
+ * --------------------------------------------------
+ * Model class treats Singleton
+ * 
+ * Through the this option to TRUE,
+ * class becomes equal treatment and singleton class,
+ * you will be sharing the instance.
+ * You will save resources and to enable
+ * if you do not want the status management in the class.
+ * --------------------------------------------------
+ */
+
+$config['class_treats_singleton'] = TRUE;
+
 
 /*
  * --------------------------------------------------
