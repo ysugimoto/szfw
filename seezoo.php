@@ -12,6 +12,11 @@
  * ====================================================================
  */
 
+// ---- user defined on your environment ---- //
+define('APPLICATION_DIR', 'public/apps/');
+
+// end ---- --------------------------------- //
+
 // Initial, force clean output buffer
 @ob_end_clean();
 // System always handles the UTF-8 encoding.
@@ -27,11 +32,13 @@ define('DISPATCHER', basename($_SERVER['SCRIPT_FILENAME']));
 define('ROOTPATH',   realpath(dirname($_SERVER['SCRIPT_FILENAME'])) . '/');
 define('SZPATH',     dirname(__FILE__) . '/');
 
-// Prepare Exceptions
+// Prepare System files
 require_once(SZPATH . 'core/system/exceptions.php');
+require_once(SZPATH . 'core/system/common.php');
+require_once(SZPATH . 'core/system/constants.php');
+require_once(SZPATH . 'core/system/Autoloader.php');
 
 // Autoloader register
-require_once(SZPATH . 'core/system/Autoloader.php');
 Autoloader::init();
 
 Seezoo::startup();
@@ -71,7 +78,7 @@ if ( PHP_SAPI === 'cli' )
 		}
 		
 		$application = Application::init($app, $prefix);
-		Seezoo::addApplication($application);
+		Seezoo::prepare($application, SZ_MODE_CLI, '/');
 		
 		// Command line tools ignittion
 		$dog = Seezoo::$Importer->classes('Console');
