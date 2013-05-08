@@ -65,20 +65,9 @@ class SZ_ActiveRecord
 	 */
 	public static function finder($arName)
 	{
-		$prefix = Seezoo::$Importer->database()->prefix();
-		// inline to camel case
-		$arName = preg_replace_callback(
-		           '/_([a-zA-Z])/',
-		           create_function('$m', 'return strtoupper($m[1]);'),
-		           preg_replace('/\A' . $prefix . '/', '', $arName)
-		          );
-		$arName = ucfirst($arName);
+		$activeRecord = self::_load($arName);
 		
-		if ( ! isset(self::$_instances[$arName]) )
-		{
-			self::$_instances[$arName] = Seezoo::$Importer->activeRecord($arName);
-		}
-		return clone self::$_instances[$arName];
+		return clone $activeRecord;
 	}
 	
 	
@@ -90,6 +79,20 @@ class SZ_ActiveRecord
 	 * @return object ActiveRecord Instance
 	 */
 	public static function create($arName)
+	{
+		$activeRecord = self::_load($arName);
+		
+		return $activeRecord;
+	}
+	
+	
+	/**
+	 * Load ActiveRecord class
+	 * 
+	 * @access protected
+	 * @param  string $arName
+	 */
+	protected static function _load($arName)
 	{
 		$prefix = Seezoo::$Importer->database()->prefix();
 		// inline to camel case
@@ -104,6 +107,7 @@ class SZ_ActiveRecord
 		{
 			self::$_instances[$arName] = Seezoo::$Importer->activeRecord($arName);
 		}
+		
 		return self::$_instances[$arName];
 	}
 	
@@ -128,22 +132,44 @@ class SZ_ActiveRecord
 	
 	public function __call($method, $args)
 	{
-		if ( preg_match('/^find(.*)$/', $method) )
+		if ( preg_match('/^(find|delete|update)(.*)$/', $method, $match) )
 		{
 			if ( $this->_isFinderMode === FALSE )
 			{
 				throw new BadMethodCallException('Instance is not finder mode.');
 			}
-			list($columns, $conditions, $limit) = $this->_parseMethod(substr($method, 4), $args);
+			list($columns, $conditions, $limit) = $this->_parseMethod($match[2], $args);
 			
-			$query  = $this->_execFindQuery($columns, $conditions, $limit)->get();
-			$this->reset();
-			if ( $limit === 1 )
+			switch ( $match[1] )
 			{
-				$query->setFetchMode(PDO::FETCH_CLASS, get_class($this));
-				return $query->fetch(PDO::FETCH_CLASS, PDO::FETCH_ORI_ABS, 0);
+				case 'find':
+					$query = $this->_execFindQuery($columns, $conditions, $limit)->get();
+					if ( $limit === 1 )
+					{
+						$query->setFetchMode(PDO::FETCH_CLASS, get_class($this));
+						$result = $query->fetch(PDO::FETCH_CLASS, PDO::FETCH_ORI_ABS, 0);
+					}
+					else
+					{
+						$result = $query->fetchAll(PDO::FETCH_CLASS, get_class($this));
+					}
+					break;
+				
+				case 'delete':
+					$result = $this->_execDeleteQuery($columns, $conditions, $limit);
+					break;
+					
+				case 'update':
+					$result = $this->_execUpdateQuery($columns, $conditions, $limit);
+					break;
+				
+				default:
+					throw new RuntimeException('Cannot parse method in ActiveRecord:' . $method);
+					break;
 			}
-			return $query->fetchAll(PDO::FETCH_CLASS, get_class($this));
+			
+			$this->reset();
+			return $result;
 		}
 	}
 	
@@ -199,6 +225,22 @@ class SZ_ActiveRecord
 		return $this->_table;
 	}
 	
+	
+	public function toArray()
+	{
+		$array = array();
+		foreach ( array_keys($this->_schemas) as $filed )
+		{
+			if ( isset($this->{$field}) )
+			{
+				$array[$field] = $this->{$field};
+			}
+		}
+		
+		return $array;
+	}
+	
+	
 	/**
 	 * Set limit statement
 	 * 
@@ -240,6 +282,10 @@ class SZ_ActiveRecord
 	 */
 	public function setOrderBy($column, $order)
 	{
+		if ( array_key_exists($column, $this->_schemas) )
+		{
+			$column = DB::prefix().$this->_table . '.' . $column;
+		}
 		$this->_orderBy[] = $column . ' ' . $order;
 		return $this;
 	}
@@ -441,10 +487,11 @@ class SZ_ActiveRecord
 	protected function _toCamelCase($str)
 	{
 		$str = preg_replace_callback(
-								'/_([a-zA-Z])/',
-								create_function('$m', 'return strtoupper($m[1]);'),
-								$str
-							);
+			'/_([a-zA-Z])/',
+			create_function('$m', 'return strtoupper($m[1]);'),
+			$str
+		);
+		
 		return ucfirst($str);
 	}
 	
@@ -478,16 +525,17 @@ class SZ_ActiveRecord
 		}
 		
 		$method = preg_replace_callback(
-						'/([A-Z])/',
-						create_function('$match', 'return "_" . strtolower($match[1]);'),
-						$method
-					);
+			'/([A-Z])/',
+			create_function('$match', 'return "_" . strtolower($match[1]);'),
+			$method
+		);
 		$conditions  = array();
-		$i           = -1;
 		$argsPointer = 0;
 		$exp         = explode('_', trim($method, '_'));
 		$cond        = '';
-		while ( isset($exp[++$i]) )
+		$size        = count($exp);
+		
+		for ( $i = 0; $i < $size; ++$i )
 		{
 			switch ( $exp[$i] )
 			{
@@ -501,10 +549,12 @@ class SZ_ActiveRecord
 						$cond .= '_' . $exp[$i];
 					}
 					break;
+				
 				case 'and':
 					$conditions[substr($cond, 1)] = $args[$argsPointer++];
 					$cond = '';
 					break;
+				
 				default:
 					$cond .= '_' . $exp[$i];
 			}
@@ -532,9 +582,8 @@ class SZ_ActiveRecord
 	{
 		$db           = Seezoo::$Importer->database();
 		$primaryTable = $db->prefix() . $this->_table;
-		$selectColumn = ( count($columns) > 0 ) ? implode(', ', $columns) : '*';
 		$bindData     = array();
-		$columns      = ( count($columns) === 0 ) ? array('*') : explode(',', $columns);
+		$columns      = ( count($columns) === 0 ) ? array('*') : $columns;
 		
 		foreach ( $columns as $key => $col )
 		{
@@ -543,6 +592,8 @@ class SZ_ActiveRecord
 			                   ? $primaryTable . '.' . $col
 			                   : $col;
 		}
+		
+		$selectColumn = implode(', ', $columns);
 		
 		foreach ( $this->_extraKeys as $exKey )
 		{
@@ -575,34 +626,7 @@ class SZ_ActiveRecord
 		
 		if ( count($conditions) > 0 )
 		{
-			$where = array();
-			foreach ( $conditions as $col => $val )
-			{
-				if ( in_array($col, $this->_extraKeys) )
-				{
-					$col = $primaryTable . '.' . $col;
-				}
-				$stb = $db->buildOperatorStatement($col, $val);
-				if ( is_array($stb) )
-				{
-					$where[] = $stb[0];
-					if ( is_array($stb[1]) )
-					{
-						foreach ( $stb[1] as $bind )
-						{
-							$bindData[] = $bind;
-						}
-					}
-					else
-					{
-						$bindData[] = $stb[1];
-					}
-				}
-				else
-				{
-					$where[] = $stb;
-				}
-			}
+			$where = $this->_buildWhereStatement($conditions, $primaryTable, $bindData);
 			$sql .= 'WHERE ' . implode(' AND ', $where) . ' ';
 		}
 		if ( count($this->_orderBy) > 0 )
@@ -619,5 +643,121 @@ class SZ_ActiveRecord
 		}
 		
 		return $db->query($sql, ( count($bindData) > 0 ) ? $bindData : FALSE);
+	}
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Execute Delete query
+	 * 
+	 * @access protected
+	 * @param  array $columns
+	 * @param  array $conditions
+	 * @param  int $limit
+	 * @return mixed
+	 */
+	protected function _execDeleteQuery($columns, $conditions, $limit  = 1)
+	{
+		$db           = Seezoo::$Importer->database();
+		$primaryTable = $db->prefix() . $this->_table;
+		$bindData     = array();
+		
+		$sql = 'DELETE FROM ' . $primaryTable . ' ';
+		
+		if ( count($conditions) > 0 )
+		{
+			$where = $this->_buildWhereStatement($conditions, $primaryTable, $bindData);
+			$sql .= 'WHERE ' . implode(' AND ', $where) . ' ';
+		}
+		if ( $limit > 0 )
+		{
+			$sql .= 'LIMIT ' . $limit . ' ';
+		}
+		
+		return $db->query($sql, ( count($bindData) > 0 ) ? $bindData : FALSE);
+	}
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Execute Update query
+	 * 
+	 * @access protected
+	 * @param  array $columns
+	 * @param  array $conditions
+	 * @param  int $limit
+	 * @return mixed
+	 */
+	protected function _execUpdateQuery($columns, $conditions, $limit  = 1)
+	{
+		$db            = Seezoo::$Importer->database();
+		$primaryTable  = $db->prefix() . $this->_table;
+		$bindData      = array();
+		$updateColumns = array();
+		
+		if ( count($columns) === 0 )
+		{
+			throw new InvalidArgumentException('Update Record must not be empty!');
+		}
+		
+		foreach ( $columns as $col => $value )
+		{
+			$col = $db->prepColumn($col);
+			$updateColumns[] = ( in_array($col, $this->_schemas) )
+			                     ? $primaryTable . '.' . $col . ' = ?'
+			                     : $col . ' = ?';
+			$bindData[] = $value;
+		}
+		
+		$sql = 'UPDATE ' . $primaryTable .' SET ' . implode(', ', $updateColumns) . ' ';
+		
+		if ( count($conditions) > 0 )
+		{
+			$where = $this->_buildWhereStatement($conditions, $primaryTable, $bindData);
+			$sql .= 'WHERE ' . implode(' AND ', $where) . ' ';
+		}
+		
+		if ( $limit > 0 )
+		{
+			$sql .= 'LIMIT ' . $limit . ' ';
+		}
+		
+		return $db->query($sql, $bindData);
+	}
+
+	protected function _buildWhereStatement($conditions, $table, &$bindData)
+	{
+		$db    = Seezoo::$Importer->database();
+		$where = array();
+		foreach ( $conditions as $col => $val )
+		{
+			if ( in_array($col, $this->_extraKeys) )
+			{
+				$col = $table . '.' . $col;
+			}
+			$stb = $db->buildOperatorStatement($col, $val);
+			if ( is_array($stb) )
+			{
+				$where[] = $stb[0];
+				if ( is_array($stb[1]) )
+				{
+					foreach ( $stb[1] as $bind )
+					{
+						$bindData[] = $bind;
+					}
+				}
+				else
+				{
+					$bindData[] = $stb[1];
+				}
+			}
+			else
+			{
+				$where[] = $stb;
+			}
+		}
+		return $where;
 	}
 }

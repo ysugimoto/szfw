@@ -218,6 +218,7 @@ Class SZ_Database extends SZ_Driver implements Singleton
 			$this->_connectID->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			// below code causes PDOStatement::execute() to error and shutting down...why?
 			//$this->_connectID->setAttribute(PDO::ATTR_EMULATE_PREPARES, FALSE);
+			Event::addListener('shutdown', array($this, 'disconnect'));
 		}
 		catch ( PDOException $e )
 		{
@@ -1043,7 +1044,7 @@ Class SZ_Database extends SZ_Driver implements Singleton
 			}
 			return array($column, $value);
 		}
-		else if ( $value === 'IS NULL' )
+		if ( $value === 'IS NULL' )
 		{
 			return $this->prepColumn($key) . ' IS NULL';
 		}
@@ -1051,9 +1052,29 @@ Class SZ_Database extends SZ_Driver implements Singleton
 		{
 			return $this->prepColumn($key) . ' IS NOT NULL';
 		}
-		else
+		else if ( is_array($value) )
 		{
-			return array($this->prepColumn($key) . ' = ? ', $value);
+			$column      = $this->prepColumn($key);
+			$placeHolder = array();
+			foreach ( $value as $k => $v )
+			{
+				// If key is string, build SQL syntax contains key
+				if ( ! is_int($k) )
+				{
+					$column .= ' ' . strtoupper($k);
+					return ( is_array($v) )
+					         ? array($column, $v)
+					         : array($column . ' ?', $value);
+				}
+				$placeHolder[] = '?';
+			}
+			// If values array is numbered array, build "IN" SQL
+			return array(
+				$column . ' IN (' . implode(', ', $placeHolder) . ')',
+				$value
+			);
 		}
+		
+		return array($this->prepColumn($key) . ' = ? ', $value);
 	}
 }
