@@ -229,7 +229,6 @@ class SZ_Redis_session extends SZ_Session_driver
 	 * abstruct implements
 	 * @see seezoo/core/drivers/session/SZ_Session_driver::_sessionSave()
 	 */
-
 	public function _sessionSave()
 	{
 		$sessID   = $this->_sessionID;
