@@ -583,10 +583,10 @@ class SZ_Validation extends SZ_Driver implements Growable
 	protected function _validateFormat($rule)
 	{
 		$format = new stdClass;
-		$format->class     = $this->_verify;
-		$format->function  = NULL;
-		$format->rule      = $rule;
-		$format->condition = FALSE;
+		$format->class      = $this->_verify;
+		$format->function   = NULL;
+		$format->rule       = $rule;
+		$format->condition  = FALSE;
 		$format->extraField = NULL;
 		
 		// Does rule has a condition parameter?
