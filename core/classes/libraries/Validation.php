@@ -545,6 +545,12 @@ class SZ_Validation extends SZ_Driver implements Growable
 					{
 						throw new Exception('Undefined Validation message of ' . $format->rule);
 					}
+					
+					// Swap condition string if rule is "matches"
+					if ( $format->rule === 'matches' )
+					{
+						$format->condition = $this->getField($format->extraField)->getLabel();
+					}
 					// generate error message
 					$msg = ( $format->condition !== FALSE )
 					         ? sprintf($this->_verify->messages[$format->rule], $field->getLabel(), $format->condition)
@@ -581,14 +587,16 @@ class SZ_Validation extends SZ_Driver implements Growable
 		$format->function  = NULL;
 		$format->rule      = $rule;
 		$format->condition = FALSE;
+		$format->extraField = NULL;
 		
 		// Does rule has a condition parameter?
 		if ( preg_match($this->_paramRegex, $rule, $matches) )
 		{
 			list(, $format->rule, $format->condition) = $matches;
-			if ( $rule === 'matches' )
+			if ( $format->rule === 'matches' )
 			{
-				$format->condition = ( isset($this->_targetData[$format->condition]) )
+				$format->extraField = $format->condition;
+				$format->condition  = ( isset($this->_targetData[$format->condition]) )
 				                       ? $this->_targetData[$format->condition]
 				                       : FALSE;
 			}
