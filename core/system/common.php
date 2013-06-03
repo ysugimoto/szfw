@@ -88,24 +88,28 @@ if ( ! function_exists('page_link') )
 	{
 		$env        = Seezoo::getENV();
 		$dispatcher = ( ! $env->getConfig('enable_mod_rewrite') ) ? DISPATCHER . '/' : '';
-		if ( preg_match('/\Ahttps?:\/\//u', $path) )
+		$uri        = ( preg_match('/\Ahttps?:\/\//u', $path) )
+		                ? $path
+		                : $env->getConfig('base_url') . $dispatcher . trim($path, '/');
+		$query      = array();
+		
+		// Does argument contain query string?
+		if ( FALSE !== ($point = strpos($uri, '?')) )
 		{
-			$uri = $path;
-		}
-		else
-		{
-			$uri = $env->getConfig('base_url') . $dispatcher . trim($path, '/');
+			$query = explode('&', substr($uri, $point + 1));
+			$uri   = substr($uri, 0, $point);
 		}
 		
 		if ( $querySuffix === TRUE )
 		{
-			if ( '' !== ( $q = Seezoo::getQueryStringSuffix()) )
-			{
-				$char = ( strpos($uri, '?') !== FALSE ) ? '&amp;' : '?';
-				$uri .= $char . $q;
-			}
+			$query = array_merge(Seezoo::getQueryStringSuffix(), $query);
 		}
-		return prep_str($uri);
+		
+		$queryString = ( count($query) > 0 )
+		                 ? '?' . implode('&', array_map('prep_str', $query))
+		                 : '';
+		
+		return prep_str($uri) . $queryString;
 	}
 }
 

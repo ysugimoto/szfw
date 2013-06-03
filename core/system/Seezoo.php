@@ -442,7 +442,7 @@ class Seezoo
 	
 	public static function getQueryStringSuffix()
 	{
-		return implode('&amp;', self::$_queryStringSuffix);
+		return self::$_queryStringSuffix;
 	}
 	
 	
