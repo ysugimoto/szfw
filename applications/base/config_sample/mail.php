@@ -53,11 +53,17 @@ $mail['from_name'] = '';
  * 
  * If you use SMTP mail sending,
  * please set these parameters.
+ * 
+ * You can choose authtype belows:
+ * NONE     : no auth
+ * PLAIN    : AUTH PLAIN
+ * LOGIN    : AUTH LOGIN
+ * CRAM-MD5 : AUTH CRAM-MD5
  * --------------------------------------------------------------------
  */
 $mail['smtp']['hostname']  = 'localhost';
 $mail['smtp']['port']      = 25;
-$mail['smtp']['crypto']    = FALSE;
+$mail['smtp']['authtype']  = 'NONE';
 $mail['smtp']['username']  = '';
 $mail['smtp']['password']  = '';
 $mail['smtp']['keepalive'] = FALSE;

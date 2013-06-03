@@ -450,22 +450,22 @@ abstract class SZ_Mail_driver
 	 */
 	protected function _validate()
 	{
-		$error = FALSE;
+		$success = TRUE;
 		
 		// Does send "to" is not empty?
 		if ( count($this->_to) === 0 )
 		{
 			$this->_log[] = 'Send to parameter is required.';
-			$error = TRUE;
+			$success = FALSE;
 		}
 		// Does send "from" is not empty?
 		if ( empty($this->_from) )
 		{
 			$this->_log[] = 'Send from parameter is required.';
-			$error = TRUE;
+			$success = FALSE;
 		}
 		
-		return $error;
+		return $success;
 	}
 	
 	

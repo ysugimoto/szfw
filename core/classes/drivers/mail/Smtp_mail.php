@@ -209,8 +209,7 @@ class SZ_Smtp_mail extends SZ_Mail_driver
 		
 		// Date
 		$header[] = 'Date: ' . $date;
-		
-		$replyTo  = ( $this->_replyTo ) ? $this->_replyTo : $this->_from;
+		$replyTo  = ( $this->_replyTo ) ? $this->_replyTo : $this->_from;replyTo  = ( $this->_replyTo ) ? $this->_replyTo : $this->_from;
 		// Return-Path
 		$header[] = 'Return-Path: ' . $replyTo;
 		// Reply-to
