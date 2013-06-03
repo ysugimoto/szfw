@@ -501,7 +501,7 @@ Class SZ_Database extends SZ_Driver implements Singleton
 	 * @param  string $table
 	 * @param  array $where
 	 */
-	public function delete($table, $where = FALSE)
+	public function delete($table, $where = array())
 	{
 		if ( ! $this->isAllowedTableName($table) )
 		{
@@ -512,15 +512,11 @@ Class SZ_Database extends SZ_Driver implements Singleton
 		$bindData = array();
 		$sql      = 'DELETE FROM ' . $this->prefix() . $table;
 
-		if ( is_array($where) )
+		if ( ! empty($where) )
 		{
 			$statements = array();
 			$this->_buildConditionStatement($where, $statements, $bindData);
 			$sql .= ' WHERE ' . implode(' AND ', $statements);
-		}
-		else if ( is_string($where) )
-		{
-			$sql .= ' WHERE ' . $where;
 		}
 		
 		return $this->query($sql, ( count($bindData) > 0 ) ? $bindData : FALSE);
