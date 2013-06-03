@@ -33,7 +33,7 @@ class SZ_Smtp_mail extends SZ_Mail_driver
 	 */
 	protected $_host;      // hostname
 	protected $_port;      // port number
-	protected $_crypto;    // crypto flag
+	protected $_authtype;  // authenticate protocol
 	protected $_username;  // username
 	protected $_password;  // password
 	
@@ -71,7 +71,7 @@ class SZ_Smtp_mail extends SZ_Mail_driver
 		// set SMTP server settings from config
 		$this->_host      = $smtp['hostname'];
 		$this->_port      = $smtp['port'];
-		$this->_crypto    = $smtp['crypto'];
+		$this->_authtype  = strtoupper($smtp['authtype']);
 		$this->_username  = $smtp['username'];
 		$this->_password  = $smtp['password'];
 		$this->_keepAlive = $smtp['keepalive'];
@@ -133,7 +133,7 @@ class SZ_Smtp_mail extends SZ_Mail_driver
 			fclose($this->handle);
 		}
 		
-		return $exec;
+		return ( $exec[0] == 250 ) ? TRUE : FALSE;
 	}
 	
 	
@@ -162,7 +162,8 @@ class SZ_Smtp_mail extends SZ_Mail_driver
 			//throw new Exception('SMTP response returns Failure Code: ' . $response);
 			//return FALSE;
 		//}
-		return TRUE;
+		
+		return explode(' ', $response, 2);
 	}
 	
 	
@@ -181,11 +182,89 @@ class SZ_Smtp_mail extends SZ_Mail_driver
 		$this->cmd('EHLO ' . $this->_host);
 		
 		// Does Server need Authenticate?
-		if ( $this->_host !== 'localhost' )
+		switch ( $this->_authtype )
 		{
-			$this->cmd('AUTH LOGIN');
-			$this->cmd(base64_encode($this->_username));
-			$this->cmd(base64_encode($this->_password));
+			case 'PLAIN':
+				$this->authPlain();
+				break;
+			
+			case 'LOGIN':
+				$this->authLogin();
+				break;
+			
+			case 'CRAM-MD5':
+				$this->authCramMd5();
+				break;
+				
+		}
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Authenticate "PLAIN"
+	 * 
+	 * @access protected
+	 * @return void
+	 * @throws SeezooException
+	 */
+	protected function authPlain()
+	{
+		$crypto = $this->_username. "\0". $this->_username. "\0" . $this->_password;
+		$auth   = $this->_cmd('AUTH PLAIN ' . base64_encode($crypto));
+		
+		if ( $auth[0] != 235 )
+		{
+			throw new SeezooException('SMTP PLAIN Auth failed at Server: ' . $this->_host);
+		}
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Authenticate "LOGIN"
+	 * 
+	 * @access protected
+	 * @return void
+	 * @throws SeezooException
+	 */
+	protected function authLogin()
+	{
+		$this->cmd('AUTH LOGIN');
+		$this->cmd(base64_encode($this->_username));
+		$auth = $this->cmd(base64_encode($this->_password));
+		
+		if ( $auth[0] != 235 )
+		{
+			throw new SeezooException('SMTP LOGIN Auth failed at Server: ' . $this->_host);
+		}
+	}
+	
+	
+	// ---------------------------------------------------------------
+	
+	
+	/**
+	 * Authenticate "CRAM-MD5"
+	 * 
+	 * @access protected
+	 * @return void
+	 * @throws SeezooException
+	 */
+	protected function authCramMd5()
+	{
+		$challenge = $this->cmd('AUTH CRAM-MD5');
+		$cipher    = base64_decode($challenge[1]);
+		$crypto    = $this->_username . ' ' . hash_hmac('md5', $cipher, $this->_password);
+		$auth      = $this->cmd(base64_encode($crypto));
+		
+		if ( $auth[0] != 235 )
+		{
+			throw new SeezooException('SMTP CRAM-MD5 Auth failed at Server: ' . $this->_host);
 		}
 	}
 	
@@ -209,7 +288,7 @@ class SZ_Smtp_mail extends SZ_Mail_driver
 		
 		// Date
 		$header[] = 'Date: ' . $date;
-		$replyTo  = ( $this->_replyTo ) ? $this->_replyTo : $this->_from;replyTo  = ( $this->_replyTo ) ? $this->_replyTo : $this->_from;
+		$replyTo  = ( $this->_replyTo ) ? $this->_replyTo : $this->_from;
 		// Return-Path
 		$header[] = 'Return-Path: ' . $replyTo;
 		// Reply-to
