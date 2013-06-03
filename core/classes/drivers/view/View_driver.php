@@ -225,7 +225,7 @@ abstract class SZ_View_driver
 		{
 			return $buffer;
 		}
-		else if ( ob_get_level() > $this->_initBufLevel + 1 )
+		else if ( ob_get_level() > $this->_initBufLevel )
 		{
 			echo $buffer;
 			return;

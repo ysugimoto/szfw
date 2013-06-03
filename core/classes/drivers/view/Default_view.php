@@ -31,7 +31,7 @@ class SZ_Default_view extends SZ_View_driver
 	
 	/**
 	 * abstruct implements
-	 * @see seezoo/core/drivers/view/SZ_View_driver::render()
+	 * @see core/drivers/view/SZ_View_driver::render()
 	 */
 	public function renderView($viewFile, $vars = NULL, $return = FALSE)
 	{
