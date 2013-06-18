@@ -80,7 +80,7 @@ class SZ_Socket_http
 		if ( preg_match('/30[1237]/', $status) )
 		{
 			$movedURI = preg_replace('|.+href="([^"]+)".+|is', '$1', $body);
-			return $this->request($method, $movedURI, $header, $postBody);
+			return $this->sendRequest($method, $movedURI, $header, $postBody);
 		}
 		
 		$response         = new stdClass;
@@ -259,12 +259,12 @@ class SZ_Socket_http
 		{
 			// note key:post is already encoded.
 			$exp = explode('=', $post);
-			$postData = '--' . $boundary . $this->CRLF;
-			$postData = 'Content-Disposition: form-data; name="' . $exp[0] . '"' . $this->CRLF;
-			$postData = 'Content-Type: text/plain' . $this->CRLF;
-			$postData = $this->CRLF;
-			$postData = $exp[1];
-			$postData = $this->CRLF;
+			$postData .= '--' . $boundary . $this->CRLF;
+			$postData .= 'Content-Disposition: form-data; name="' . $exp[0] . '"' . $this->CRLF;
+			$postData .= 'Content-Type: text/plain' . $this->CRLF;
+			$postData .= $this->CRLF;
+			$postData .= $exp[1];
+			$postData .= $this->CRLF;
 		}
 		
 		// file upload
