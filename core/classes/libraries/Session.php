@@ -28,14 +28,16 @@ class SZ_Session extends SZ_Driver implements Growable, Singleton
 	
 	public function __construct()
 	{
+		parent::__construct();
+		
 		$this->env = Seezoo::getENV();
 		
-		$driverName  = $this->env->getConfig('session_store_type');
+		$driverName = $this->env->getConfig('session_store_type');
 		if ( ! $driverName )
 		{
 			$driverName = 'php';
 		}
-		$this->_loadDriver('session', ucfirst($driverName) . '_session');
+		$this->driver = $this->loadDriver(ucfirst($driverName) . '_session');
 	}
 	
 	

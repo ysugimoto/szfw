@@ -78,6 +78,8 @@ class SZ_View extends SZ_Driver implements Growable
 	
 	public function __construct()
 	{
+		parent::__construct();
+		
 		// set initial redering engine
 		if ( FALSE === ($templateEngine = get_config('rendering_engine')) )
 		{
@@ -439,7 +441,7 @@ class SZ_View extends SZ_Driver implements Growable
 				$extension             = '.php';
 				break;
 		}
-		$this->_loadDriver('view', ucfirst($this->_templateEngine) . '_view');
+		$this->driver = $this->loadDriver(ucfirst($this->_templateEngine) . '_view');
 		$this->setExtension($extension);
 	}
 	

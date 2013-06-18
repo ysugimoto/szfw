@@ -90,7 +90,7 @@ class SZ_Xmlrpc_encoder
 	/**
 	 * constructor
 	 */
-	public function  __construct($value, $type)
+	public function __construct($value, $type)
 	{
 		$type = str_replace('.', '_', $type);
 		if ( ! method_exists($this, '_encode' . ucfirst($type)) )

@@ -33,6 +33,8 @@ class SZ_Oauth extends SZ_Driver implements Growable
 	
 	public function __construct($serviceName = null)
 	{
+		parent::__construct();
+		
 		if ( $serviceName )
 		{
 			$this->service($serviceName);
@@ -72,14 +74,10 @@ class SZ_Oauth extends SZ_Driver implements Growable
 		
 		if ( ! $this->drivers[$serviceName] )
 		{
-			$this->_loadDriver('oauth', ucfirst($serviceName) . '_oauth');
-			$this->drivers[$serviceName] =& $this->driver;
-		}
-		else
-		{
-			$this->driver = $this->drivers[$serviceName];
+			$this->drivers[$serviceName] = $this->loadDriver(ucfirst($serviceName) . '_oauth');
 		}
 		
+		$this->driver = $this->drivers[$serviceName];
 		$this->driver->configure($conf);
 	}
 }

@@ -39,10 +39,12 @@ class SZ_Pict extends SZ_Driver implements Growable
 	 */
 	public function __construct()
 	{
-		$env = Seezoo::getENV();
-		$this->driverType = $env->getConfig('picture_manipulation');
+		parent::__construct();
 		
-		$this->_loadDriver('pict', ucfirst($this->driverType) .  '_pict');
+		$env        = Seezoo::getENV();
+		$driverType = $env->getConfig('picture_manipulation') . '_pict';
+		
+		$this->driver = $this->loadDriver(ucfirst($driverType));
 	}
 	
 	
@@ -180,9 +182,7 @@ class SZ_Pict extends SZ_Driver implements Growable
 	{
 		if ( ! self::$_textClass )
 		{
-			$tmp = $this->driver;
-			self::$_textClass = $this->_loadDriver('pict', 'Text_pict', FALSE, FALSE);
-			$this->driver = $tmp;
+			self::$_textClass = $this->loadDriver('Text_pict', FALSE);
 			$this->driver->textClass = self::$_textClass;
 		}
 

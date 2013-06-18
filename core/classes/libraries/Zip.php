@@ -20,24 +20,15 @@
 
 class SZ_Zip extends SZ_Driver implements Growable
 {
-	/**
-	 * Driver class name
-	 * @var string
-	 */
-	protected $driverClass;
-	
-	
-	// --------------------------------------------------
-	
 	
 	public function __construct()
 	{
-		$this->_mode = get_config('zip_mode');
+		parent::__construct();
 		
 		// feature detection
-		$this->_featureDetection();
+		$driverClass = $this->_featureDetection();
 		// and load Dirver
-		$this->_loadDriver('zip', $this->driverClass . '_zip');
+		$this->driver = $this->loadDriver($driverClass . '_zip');
 	}
 	
 	
@@ -130,19 +121,20 @@ class SZ_Zip extends SZ_Driver implements Growable
 	 */
 	protected function _featureDetection()
 	{
-		if ( $this->_mode === 'auto' )
+		$feature = ucfirst(get_config('zip_mode'));
+		if ( $feature === 'auto' )
 		{
 			// auto detection
 			if ( class_exists('ZipArchive') )
 			{
 				// PHP5.2.0+ supports built-in class
-				$this->driverClass = 'Php';
+				$feature = 'Php';
 			}
 			// elseif, Does zlib extension enabled?
 			else if ( extension_loaded('zlib') )
 			{
 				// use Manual zip archive/extract class
-				$this->driverClass = 'Manual';
+				$feature = 'Manual';
 			}
 			// else, can't works on this env.
 			else
@@ -150,9 +142,7 @@ class SZ_Zip extends SZ_Driver implements Growable
 				throw new Exception('Sorry, your environment can\'t use Zip Library. need to zlib extension loaded at least.');
 			}
 		}
-		else
-		{
-			$this->driverClass = ucfirst($this->_mode);
-		}
+		
+		return $feature;
 	}
 }

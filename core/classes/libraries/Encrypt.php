@@ -35,6 +35,8 @@ class SZ_Encrypt extends SZ_Driver implements Growable
 	
 	public function __construct()
 	{
+		parent::__construct();
+		
 		if ( extension_loaded('mcrypt') )
 		{
 			$this->mode = 'mcrypt';
@@ -131,7 +133,7 @@ class SZ_Encrypt extends SZ_Driver implements Growable
 	{
 		if ( ! $this->_mcrypt )
 		{
-			$this->_mcrypt = $this->_loadDriver('encrypt', 'Mcrypt_crypt', TRUE, FALSE);
+			$this->_mcrypt = $this->loadDriver('Mcrypt_encrypt');
 		}
 		
 		$enc = $this->_mcrypt->encode($string);
@@ -153,7 +155,7 @@ class SZ_Encrypt extends SZ_Driver implements Growable
 	{
 		if ( ! $this->_mcrypt )
 		{
-			$this->_mcrypt = $this->_loadDriver('encrypt', 'Mcrypt_crypt', TRUE, FALSE);
+			$this->_mcrypt = $this->loadDriver('Mcrypt_encrypt');
 		}
 		
 		$string = base64_decode($string);
@@ -176,7 +178,7 @@ class SZ_Encrypt extends SZ_Driver implements Growable
 	{
 		if ( ! $this->_blowfish )
 		{
-			$this->_blowfish = $this->_loadDriver('encrypt', 'Blowfish_crypt', TRUE, FALSE);
+			$this->_blowfish = $this->loadDriver('Blowfish_encrypt');
 		}
 		
 		$enc = $this->_blowfish->encode($string);
@@ -198,7 +200,7 @@ class SZ_Encrypt extends SZ_Driver implements Growable
 	{
 		if ( ! $this->_blowfish )
 		{
-			$this->_blowfish = $this->_loadDriver('encrypt', 'Blowfish_crypt', TRUE, FALSE);
+			$this->_blowfish = $this->loadDriver('Blowfish_encrypt');
 		}
 		
 		$string = base64_decode($string);
@@ -220,7 +222,7 @@ class SZ_Encrypt extends SZ_Driver implements Growable
 	{
 		if ( ! $this->_xor )
 		{
-			$this->_xor = $this->_loadDriver('encrypt', 'Xor_crypt', TRUE, FALSE);
+			$this->_xor = $this->loadDriver('Xor_encrypt');
 		}
 		
 		$enc = $this->_xor->encode($string);
@@ -242,7 +244,7 @@ class SZ_Encrypt extends SZ_Driver implements Growable
 	{
 		if ( ! $this->_xor )
 		{
-			$this->_xor = $this->_loadDriver('encrypt', 'Xor_crypt', TRUE, FALSE);
+			$this->_xor = $this->loadDriver('Xor_encrypt');
 		}
 		
 		$string = base64_decode($string);

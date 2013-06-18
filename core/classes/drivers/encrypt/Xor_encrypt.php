@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Xor_crypt
+class SZ_Xor_encrypt
 {
 	protected $key;
 	

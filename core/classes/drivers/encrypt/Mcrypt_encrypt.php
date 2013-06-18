@@ -18,7 +18,7 @@
  * ====================================================================
  */
 
-class SZ_Mcrypt_crypt
+class SZ_Mcrypt_encrypt
 {
 	protected $cipher = MCRYPT_RIJNDAEL_256;
 	protected $mode   = MCRYPT_MODE_CBC;

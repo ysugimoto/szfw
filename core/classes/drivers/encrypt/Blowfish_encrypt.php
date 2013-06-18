@@ -35,7 +35,7 @@
  */
 
 
-class SZ_BLowfish_crypt
+class SZ_BLowfish_encrypt
 {
 	protected $env;
 	

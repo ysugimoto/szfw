@@ -78,9 +78,11 @@ class SZ_Validation extends SZ_Driver implements Growable
 	
 	public function __construct()
 	{
+		parent::__construct();
+		
 		$this->setGroup();
 		
-		$this->_loadDriver('validation', 'Validation_field', FALSE, FALSE);
+		$this->driver  = $this->loadDriver('Validation_field', FALSE);
 		$this->_verify = Seezoo::$Importer->library('Verify');
 		
 		// append for View

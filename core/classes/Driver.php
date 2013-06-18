@@ -21,65 +21,65 @@
 class SZ_Driver
 {
 	protected $driver;
+	protected $driverPath;
+	protected $driverBase;
+	protected $driverSuffix;
+	
+	public function __construct()
+	{
+		$className = Seezoo::removePrefix(get_class($this));
+		$class     = strtolower($className);
+		$this->driverPath = 'classes/drivers/' . $class . '/';
+		
+		// Pre-include abstract base class
+		if ( file_exists(SZPATH . 'core/' . $this->driverPath . $className . '_driver.php') )
+		{
+			require_once(SZPATH . 'core/' . $this->driverPath . $className . '_driver.php');
+			//$this->driverBase = SZ_PREFIX_CORE . $className . '_driver';
+		}
+	}
 	
 	/**
 	 * load a driver
 	 * 
 	 * @access protected
-	 * @param  string $driverType
 	 * @param  string $driverClass
 	 * @param  bool   $instanticate
 	 * @throws Exception
 	 */
-	protected function _loadDriver(
-	                               $driverType,
-	                               $driverClass,
-	                               $instantiate = TRUE,
-	                               $useBaseDriver = TRUE)
+	protected function loadDriver($driverClass = '', $instantiate = TRUE)
 	{
-		$driverPath = 'classes/drivers/' . $driverType . '/'; 
-		$driverBase = ucfirst($driverType) . '_driver';
-		$loadFile   = $driverPath . $driverBase. '.php';
-		
-		if ( $useBaseDriver )
-		{
-			// First, driver base class include
-			if ( ! file_exists(SZPATH . 'core/' . $loadFile) )
-			{
-				throw new Exception('DriverBase: ' . $driverBase . ' file not exists.');
-				return FALSE;
-			}
-			require_once(SZPATH . 'core/' . $loadFile);
-		}
-		
 		if ( empty($driverClass) )
 		{
-			$Class = SZ_PREFIX_CORE . $driverBase;
-			$this->driver = new $Class();
-			return $this->driver;
+			if ( $this->driverBase )
+			{
+				return new $this->driverBase;
+			}
+			return;
 		}
 		
 		// Mark the load class
-		$Class  = '';
-		if ( file_exists(SZPATH . 'core/' . $driverPath . $driverClass . '.php') )
+		$Class = '';
+		
+		if ( file_exists(SZPATH . 'core/' . $this->driverPath . $driverClass . '.php') )
 		{
-			require_once(SZPATH . 'core/' . $driverPath . $driverClass . '.php');
+			require_once(SZPATH . 'core/' . $this->driverPath . $driverClass . '.php');
 			$Class = SZ_PREFIX_CORE . $driverClass;
 		}
 		
 		foreach ( Seezoo::getApplication() as $app )
 		{
-			if ( file_exists($app->path . $driverPath . $app->prefix . $driverClass . '.php') )
+			if ( file_exists($app->path . $this->driverPath . $app->prefix . $driverClass . '.php') )
 			{
-				require_once($app->path . $driverPath . $app->prefix . $driverClass . '.php');
+				require_once($app->path . $this->driverPath . $app->prefix . $driverClass . '.php');
 				$Class = ( class_exists($app->prefix . $driverClass, FALSE) )
 				           ? $app->prefix . $driverClass
 				           : $driverClass;
 				break;
 			}
-			if ( file_exists($app->path . $driverPath . $driverClass . '.php') )
+			if ( file_exists($app->path . $this->driverPath . $driverClass . '.php') )
 			{
-				require_once($app->path . $driverPath . $driverClass . '.php');
+				require_once($app->path . $this->driverPath . $driverClass . '.php');
 				$Class = ( class_exists($app->prefix . $driverClass, FALSE) )
 				           ? $app->prefix . $driverClass
 				           : $driverClass;
@@ -92,8 +92,7 @@ class SZ_Driver
 			throw new Exception('DriverClass:' . $Class . ' is not declared!');
 		}
 		
-		$this->driver = ( $instantiate === TRUE ) ? new $Class() : $Class;
-		return $this->driver;
+		return ( $instantiate === TRUE ) ? new $Class() : $Class;
 	}
 	
 	

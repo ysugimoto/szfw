@@ -13,7 +13,7 @@
  */
 
 // ---- user defined on your environment ---- //
-define('APPLICATION_DIR', 'public/apps/');
+define('APPLICATION_DIR', 'applications/');
 
 // end ---- --------------------------------- //
 

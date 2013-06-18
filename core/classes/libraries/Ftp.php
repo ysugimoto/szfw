@@ -17,7 +17,7 @@
  * 
  * ====================================================================
  */
-class SZ_Ftp implements Growable
+class SZ_Ftp extends SZ_Driver implements Growable
 {
 	/**
 	 * FTP connection handle
@@ -65,10 +65,15 @@ class SZ_Ftp implements Growable
 	
 	public function __construct()
 	{
+		parent::__construct();
+		
 		$env       = Seezoo::getENV();
 		$ftpConfig = $env->getConfig('FTP');
 		
 		$this->configure((array)$ftpConfig);
+		$this->driver = ( extension_loaded('ftp') )
+		                  ? $this->loadDriver('Php_ftp')
+		                  : $this->loadDriver('Socket_ftp');
 	}
 	
 	
@@ -117,39 +122,26 @@ class SZ_Ftp implements Growable
 	public function connect()
 	{
 		// Connection initialize.
-		$this->close();
+		$this->driver->close();
 		
-		// normalize hostname
 		$hostname = rtrim(preg_replace('|^[.+]://|', '', $this->_get('hostname')), '/');
+		$port     = (int)$this->_get('port');
 		
-		// Try to connect FTP server
-		$this->handle = @ftp_connect($hostname, (int)$this->_get('port'));
-		if ( ! is_resource($this->handle) )
+		if ( ! $this->driver->connect($hostname, $port) )
 		{
-			return $this->_log('CONNECT: FTP server connection failed.');
+			throw new SeezooException('FTP connection failed.');
 		}
 		
-		// Try to login
-		$login = @ftp_login(
-		           $this->handle,
-		           $this->_get('username'),
-		           $this->_get('password')
-		         );
+		$username = $this->_get('username');
+		$password = $this->_get('password');
+		$passive  = $this->_get('passive');
 		
-		if ( ! $login )
+		if ( ! $this->driver->login($username, $password, $passive) )
 		{
-			return $this->_log('LOGIN: FTP login failed.');
+			throw new SeezooException('FTP login failed.');
 		}
 		
-		// Set PASV mode if needs
-		if ( $this->_get('passive') === TRUE )
-		{
-			if ( ! ftp_pasv($this->handle, TRUE) )
-			{
-				return $this->_log('PASSIV: FTP server rejected PASV mode.');
-			}
-		}
-		return TRUE;
+		return $this;
 	}
 	
 	
@@ -165,14 +157,12 @@ class SZ_Ftp implements Growable
 	 */
 	public function chdir($path = '')
 	{
-		if ( $path === '' || ! is_resource($this->handle) )
+		if ( ! $this->driver->chdir($path) )
 		{
-			return FALSE;
+			throw new SeezooException('FTP chdir command failed.');
 		}
 		
-		return ( ! @ftp_chdir($this->handle, $path) )
-		         ? $this->_log('CHDIR: Failed to change directory.')
-		         : TRUE;
+		return $this;
 	}
 	
 	
@@ -189,22 +179,12 @@ class SZ_Ftp implements Growable
 	 */
 	public function mkdir($directory, $permission = NULL)
 	{
-		if ( $directory === '' || ! is_resource($this->handle) )
+		if ( ! $this->driver->mkdir($directory, $permission) )
 		{
-			return FALSE;
+			throw new SeezooException('MKDIR: Failed to make directory.');
 		}
 		
-		if ( ! @ftp_mkdir($this->handle, $directory) )
-		{
-			return $this->_log('MKDIR: Failed to make directory.');
-		}
-		
-		if ( ! is_null($permission) )
-		{
-			$this->chmod($directory, (int)$permission);
-		}
-		
-		return TRUE;
+		return $this;
 	}
 	
 	
@@ -222,40 +202,12 @@ class SZ_Ftp implements Growable
 	 */
 	public function sendFile($localFile, $remoteFile, $binary = FALSE, $permission = NULL)
 	{
-		if ( ! is_resource($this->handle) )
+		if ( ! $this->driver->sendFile($localFile, $remoteFile, $binary, $permission) )
 		{
-			return FALSE;
+			throw new SeezooException('SENDFILE: Failed to send file.');
 		}
 		
-		if ( ! file_exists($localFile) )
-		{
-			return $this->_log('UPLOAD: Local file is not exists.');
-		}
-		
-		if ( is_dir($localFile) )
-		{
-			return $this->sendDir($localFile, $remotePath, $binary, $permission);
-		}
-		
-		$mode = ( $binary ) ? FTP_BINARY : FTP_ASCII;
-		
-		// clone filename if remote file is directory
-		if ( substr($remoteFile, -1, 1) === '/' )
-		{
-			$remoteFile .= basename($localFile);
-		}
-		
-		if ( ! @ftp_put($this->handle, $remoteFile, $localFile, $mode) )
-		{
-			return $this->_log('SENDFILE: Failed to send file.');
-		}
-		
-		if ( ! is_null($permission) )
-		{
-			$this->chmod($remoteFile, (int)$permission);
-		}
-		
-		return TRUE;
+		return $this;
 	}
 	
 	
@@ -274,27 +226,12 @@ class SZ_Ftp implements Growable
 	 */
 	public function sendStream(resource $stream, $remoteFile, $binary = FALSE, $permission = NULL)
 	{
-		if ( ! is_resource($this->handle) )
+		if ( $this->driver->sendStream($stream, $remoteFile, $binary, $permission) )
 		{
-			return FALSE;
+			throw new SeezooException('SENDFILE: Failed to send stream.');
 		}
 		
-		$mode = ( $binary ) ? FTP_BINARY : FTP_ASCII;
-		rewind($stream);
-		
-		if ( ! @ftp_fput($this->handle, $remoteFile, $stream, $mode) )
-		{
-			fclose($stream);
-			return $this->_log('SENDFILE: Failed to send stream.');
-		}
-		fclose($stream);
-		
-		if ( ! is_null($permission) )
-		{
-			$this->chmod($remoteFile, (int)$permission);
-		}
-		
-		return TRUE;
+		return $this;
 	}
 	
 	
@@ -313,40 +250,12 @@ class SZ_Ftp implements Growable
 	 */
 	public function sendBuffer($string, $remoteFile, $binary = FALSE, $permission = NULL)
 	{
-		if ( ! is_resource($this->handle) )
+		if ( ! $this->driver->sendBuffer($string, $remoteFile, $binary, $permission) )
 		{
-			return FALSE;
+			throw new SeezooException('SENDFILE: Failed to send buffer.');
 		}
 		
-		$mode = ( $binary ) ? FTP_BINARY : FTP_ASCII;
-		
-		// create file stream
-		$stream = fopen('php://temp', 'wb');
-		$length = 0;
-		$dest   = strlen($string);
-		
-		// Write to temp stream
-		do
-		{
-			$length += fwrite($stream, $string);
-		}
-		while ( $length <= $dest );
-		// And rewind
-		rewind($stream);
-		
-		if ( ! @ftp_fput($this->handle, $remoteFile, $stream, $mode) )
-		{
-			fclose($stream);
-			return $this->_log('SENDFILE: Failed to send Buffer.');
-		}
-		fclose($stream);
-		
-		if ( ! is_null($permission) )
-		{
-			$this->chmod($remoteFile, (int)$permission);
-		}
-		
-		return TRUE;
+		return $this;
 	}
 	
 	
@@ -354,61 +263,44 @@ class SZ_Ftp implements Growable
 	
 	
 	/**
-	 * Send server from directory recursive
+	 * Get remote file
 	 * 
 	 * @access public
-	 * @param  string $localDir
-	 * @param  string $remoteDir
+	 * @param  string $remoteFile
+	 * @param  string $saveTo
 	 * @param  bool $binary
-	 * @param  int $pemission
 	 * @return bool
 	 */
-	public function sendDir($localDir, $remoteDir, $binary = FALSE, $permission = NULL)
+	public function getFile($remoteFile, $saveTo, $binary = FALSE)
 	{
-		if ( ! is_resource($this->handle) || ! is_dir($localDir) )
+		if ( ! $this->driver->getFile($remoteFile, $saveTo, $binary) )
 		{
-			return FALSE;
+			throw new SeezooException('GTEFILE: Failed to get remote file.');
 		}
 		
-		if ( ! $this->chdir($remoteDir) )
+		return $this;
+	}
+	
+	
+	// --------------------------------------------------------------------
+	
+	
+	/**
+	 * Get remote file to memory string
+	 * 
+	 * @access public
+	 * @param  string $remoteFile
+	 * @param  bool $binary
+	 * @return bool
+	 */
+	public function getFileBuffer($remoteFile, $binary = FALSE)
+	{
+		if ( ! ($buffer = $this->driver->getFileBuffer($remoteFile, $binary)) )
 		{
-			if ( ! $this->mkdir($remoteDir, $permission) || ! $this->chdir($remoteDir) )
-			{
-				return FALSE;
-			}
+			throw new SeezooException('GTEFILE: Failed to get remote file.');
 		}
 		
-		$localDir  = trail_slash($localDir);
-		$remoteDir = trail_slash($remoteDir);
-		
-		try
-		{
-			$dir = new DirectoryIterator($localDir);
-			
-			foreach ( $dir as $file )
-			{
-				if ( $file->isDot() )
-				{
-					continue;
-				}
-				if ( $file->isDir() )
-				{
-					$this->sendDir($localDir . (string)$file, $remoteDir . (string)$file, $binary, $permission);
-				}
-				else if ( $file->isFile() )
-				{
-					$this->sendFile($localDir . (string)$file, $remoteDir . (string)$file, $binary, $permission);
-				}
-			}
-			return TRUE;
-		}
-		catch ( Exception $e )
-		{
-			$this->_log('SENDDIR: Failed to send directory recursive.');
-			throw $e;
-		}
-		
-		return FALSE;
+		return $buffer;
 	}
 	
 	
@@ -425,17 +317,12 @@ class SZ_Ftp implements Growable
 	 */
 	public function rename($oldName, $newName)
 	{
-		if ( ! is_resource($this->handle) )
+		if ( ! $this->driver->rename($oldName, $newName) )
 		{
-			return FALSE;
+			throw new SeezooException('RENAME: Failed to rename file.');
 		}
 		
-		if ( ! @ftp_rename($this->handle, $oldName, $newName) )
-		{
-			return $this->_log('RENAME: Failed to rename file.');
-		}
-		
-		return TRUE;
+		return $this;
 	}
 	
 	
@@ -468,17 +355,12 @@ class SZ_Ftp implements Growable
 	 */
 	public function deleteFile($remoteFile)
 	{
-		if ( ! is_resource($this->handle) )
+		if ( ! $this->driver->deleteFile($remoteFile) )
 		{
-			return FALSE;
+			throw new SeezooException('DELETE: Failed to delete file.');
 		}
 		
-		if ( ! @ftp_delete($this->handle, $remoteFile) )
-		{
-			return $this->_log('DELETE: Failed to delete file.');
-		}
-		
-		return TRUE;
+		return $this;
 	}
 	
 	
@@ -494,37 +376,12 @@ class SZ_Ftp implements Growable
 	 */
 	public function deleteDir($dirPath)
 	{
-		if ( ! is_resource($this->handle) )
+		if ( ! $this->driver->deleteDir($dirPath) )
 		{
-			return FALSE;
+			throw new SeezooException('RMDIR: Failed to remove directory.');
 		}
 		
-		$dirPath = trail_slash($dirPath);
-		$list    = $this->rawFileList($dirPath, TRUE);
-		
-		// Remove child files recursive
-		if ( is_array($list) )
-		{
-			foreach ( $list as $file )
-			{
-				if ( $file->isDirectory )
-				{
-					$this->deleteDir($dirPath . $file->name);
-				}
-				else
-				{
-					$this->deleteFile($dirPath . $file->name);
-				}
-			}
-		}
-		
-		// Remove dest directory
-		if ( ! @ftp_rmdir($this->handle, $dirPath) )
-		{
-			return $this->_log('RMDIR: Failed to remove directory.');
-		}
-		
-		return TRUE;
+		return $this;
 	}
 	
 	
@@ -586,35 +443,9 @@ class SZ_Ftp implements Growable
 	 * @param  string $path
 	 * @return mixed
 	 */
-	public function rawFileList($path)
+	public function rawFileList($path = '')
 	{
-		$return = array();
-		$list   = ftp_rawlist($this->handle, $path);
-		
-		if ( is_array($list) )
-		{
-			$path = trail_slash($path);
-			foreach ( $list as $raw )
-			{
-				$stat = new stdClass;
-				if ( ! preg_match('/^(.{1}).+\s([^\s]+)$/', $raw, $matches) )
-				{
-					return $this->_log('RAWLIST: invalid raw list returns.');
-				}
-				if ( $matches[2] === '.' || $matches[2] === '..' )
-				{
-					continue;
-				}
-				$stat->isDirectory = ( strtolower($matches[1]) === 'd') ? TRUE : FALSE;
-				$stat->isLink      = ( strtolower($matches[1]) === 'l') ? TRUE : FALSE;
-				$stat->isFile      = ! $stat->isDirectory;
-				$stat->name        = $matches[2];
-				$stat->fullPath    = $path . $matches[2];
-				$return[]          = $stat;
-			}
-		}
-		
-		return $return;
+		return $this->driver->rawFileList($path);
 	}
 	
 	
@@ -628,10 +459,7 @@ class SZ_Ftp implements Growable
 	 */
 	public function close()
 	{
-		if ( is_resource($this->handle) )
-		{
-			@ftp_close($this->handle);
-		}
+		$this->driver->close();
 	}
 	
 	
@@ -650,21 +478,6 @@ class SZ_Ftp implements Growable
 	
 	
 	/**
-	 * Set log
-	 * 
-	 * @access protected
-	 * @param  string $msg
-	 */
-	protected function _log($msg)
-	{
-		$this->logMessages[] = $msg;
-	}
-	
-	
-	// --------------------------------------------------------------------
-	
-	
-	/**
 	 * Get log
 	 * 
 	 * @access public
@@ -673,6 +486,8 @@ class SZ_Ftp implements Growable
 	 */
 	public function getLog($all = FALSE)
 	{
-		return ( $all ) ? $this->logMessages : end($this->logMessages);
+		$log = $this->driver->getLog();
+		
+		return ( $all ) ? $log : end($log);
 	}
 }

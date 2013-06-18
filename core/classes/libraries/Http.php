@@ -18,20 +18,13 @@
  * ====================================================================
  */
 
-class SZ_Http implements Growable
+class SZ_Http extends SZ_Driver implements Growable
 {
 	/**
 	 * Request class instance
 	 * @var Request
 	 */
 	protected $req;
-	
-	
-	/**
-	 * cURL enable flag
-	 * @var bool
-	 */
-	protected $_enable_curl;
 	
 	
 	/**
@@ -74,8 +67,9 @@ class SZ_Http implements Growable
 	
 	public function __construct()
 	{
-		$this->req          = Seezoo::getRequest();
-		$this->_enable_curl = function_exists('curl_init');
+		parent::__construct();
+		
+		$this->req = Seezoo::getRequest();
 	}
 	
 	
@@ -199,16 +193,13 @@ class SZ_Http implements Growable
 		$header   = ( count($header) > 0 ) ? $header             : $this->header;
 		$postBody = ( ! empty($postBody) ) ? $postBody           : $this->postBody;
 		
-		// Does cURL request enable?
-		if ( $this->_enable_curl )
-		{
-			return $this->_curlRequest($method, $uri, $header, $postBody);
-		}
-		// Else, send socket request
-		else
-		{
-			return $this->_fsockRequest($method, $uri, $header, $postBody);
-		}
+		// Load driver
+		$this->driver = ( extension_loaded('curl') )
+		                  ? $this->loadDriver('Curl_http')
+		                  : $this->loadDriver('Socket_http');
+		
+		// Send request
+		return $this->driver->sendRequest($method, $uri, $header, $postBody);
 	}
 	
 	

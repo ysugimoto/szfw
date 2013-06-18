@@ -26,6 +26,11 @@ class SZ_Mailreceive extends SZ_Driver implements Growable
 	 */
 	protected $settings;
 	
+	/**
+	 * Mail decoder
+	 * @var string
+	 */
+	protected $decoder;
 	
 	/**
 	 * Mail receiver name
@@ -36,11 +41,13 @@ class SZ_Mailreceive extends SZ_Driver implements Growable
 	
 	public function __construct()
 	{
+		parent::__construct();
+		
 		$env = Seezoo::getENV();
 		$this->settings = $env->getMailSettings();
 		$this->receiver = $this->settings['receiver'];
-		$this->_loadDriver('mailreceive', 'Mail_decoder', FALSE, FALSE);
-		$this->_loadDriver('mailreceive', ucfirst($this->receiver) . '_mailreceive');
+		$this->decoder  = $this->loadDriver('Mail_decoder', FALSE);
+		$this->driver   = $this->loadDriver(ucfirst($this->receiver) . '_mailreceive');
 		if ( isset($this->settings[$this->receiver]) )
 		{
 			$this->driver->configure($this->settings[$this->receiver]);

@@ -36,11 +36,13 @@ class SZ_Mail extends SZ_Driver implements Growable
 	
 	public function __construct()
 	{
-		$env = Seezoo::getENV();
+		parent::__construct();
+		
+		$env              = Seezoo::getENV();
 		$this->setting    = $env->getMailSettings();
-		$this->driverType = $this->setting['type'];
+		$driverType       = $this->setting['type'];
 		// load the driver
-		$this->_loadDriver('mail', ucfirst($this->driverType) . '_mail');
+		$this->driver = $this->loadDriver(ucfirst($driverType) . '_mail');
 		$this->driver->setup($this->setting);
 	}
 	

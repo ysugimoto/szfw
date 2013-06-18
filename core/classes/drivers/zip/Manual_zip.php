@@ -24,7 +24,7 @@
  * Zip format:
  * @see http://www.onicos.com/staff/iz/formats/zip.html
  * 
- * [Local file header + Compressed data [+ Extended local header]?]
+ * [Local file header + Compressed data [+ Extended local header]]
  * [Central directory]*
  * [End of central directory record]
  * 

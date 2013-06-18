@@ -26,6 +26,8 @@ class SZ_Kvs extends SZ_Driver
 	 */
 	public function __construct($driver = NULL)
 	{
+		parent::__construct();
+		
 		$env     = Seezoo::getENV();
 		$setting = $env->getKvsSettings();
 		
@@ -34,8 +36,8 @@ class SZ_Kvs extends SZ_Driver
 		{
 			$driver = $setting['driver'];
 		}
-		$info  = $setting[$driver];		
-		$this->_loadDriver('kvs', ucfirst($driver) . '_kvs');
+		$info         = $setting[$driver];		
+		$this->driver = $this->loadDriver(ucfirst($driver) . '_kvs');
 		
 		if ( ! $this->driver->connect($info['host'], $info['port']) )
 		{

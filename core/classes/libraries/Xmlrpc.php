@@ -54,9 +54,11 @@ class SZ_Xmlrpc extends SZ_Driver implements Growable
 	
 	public function __construct($options = array())
 	{
+		parent::__construct();
+		
 		$this->_options = $options;
-		$this->_decoder = $this->_loadDriver('xmlrpc', 'Xmlrpc_decoder', FALSE, FALSE);
-		$this->_encoder = $this->_loadDriver('xmlrpc', 'Xmlrpc_encoder', FALSE, FALSE);
+		$this->_decoder = $this->loadDriver('Xmlrpc_decoder', FALSE);
+		$this->_encoder = $this->loadDriver('Xmlrpc_encoder', FALSE);
 	}
 	
 	
@@ -86,11 +88,9 @@ class SZ_Xmlrpc extends SZ_Driver implements Growable
 	{
 		if ( ! $this->_server )
 		{
-			$this->_server  = $this->_loadDriver('xmlrpc', 'Xmlrpc_server', FALSE, FALSE);
+			$this->_server  = $this->loadDriver('Xmlrpc_server', FALSE);
 		}
-		$server = new $this->_server($maps, $this->_encoder, $this->_decoder);
-		
-		return $server;
+		return new $this->_server($maps, $this->_encoder, $this->_decoder);
 	}
 	
 	
