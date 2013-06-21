@@ -28,12 +28,12 @@ class SZ_Twitter_oauth extends SZ_Oauth_driver
 	const AUTHENTICATE_PATH     = '/oauth/authenticate';
 	const ACCESS_TOKEN_PATH     = '/oauth/access_token';
 	const ACCOUNT_VERIFY_PATH   = '/account/verify/credentials.json';
-	const UPDATE_PATH           = '/1/statuses/update';
-	const RETWEET_PATH          = '/1/statuses/retweet';
-	const HOME_TIMELINE_PATH    = '/1/statuses/home_timeline';
-	const FRIENDS_TIMELINE_PATH = '/1/statuses/friends_timeline';
+	const UPDATE_PATH           = '/1.1/statuses/update';
+	const RETWEET_PATH          = '/1.1/statuses/retweet';
+	const HOME_TIMELINE_PATH    = '/1.1/statuses/home_timeline';
+	const FRIENDS_TIMELINE_PATH = '/1.1/statuses/friends_timeline';
 	
-	protected $authName       = 'twitter';
+	protected $authName         = 'twitter';
 	
 	
 	public function __construct()
@@ -65,19 +65,19 @@ class SZ_Twitter_oauth extends SZ_Oauth_driver
 			return FALSE;
 		}
 		
-		$uri     = self::TWITTER_BASE_URL . '/users/show/' . $user . '.json';
-		$header  = array();
+		$uri    = self::TWITTER_BASE_URL . '/users/show/' . $user . '.json';
+		$header = array();
 		if ( $this->isAuthorized() )
 		{
 			$headers = $this->_buildParameter(
-												$uri,
-												array(
-													'oauth_token' => $this->get('oauth_token'),
-													'secret'      => $this->get('oauth_token_secret')
-												),
-												FALSE,
-												TRUE
-											);
+				$uri,
+				array(
+					'oauth_token' => $this->get('oauth_token'),
+					'secret'      => $this->get('oauth_token_secret')
+				),
+				FALSE,
+				TRUE
+			);
 			$header = array(
 				'Authorization: OAuth ' . implode(', ', $headers)
 			);
@@ -119,18 +119,20 @@ class SZ_Twitter_oauth extends SZ_Oauth_driver
 		         ? self::REQUEST_BASE . self::HOME_TIMELINE_PATH
 		         : self::REQUEST_BASE . self::FRIENDS_TIMELINE_PATH;
 		$uri .= '?count=' . $limit . '&page=' . $page;
+		
 		$headers = $this->_buildParameter(
-												$uri,
-												array(
-													'oauth_token' => $this->get('oauth_token'),
-													'secret'      => $this->get('oauth_token_secret')
-												),
-												FALSE,
-												TRUE
-											);
+			$uri,
+			array(
+				'oauth_token' => $this->get('oauth_token'),
+				'secret'      => $this->get('oauth_token_secret')
+			),
+			FALSE,
+			TRUE
+		);
 		$header = array(
 			'Authorization: OAuth ' . implode(', ', $headers)
 		);
+		
 		$response = $this->http->request('GET', $uri . '.json', $header);
 		if ( $response->status !== 200 )
 		{
@@ -180,15 +182,16 @@ class SZ_Twitter_oauth extends SZ_Oauth_driver
 		$this->_request_method = 'POST';
 		
 		$headers = $this->_buildParameter(
-										$uri,
-										array(
-											'status'             => $message,
-											'oauth_token'        => $this->get('oauth_token'),
-											'oauth_token_secret' => $this->get('oauth_token_secret')
-										),
-										FALSE,
-										TRUE
-									);
+			$uri,
+			array(
+				'status'             => $message,
+				'oauth_token'        => $this->get('oauth_token'),
+				'oauth_token_secret' => $this->get('oauth_token_secret')
+			),
+			FALSE,
+			TRUE
+		);
+		
 		$authHeader = array();
 		foreach ( $headers as $auth )
 		{
@@ -243,14 +246,15 @@ class SZ_Twitter_oauth extends SZ_Oauth_driver
 		$statusID = (string)$statusID;
 		$uri      = self::REQUEST_BASE . self::RETWEET_PATH . '/' . $statusID . '.json';
 		$headers  = $this->_buildParameter(
-											$uri,
-											array(
-												'oauth_token'        => $this->get('oauth_token'),
-												'oauth_token_secret' => $this->get('oauth_token_secret')
-											),
-											FALSE,
-											TRUE
-										);
+			$uri,
+			array(
+				'oauth_token'        => $this->get('oauth_token'),
+				'oauth_token_secret' => $this->get('oauth_token_secret')
+			),
+			FALSE,
+			TRUE
+		);
+		
 		$authHeader = array();
 		foreach ( $headers as $auth )
 		{
@@ -259,12 +263,13 @@ class SZ_Twitter_oauth extends SZ_Oauth_driver
 				$authHeader[] = $auth;
 			}
 		}
+		
 		$response = $this->http->request(
-											'POST',
-											$uri,
-											array('Authorization: OAuth ' . implode(', ', $authHeader)),
-											$header
-										);
+			'POST',
+			$uri,
+			array('Authorization: OAuth ' . implode(', ', $authHeader)),
+			$header
+		);
 		
 		if ( $response->status !== 200 )
 		{

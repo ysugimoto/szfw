@@ -68,7 +68,7 @@ class SZ_Dropbox_oauth extends SZ_Oauth_driver
 			return TRUE;
 		}
 
-		if ( ! $this->get('authorized') && $this->_isCallbackAuth() === TRUE )
+		if ( ! $this->isAuthorized() && $this->_isCallbackAuth() === TRUE )
 		{
 			return $this->callbackAuth($ext_params);
 		}
@@ -83,10 +83,10 @@ class SZ_Dropbox_oauth extends SZ_Oauth_driver
 		
 		// do request
 		$resp = $this->http->request(
-		                            $this->_request_method,
-		                            $this->_request_token_uri,
-		                            array('Authorization: OAuth ' . implode(', ', $this->queryString))
-								);
+			'POST',
+			$this->_request_token_uri,
+			array('Authorization: OAuth ' . implode(', ', $this->queryString))
+		);
 		
 		if ( ! $resp->body )
 		{
@@ -107,9 +107,10 @@ class SZ_Dropbox_oauth extends SZ_Oauth_driver
 		
 		// redirect to request tokens URI.
 		$redirectURI = rtrim($this->_authorize_uri, '?')
-		               . '?oauth_token=' . $this->requestTokens['oauth_token']
+		               . '?oauth_token=' . $this->get('oauth_token')
 		               . '&oauth_callback=' . rawurlencode($this->_callback_url); 
-		Seezoo::$Response->redirect($redirectURI);
+		
+		Seezoo::$Response->redirectForce($redirectURI);
 	}
 	
 	
@@ -124,9 +125,11 @@ class SZ_Dropbox_oauth extends SZ_Oauth_driver
 	 */
 	protected function _isCallbackAuth()
 	{
+		$request = Seezoo::getRequest();
+		
 		$q = (isset($_SERVER['QUERY_STRING'])) ? $_SERVER['QUERY_STRING'] : FALSE;
 		
-		if ( ! $q )
+		if ( ! ($q = $request->server('QUERY_STRNG')) )
 		{
 			return FALSE;
 		}
@@ -148,29 +151,29 @@ class SZ_Dropbox_oauth extends SZ_Oauth_driver
 	 * @access public
 	 * @return mixed
 	 */
-	public function accountInfo()
+	public function getUser()
 	{
 		if ( ! $this->isAuthorized() )
 		{
 			$this->_setError('Not authorized yet.');
 			return FALSE;
 		}
-		$this->_request_method = 'GET';
+		
 		$uri = self::API_URL . 'account/info';
 		$headers = $this->_buildParameter(
-											$uri,
-											array(
-												'oauth_token'        => $this->get('oauth_token'),
-												'oauth_token_secret' => $this->get('oauth_token_secret')
-											),
-											FALSE,
-											TRUE
-										);
+			$uri,
+			array(
+				'oauth_token'        => $this->get('oauth_token'),
+				'oauth_token_secret' => $this->get('oauth_token_secret')
+			),
+			FALSE,
+			TRUE
+		);
 		$header = array(
 			'Authorization: OAuth ' . implode(', ', $headers)
 		);
 		
-		$response = $this->http->request($this->_request_method, $uri, $header);
+		$response = $this->http->request('GET', $uri, $header);
 		if ( $response->status !== 200 )
 		{
 			$this->_setError($response->status . ': ' . $response->body);
@@ -198,23 +201,23 @@ class SZ_Dropbox_oauth extends SZ_Oauth_driver
 			$this->_setError('Not authorized yet.');
 			return FALSE;
 		}
-		$this->_request_method = 'GET';
+		
 		$file = $this->_prepFileName($path);
 		$uri = self::CONTENT_URL . 'files/' . $this->_root . '/' . $this->_prepFileName($file);
 		$headers = $this->_buildParameter(
-												$uri,
-												array(
-													'oauth_token'        => $this->get('oauth_token'),
-													'oauth_token_secret' => $this->get('oauth_token_secret')
-												),
-												FALSE,
-												TRUE
-											);
+			$uri,
+			array(
+				'oauth_token'        => $this->get('oauth_token'),
+				'oauth_token_secret' => $this->get('oauth_token_secret')
+			),
+			FALSE,
+			TRUE
+		);
 		$header = array(
 			'Authorization: OAuth ' . implode(', ', $headers)
 		);
 		
-		$response = $this->http->request($this->_request_method, $uri, $header);
+		$response = $this->http->request('GET', $uri, $header);
 		if ( $response->status !== 200 )
 		{
 			$this->_setError($response->status . ': ' . $response->body);
@@ -258,26 +261,26 @@ class SZ_Dropbox_oauth extends SZ_Oauth_driver
 			return FALSE; 
 		}
 		
-		$this->_request_method = 'POST';
 		$fileName = ( ! empty($fileName) ) ? $this->_prepFileName($fileName) : basename($filePath);
-		$uri = self::CONTENT_URL . 'files/' . $this->_root . '/' . $fileName;
-		$posts = array(
+		$uri      = self::CONTENT_URL . 'files/' . $this->_root . '/' . $fileName;
+		$posts    = array(
 			'filename'  => $fileName,
 			'file'      => $fileName,
 			'overwrite' => (int)$overWrite
 		);
 		$headers = $this->_buildParameter(
-												$uri,
-												array_merge(
-													array(
-														'oauth_token'        => $this->get('oauth_token'),
-														'oauth_token_secret' => $this->get('oauth_token_secret')
-													),
-													$posts
-												),
-												FALSE,
-												TRUE
-											);
+			$uri,
+			array_merge(
+				array(
+					'oauth_token'        => $this->get('oauth_token'),
+					'oauth_token_secret' => $this->get('oauth_token_secret')
+				),
+				$posts
+			),
+			FALSE,
+			TRUE
+		);
+		
 		$authHeader = array();
 		$post       = array();
 		$ignores    = array('filename', 'file', 'overwrite');
@@ -297,11 +300,11 @@ class SZ_Dropbox_oauth extends SZ_Oauth_driver
 		// TODO : continue implement base string override
 		
 		$response = $this->http->request(
-										$this->_request_method,
-										$uri,
-										array('Authorization: OAuth ' . implode(', ', $headers)),
-										$post
-									);
+			'POST',
+			$uri,
+			array('Authorization: OAuth ' . implode(', ', $headers)),
+			$post
+		);
 		if ( $response->status !== 200 )
 		{
 			$this->_setError($response->status . ': ' . $response->body);

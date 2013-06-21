@@ -32,6 +32,8 @@ class SZ_ActiveRecord
 	 */
 	private static $_instances = array();
 	
+	private static $_virtuals  = array();
+	
 	/**
 	 * ActiveRecord class works mode
 	 * @var boolean
@@ -83,6 +85,72 @@ class SZ_ActiveRecord
 		$activeRecord = self::_load($arName);
 		
 		return $activeRecord;
+	}
+	
+	
+	public static function virtual($tableName)
+	{
+		$db     = Seezoo::$Importer->database();
+		$prefix = $db->prefix();
+		$table  = preg_replace('/\A' . $prefix . '/', '', $tableName);
+		
+		if ( ! $db->tableExists($prefix . $table) )
+		{
+			throw new SeezooException($tableName . ' id not exists on your database.');
+		}
+		
+		$arName = preg_replace_callback(
+			'/_([a-zA-Z])/',
+			create_function('$m', 'return strtoupper($m[1]);'),
+			$table
+		);
+		
+		// Has virtual activerecord already created?
+		if ( isset(self::$_virtuals[$arName]) )
+		{
+			return self::$_virtuals[$arName];
+		}
+		
+		$class = ucfirst($arName) . 'ActiveRecord';
+		$template = <<<END
+class {$class} extends SZ_ActiveRecord
+{
+	protected \$_table   = '{$prefix}{$table}';
+	protected \$_primary = 'PRIMARY_FIELD';
+	protected \$_schemas = array(
+SCHEMAS_DIFINITION
+	); 
+	public function finderMode() {
+		\$this->_isFinderMode = TRUE;
+	}
+}
+
+END;
+		$schemas = array();
+		$primary = '';
+		
+		foreach ( $db->fields($prefix . $table) as $field )
+		{
+			$line = "\t\t'{$field->field}' => array('type' => '{$field->type}')";
+			$schemas[] = $line;
+			if ( $field->key === TRUE )
+			{
+				$primary = $field->field;
+			}
+		}
+		
+		$declare = str_replace(
+			array('PRIMARY_FIELD', 'SCHEMAS_DIFINITION'),
+			array($primary, implode(",\n", $schemas)),
+			$template
+		);
+		// Instant declare class
+		eval($declare);
+		
+		self::$_virtuals[$arName] = new $class();
+		
+		return self::$_virtuals[$arName];
+		
 	}
 	
 	

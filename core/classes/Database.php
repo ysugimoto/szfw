@@ -157,13 +157,15 @@ Class SZ_Database extends SZ_Driver implements Singleton
 
 	public function __construct($group, $dsnConnection = FALSE)
 	{
+		parent::__construct();
+		
 		$this->env            = Seezoo::getENV();
 		$this->_manualConnect = is_array($group);
 		$this->_group         = $group;
-		$this->_resultClass   = $this->_loadDriver('database', 'Database_result', FALSE, FALSE);
+		$this->_resultClass   = $this->loadDriver('Database_result', FALSE);
 		
 		$this->_initialize($group);
-		$this->_loadDriver('database', ucfirst($this->_info['driver']) . '_query');
+		$this->driver = $this->loadDriver(ucfirst($this->_info['driver']) . '_query');
 		
 		// Initial connect when auto conection
 		if ( ! $this->_manualConnect )
