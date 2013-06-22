@@ -261,12 +261,12 @@ class SZ_Request implements Growable
 	 */
 	public function getCurrentURL()
 	{
-		$uri = get_config('base_url')
-		       . implode('/', reset($this->_uriArray));
+		$uri = get_config('base_url');
 		if ( ! get_config('enable_mod_rewrite') )
 		{
 			$uri .= DISPATCHER . '/';
 		}
+		$uri .= implode('/', reset($this->_uriArray));
 		if ( count($this->_get) > 0 )
 		{
 			$uri .= '?' . http_build_query($this->_get);
@@ -373,6 +373,7 @@ class SZ_Request implements Growable
 		{
 			$level = Seezoo::getLevel();
 		}
+		
 		return ( isset($this->_uriArray[$level]) )
 		         ? $this->_uriArray[$level]
 		         : array();
