@@ -90,12 +90,22 @@ $config['date_timezone'] = 'Asia/Tokyo';
  * --------------------------------------------------
  * Server encoding
  * 
- * set a your application server encoding
+ * set your application server encoding
  * ( if your server cannot change )
  * --------------------------------------------------
  */
 
 $config['server_encoding'] = 'UTF-8';
+
+
+/*
+ * --------------------------------------------------
+ * Default database connection group
+ * 
+ * set default database connection group name that you want
+ * --------------------------------------------------
+ */
+$config['default_database_connection_handle'] = 'default';
 
 
 /*
