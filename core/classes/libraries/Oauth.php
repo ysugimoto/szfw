@@ -26,6 +26,7 @@ class SZ_Oauth extends SZ_Driver implements Growable
 		'facebook' => FALSE,
 		'google'   => FALSE,
 		'mixi'     => FALSE,
+		'github'   => FALSE,
 		'twitter'  => FALSE,
 		'dropbox'  => FALSE
 	);
