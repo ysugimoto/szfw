@@ -76,9 +76,6 @@ class SZ_Curl_http extends SZ_Http_driver
 			$movedURI = preg_replace('|.+href="([^"]+)".+|is', '$1', $response->body);
 			return $this->sendRequest($method, $movedURI, $header, $postBody);
 		}
-
-        var_dump($response);
-		
 		return $response;
 	}
 }
