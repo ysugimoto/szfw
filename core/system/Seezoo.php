@@ -365,7 +365,7 @@ class Seezoo
 	 */
 	public static function getLevel()
 	{
-		return self::$level;
+		return ( self::$level === 0 ) ? 1 : self::$level;
 	}
 	
 	
