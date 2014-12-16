@@ -51,7 +51,7 @@ $config['deploy_status'] = 'development';
  * --------------------------------------------------
  */
 
-$config['enable_mod_rewirte'] = FALSE;
+$config['enable_mod_rewrite'] = FALSE;
 
 
 /*
