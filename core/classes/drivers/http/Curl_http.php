@@ -18,12 +18,12 @@
  * ====================================================================
  */
 
-class SZ_Curl_http
+class SZ_Curl_http extends SZ_Http_driver
 {
 	/**
 	 * Send cURL request
 	 * 
-	 * @access protected
+	 * @access public
 	 * @param  string $method
 	 * @param  string $uri
 	 * @param  array $header
@@ -45,6 +45,11 @@ class SZ_Curl_http
 					CURLOPT_HEADER         => FALSE
 				)
 		);
+		
+		if ( preg_match('#\Ahttps://#u', $uri) )
+		{
+			curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, FALSE);
+		}
 		
 		if ( $method === 'POST' )
 		{
@@ -71,6 +76,8 @@ class SZ_Curl_http
 			$movedURI = preg_replace('|.+href="([^"]+)".+|is', '$1', $response->body);
 			return $this->sendRequest($method, $movedURI, $header, $postBody);
 		}
+
+        var_dump($response);
 		
 		return $response;
 	}
