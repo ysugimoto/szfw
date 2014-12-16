@@ -38,7 +38,7 @@ class SZ_Google_oauth extends SZ_Oauth_driver
 		));
 	}
 	
-	public function auth($code = '')
+	public function auth2($code = '')
 	{
 		$request = Seezoo::getRequest();
 		// Did you authrize?
@@ -61,7 +61,7 @@ class SZ_Google_oauth extends SZ_Oauth_driver
 			        . '&scope='        . rawurlencode($this->scope)
 			        . '&response_type=code'; 
 
-			Seezoo::$Response->redirectForce($uri);
+			Seezoo::$Response->forceRedirect($uri);
 		}
 		else 
 		{

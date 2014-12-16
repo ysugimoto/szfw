@@ -55,7 +55,7 @@ class SZ_Dropbox_oauth extends SZ_Oauth_driver
 	 */
 	public function auth($oauth_token = null, $oauth_token_secret = null, $ext_params = array())
 	{
-		if ( $this->_consumer_key === '' || $this->_consumer_secret === '' )
+		if ( $this->consumer_key === '' || $this->consumer_secret === '' )
 		{
 			$this->_setError('undefined consumer_key or consumer_secret.');
 			return FALSE;
@@ -74,7 +74,7 @@ class SZ_Dropbox_oauth extends SZ_Oauth_driver
 		}
 
 		// build base string and paramter query
-		$this->queryString = $this->_buildParameter($this->_request_token_uri, $ext_params,  TRUE, TRUE);
+		$this->queryString = $this->_buildParameter($this->request_token_uri, $ext_params,  TRUE, TRUE);
 		
 		if ( ! $this->queryString )
 		{
@@ -84,7 +84,7 @@ class SZ_Dropbox_oauth extends SZ_Oauth_driver
 		// do request
 		$resp = $this->http->request(
 			'POST',
-			$this->_request_token_uri,
+			$this->request_token_uri,
 			array('Authorization: OAuth ' . implode(', ', $this->queryString))
 		);
 		
@@ -106,11 +106,11 @@ class SZ_Dropbox_oauth extends SZ_Oauth_driver
 		$this->_saveToken();
 		
 		// redirect to request tokens URI.
-		$redirectURI = rtrim($this->_authorize_uri, '?')
+		$redirectURI = rtrim($this->authorize_uri, '?')
 		               . '?oauth_token=' . $this->get('oauth_token')
-		               . '&oauth_callback=' . rawurlencode($this->_callback_url); 
+		               . '&oauth_callback=' . rawurlencode($this->callback_url);
 		
-		Seezoo::$Response->redirectForce($redirectURI);
+		Seezoo::$Response->forceRedirect($redirectURI);
 	}
 	
 	

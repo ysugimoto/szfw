@@ -39,7 +39,7 @@ class SZ_Github_oauth extends SZ_Oauth_driver
 		));
 	}
 	
-	public function auth($code = '')
+	public function auth2($code = '')
 	{
 		$request = Seezoo::getRequest();
 		
@@ -66,7 +66,7 @@ class SZ_Github_oauth extends SZ_Oauth_driver
 				$uri .= '&scope=' . $this->scope;
 			}
 			
-			Seezoo::$Response->redirectForce($uri);
+			Seezoo::$Response->forceRedirect($uri);
 		}
 		else 
 		{
@@ -113,7 +113,7 @@ class SZ_Github_oauth extends SZ_Oauth_driver
 		{
 			$this->requestTokens['authorized'] = FALSE;
 			$this->_saveToken();
-			$this->auth();
+			$this->auth2();
 			return FALSE;
 		}
 		return $data;

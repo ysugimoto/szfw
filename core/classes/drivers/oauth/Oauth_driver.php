@@ -23,18 +23,18 @@ class SZ_Oauth_driver
 	/**
 	 * Oauth parameters
 	 */
-	protected $_authorize_uri;
-	protected $_request_token_uri;
-	protected $_access_token_uri;
-	protected $_callback_url;
-	protected $_consumer_key;
-	protected $_consumer_secret;
-	protected $_signature_method = 'HMAC-SHA1';
-	protected $_request_method   = 'GET';
-	protected $_version          = '1.0';
-	protected $_userAgent        = 'DogFW.Oauth-client-0.6beta';
-	protected $_timeout          = 30;
-	protected $_connectTimeout   = 30;
+	protected $authorize_uri;
+	protected $request_token_uri;
+	protected $access_token_uri;
+	protected $callback_url;
+	protected $consumer_key;
+	protected $consumer_secret;
+	protected $signature_method = 'HMAC-SHA1';
+	protected $request_method   = 'GET';
+	protected $version          = '1.0';
+	protected $userAgent        = 'SZFW.Oauth-client';
+	protected $timeout          = 30;
+	protected $connectTimeout   = 30;
 	
 	protected $authName;
 	protected $error;
@@ -68,7 +68,7 @@ class SZ_Oauth_driver
 	{
 		foreach ( $conf as $key => $val )
 		{
-			$this->{'_' . $key} = $val;
+			$this->{$key} = $val;
 		}
 	}
 	
@@ -84,7 +84,7 @@ class SZ_Oauth_driver
 	 */
 	public function setCallback($callback = '')
 	{
-		$this->_callback_url = $callback;
+		$this->callback_url = $callback;
 	}
 	
 	
@@ -117,7 +117,7 @@ class SZ_Oauth_driver
 	 */
 	public function auth($oauth_token = null, $oauth_token_secret = null, $ext_params = array())
 	{
-		if ( $this->_consumer_key === '' || $this->_consumer_secret === '' )
+		if ( $this->consumer_key === '' || $this->consumer_secret === '' )
 		{
 			$this->_setError('undefined consumer_key or consumer_secret.');
 			return FALSE;
@@ -136,7 +136,7 @@ class SZ_Oauth_driver
 		}
 
 		// build base string and paramter query
-		$this->queryString = $this->_buildParameter($this->_request_token_uri, $ext_params,  TRUE, TRUE);
+		$this->queryString = $this->_buildParameter($this->request_token_uri, $ext_params,  TRUE, TRUE);
 		
 		if ( ! $this->queryString )
 		{
@@ -145,8 +145,8 @@ class SZ_Oauth_driver
 		
 		// do request
 		$resp = $this->http->request(
-		                            $this->_request_method,
-		                            $this->_request_token_uri,
+		                            $this->request_method,
+		                            $this->request_token_uri,
 		                            array('Authorization: OAuth ' . implode(', ', $this->queryString))
 								);
 		
@@ -168,8 +168,8 @@ class SZ_Oauth_driver
 		$this->_saveToken();
 		
 		// redirect to request tokens URI.
-		$redirectURI = rtrim($this->_authorize_uri, '?') . '?oauth_token=' . $this->requestTokens['oauth_token']; 
-		Seezoo::$Response->redirect($redirectURI);
+		$redirectURI = rtrim($this->authorize_uri, '?') . '?oauth_token=' . $this->requestTokens['oauth_token'];
+		Seezoo::$Response->forceRedirect($redirectURI);
 	}
 	
 	
@@ -208,12 +208,12 @@ class SZ_Oauth_driver
 						'oauth_verifier'     => $verify,
 						'oauth_token_secret' => $this->get('oauth_token_secret')
 							);
-		$this->queryString = $this->_buildParameter($this->_access_token_uri, $data, FALSE, TRUE);
+		$this->queryString = $this->_buildParameter($this->access_token_uri, $data, FALSE, TRUE);
 	
 		// get Access token!
 		$resp = $this->http->request(
-		                            $this->_request_method,
-		                            $this->_access_token_uri,
+		                            $this->request_method,
+		                            $this->access_token_uri,
 		                            array('Authorization: OAuth ' . implode(', ', $this->queryString))
 									);
 		
@@ -336,11 +336,11 @@ class SZ_Oauth_driver
 		
 		// base paramters create
 		$parameters = array(
-			'oauth_consumer_key'     => $this->_consumer_key,
-			'oauth_signature_method' => $this->_signature_method,
+			'oauth_consumer_key'     => $this->consumer_key,
+			'oauth_signature_method' => $this->signature_method,
 			'oauth_timestamp'        => time(),
 			'oauth_nonce'            => md5(uniqid(mt_rand(), TRUE)),
-			'oauth_version'          => $this->_version,
+			'oauth_version'          => $this->version,
 		);
 		
 		// merge additional parameters
@@ -353,12 +353,12 @@ class SZ_Oauth_driver
 		// If need callback, add paramter
 		if ( $callback === TRUE )
 		{
-			if ( $this->_callback_url === '' )
+			if ( $this->callback_url === '' )
 			{
 				$this->_setError('Undefined Callback URI.');
 				return FALSE;
 			}
-			$parameters['oauth_callback'] = $this->_callback_url;
+			$parameters['oauth_callback'] = $this->callback_url;
 		}
 		
 		// encode RFC3986
@@ -412,7 +412,7 @@ class SZ_Oauth_driver
 		$ret = array_map(
 						array($this, '_encodeRFC3986'),
 						array(
-							$this->_request_method,
+							$this->request_method,
 							$uri,
 							implode('&', $p)
 						)
@@ -437,7 +437,7 @@ class SZ_Oauth_driver
 		$key = array_map(
 						array($this, '_encodeRFC3986'),
 						array(
-							$this->_consumer_secret,
+							$this->consumer_secret,
 							($secret) ? $secret : ''
 						)
 					);

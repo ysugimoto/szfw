@@ -38,7 +38,7 @@ class SZ_Ameba_oauth extends SZ_Oauth_driver
 		));
 	}
 	
-	public function auth($code = '')
+	public function auth2($code = '')
 	{
 		$request = Seezoo::getRequest();
 		
@@ -118,7 +118,7 @@ class SZ_Ameba_oauth extends SZ_Oauth_driver
 		{
 			$this->requestTokens['authorized'] = FALSE;
 			$this->_saveToken();
-			$this->auth();
+			$this->auth2();
 			return FALSE;
 		}
 		return $data;
