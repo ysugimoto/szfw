@@ -397,7 +397,7 @@ class SZ_Validation extends SZ_Driver implements Growable
 		// convert object-to-array
 		if ( is_object($data) )
 		{
-			$data = get_object_vas($data);
+			$data = get_object_vars($data);
 		}
 		
 		$this->_targetData = $data;
