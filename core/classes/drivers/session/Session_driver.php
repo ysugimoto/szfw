@@ -310,7 +310,7 @@ abstract class SZ_Session_driver
 			if ( preg_match($regex, $key, $match) )
 			{
 				// If keyname is empty, keep all flashdata
-				if ( ! $keyName || $key === $keyName )
+				if ( ! $keyName || $match[1] === $keyName )
 				{
 					$newSession['Flash:keep:' . $match[1]] = $val;
 				}
