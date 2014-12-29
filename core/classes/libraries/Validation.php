@@ -437,21 +437,21 @@ class SZ_Validation extends SZ_Driver implements Growable
 			$is_array = ( is_array($value) ) ? TRUE : FALSE;
 			$value    = ( $is_array ) ? $value : array($value);
 			
-			// Does field enabled to delegete validation?
-			if ( $v->isDelegateValidation() )
+			// loop of rules
+			foreach ( $rules as $rule )
 			{
-				$success = $rules[0]->validate($v);
-			}
-			else
-			{
-				// loop of rules
-				foreach ( $rules as $rule )
+				if ( $rule === '' )
 				{
-					if ( $rule === '' )
-					{
-						continue;
-					}
-					
+					continue;
+				}
+				
+				// Does field enabled to delegete validation?
+				if ( $rule instanceof Validatable )
+				{
+					$success = $rule->validate($v);
+				}
+				else
+				{
 					$class = $this->_verify;
 					// Is special syncronized rule?
 					if ( preg_match($this->_syncRegex, $rule, $matches) )
@@ -483,19 +483,17 @@ class SZ_Validation extends SZ_Driver implements Growable
 					
 					// Validation execute
 					$success = $this->_execute($v, $format, $value);
-					if ( $success === FALSE )
-					{
-						$errors[] = $name;
-					}
 				}
 				
-					// set "validated" value to field and add stack
-				$v->setValidatedValue(( $is_array ) ? $value : $value[0]);
-				$executed[$name] = $v;
-				
-				
+				if ( $success === FALSE )
+				{
+					$errors[] = $name;
+				}
 			}
 			
+				// set "validated" value to field and add stack
+			$v->setValidatedValue(( $is_array ) ? $value : $value[0]);
+			$executed[$name] = $v;
 		}
 		
 		// Validation end event fire
