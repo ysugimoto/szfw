@@ -1003,7 +1003,7 @@ Class SZ_Database extends SZ_Driver implements Singleton
 		{
 			$exp = explode(',', $column);
 			$exp = array_map(array($this, 'prepColumn'), $exp);
-			return implode(',', $ret);
+			return implode(',', $exp);
 		}
 		else
 		{
