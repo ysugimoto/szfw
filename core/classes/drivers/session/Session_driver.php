@@ -314,6 +314,10 @@ abstract class SZ_Session_driver
 				{
 					$newSession['Flash:keep:' . $match[1]] = $val;
 				}
+				else
+				{
+					$newSession[$key] = $val;
+				}
 			}
 			else
 			{
