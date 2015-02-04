@@ -431,7 +431,7 @@ class SZ_Environment implements Growable, Singleton
 		// Configure data is merged from base file cascading.
 		foreach ( array_reverse(Seezoo::getApplication()) as $app )
 		{
-			if ( FALSE !== ($config = graceful_require($app->parh . $filePath, 'config')) )
+			if ( FALSE !== ($config = graceful_require($app->path . $filePath, 'config')) )
 			{
 				$stackedConfig = array_merge($stackedConfig, $config);
 				unset($config);
